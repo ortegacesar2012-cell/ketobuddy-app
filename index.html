@@ -3978,9 +3978,16 @@ function updateAuthUI(){
     if(isLoggedIn){
       authBtn.textContent = isPro ? '⚡ Pro' : '👤 '+kbUser.email.split('@')[0];
       authBtn.onclick = () => {
-        if(confirm(isPro ? 'KetoBuddy Pro ⚡\n\nManage subscription or sign out?' : 'Signed in as '+kbUser.email+'\n\nUpgrade to Pro or sign out?')){
-          if(isPro) manageSubscription(); else showUpgradeModal();
-        } else if(confirm('Sign out?')) signOut();
+        const menu = document.createElement('div');
+        menu.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:flex-end;justify-content:center';
+        const upgradeBtn = !isPro ? '<button id="menuUpgradeBtn" style="width:100%;padding:14px;background:#00e676;color:#000;font-weight:700;border:none;border-radius:10px;font-size:15px;margin-bottom:10px;cursor:pointer">🚀 Upgrade to Pro — $4.99/mo</button>' : '<button id="menuManageBtn" style="width:100%;padding:14px;background:#00e676;color:#000;font-weight:700;border:none;border-radius:10px;font-size:15px;margin-bottom:10px;cursor:pointer">⚡ Manage Subscription</button>';
+        menu.innerHTML = '<div style="background:#1a2332;border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:20px">'+upgradeBtn+'<button id="menuSignOutBtn" style="width:100%;padding:14px;background:rgba(255,255,255,0.07);color:#ff4444;font-weight:700;border:none;border-radius:10px;font-size:15px;margin-bottom:10px;cursor:pointer">Sign Out</button><button id="menuCancelBtn" style="width:100%;padding:14px;background:rgba(255,255,255,0.05);color:#aaa;font-weight:700;border:none;border-radius:10px;font-size:15px;cursor:pointer">Cancel</button></div>';
+        document.body.appendChild(menu);
+        const close = () => menu.remove();
+        menu.querySelector('#menuSignOutBtn').addEventListener('click', () => { close(); signOut(); });
+        menu.querySelector('#menuCancelBtn').addEventListener('click', close);
+        const ab = menu.querySelector('#menuUpgradeBtn') || menu.querySelector('#menuManageBtn');
+        if(ab) ab.addEventListener('click', () => { close(); isPro ? manageSubscription() : showUpgradeModal(); });
       };
       authBtn.style.color = isPro ? '#00e676' : '#5a7a9a';
     } else {
