@@ -1,0 +1,42 @@
+{
+  "name": "KetoBuddy",
+  "short_name": "KetoBuddy",
+  "description": "Smart keto companion — track macros, fast, and reach your goals",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080d14",
+  "theme_color": "#00e676",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "fitness"],
+  "shortcuts": [
+    {
+      "name": "Log Food",
+      "short_name": "Log",
+      "description": "Quickly log food to your tracker",
+      "url": "/?tab=track",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Fasting Timer",
+      "short_name": "Fast",
+      "description": "Check your fasting timer",
+      "url": "/?tab=fast",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
