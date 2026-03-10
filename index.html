@@ -3925,16 +3925,20 @@ async function startCheckout(){
   const btn = document.getElementById('checkoutBtn');
   btn.textContent = 'Loading...'; btn.disabled = true;
   try{
+    console.log('Calling stripe with token:', token ? 'present' : 'missing');
     const res = await fetch(BACKEND_URL+'/stripe', {
       method: 'POST',
       headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
       body: JSON.stringify({ action: 'create-checkout' })
     });
+    console.log('Stripe response status:', res.status);
     const data = await res.json();
+    console.log('Stripe response data:', JSON.stringify(data));
     if(data.url) window.location.href = data.url;
-    else throw new Error(data.error || 'Checkout failed');
+    else throw new Error(data.error || data.message || 'Checkout failed: '+JSON.stringify(data));
   }catch(err){
-    showToast('❌ '+err.message);
+    console.error('Checkout error:', err);
+    alert('Checkout error: '+err.message);
     btn.textContent = '🚀 Upgrade to Pro — $4.99/mo'; btn.disabled = false;
   }
 }
