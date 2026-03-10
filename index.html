@@ -3977,7 +3977,11 @@ function updateAuthUI(){
   if(authBtn){
     if(isLoggedIn){
       authBtn.textContent = isPro ? '⚡ Pro' : '👤 '+kbUser.email.split('@')[0];
-      authBtn.onclick = isPro ? manageSubscription : showUpgradeModal;
+      authBtn.onclick = () => {
+        if(confirm(isPro ? 'KetoBuddy Pro ⚡\n\nManage subscription or sign out?' : 'Signed in as '+kbUser.email+'\n\nUpgrade to Pro or sign out?')){
+          if(isPro) manageSubscription(); else showUpgradeModal();
+        } else if(confirm('Sign out?')) signOut();
+      };
       authBtn.style.color = isPro ? '#00e676' : '#5a7a9a';
     } else {
       authBtn.textContent = '🔑 Sign In';
