@@ -535,7 +535,7 @@ body::before{content:'';position:fixed;top:-200px;left:-200px;width:600px;height
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       <div class="streak" id="streakBadge">🔥 Day 1</div>
-      <button id="headerAuthBtn" onclick="showAuthModal()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:6px 11px;color:#5a7a9a;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">🔑 Sign In</button>
+      <button onclick="showSettings()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:6px 10px;color:#5a7a9a;font-size:14px;cursor:pointer;margin-right:4px">⚙️</button><button id="headerAuthBtn" onclick="showAuthModal()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:6px 11px;color:#5a7a9a;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">🔑 Sign In</button>
     </div>
   </div>
 </div>
@@ -805,14 +805,11 @@ body::before{content:'';position:fixed;top:-200px;left:-200px;width:600px;height
         </div>
       </div>
 
-      <!-- PHOTO -->
+      <!-- PHOTOS - Multiple -->
       <div class="card" style="margin-bottom:10px">
-        <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📸 Progress Photo (optional)</div>
-        <div id="photoPreview" style="display:none;margin-bottom:10px;position:relative">
-          <img id="photoImg" style="width:100%;border-radius:12px;max-height:220px;object-fit:cover" src="" alt="Progress photo"/>
-          <button onclick="removePhoto()" style="position:absolute;top:8px;right:8px;background:rgba(255,77,109,0.85);border:none;color:#fff;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
-        </div>
-        <div id="photoLabel" style="display:flex;gap:8px">
+        <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📸 Progress Photos (optional)</div>
+        <div id="multiPhotoPreview" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px">
           <button onclick="document.getElementById('photoInput').click()" style="flex:1;padding:13px 8px;background:rgba(199,125,255,0.07);border:1.5px dashed rgba(199,125,255,0.35);border-radius:13px;cursor:pointer;color:var(--purple);font-size:12px;font-weight:700;font-family:'DM Sans',sans-serif">
             🖼️ Gallery
           </button>
@@ -820,8 +817,8 @@ body::before{content:'';position:fixed;top:-200px;left:-200px;width:600px;height
             📷 Camera
           </button>
         </div>
-        <input type="file" accept="image/*" id="photoInput" style="display:none" onchange="handlePhoto(this)"/>
-        <input type="file" accept="image/*" capture="environment" id="photoInputCamera" style="display:none" onchange="handlePhoto(this)"/>
+        <input type="file" accept="image/*" multiple id="photoInput" style="display:none" onchange="handleMultiPhoto(this)"/>
+        <input type="file" accept="image/*" capture="environment" id="photoInputCamera" style="display:none" onchange="handleMultiPhoto(this)"/>
       </div>
 
       <!-- NOTES -->
@@ -1328,6 +1325,7 @@ body::before{content:'';position:fixed;top:-200px;left:-200px;width:600px;height
         <button class="fast-btn start" id="fastStartBtn" onclick="startFast()">▶ Start Fast</button>
         <button class="fast-btn stop" id="fastStopBtn" onclick="stopFast()" disabled>■ End Fast</button>
       </div>
+      <button id="editFastTimeBtn" onclick="showEditFastTime()" style="display:none;width:100%;margin-top:8px;padding:9px;background:rgba(255,154,60,0.1);border:1px solid rgba(255,154,60,0.3);border-radius:10px;color:var(--orange);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">✏️ Edit Start Time</button>
       <!-- Benefits panel -->
       <div class="card">
         <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">🔓 Benefits — Unlocked As You Fast</div>
@@ -2168,9 +2166,11 @@ CARBS: [net carbs]g | FAT: [fat]g | PROTEIN: [protein]g`;
             <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px">
               ${m.ingredients.map(ing=>`<span style="font-size:11px;padding:3px 9px;background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.2);border-radius:6px;color:#c0d0e0">${ing}</span>`).join('')}
             </div>
-            <button onclick="addMealToShop(${JSON.stringify(m.ingredients).replace(/"/g,"'")},'${m.name.replace(/'/g,"&#39;")}')" style="width:100%;padding:9px;background:linear-gradient(135deg,rgba(0,230,118,0.15),rgba(76,201,240,0.1));border:1px solid rgba(0,230,118,0.3);border-radius:9px;color:var(--green);font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">
-              🛒 Add Ingredients to Shopping List
-            </button>
+            <div style="display:flex;gap:6px;margin-top:4px">
+              <button onclick="saveAIMealFavorite(this)" style="flex:1;padding:8px;background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.3);border-radius:9px;color:#ffc107;font-size:11px;font-weight:700;cursor:pointer">⭐ Save</button>
+              <button onclick="addAIMealToTracker(this)" style="flex:1;padding:8px;background:rgba(76,201,240,0.1);border:1px solid rgba(76,201,240,0.3);border-radius:9px;color:var(--blue);font-size:11px;font-weight:700;cursor:pointer">📊 Track</button>
+              <button onclick="addMealToShop_btn(this)" style="flex:1;padding:8px;background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.3);border-radius:9px;color:var(--green);font-size:11px;font-weight:700;cursor:pointer">🛒 Shop</button>
+            </div>
           </div>`:''}
           ${m.steps.length?`
           <div style="width:100%;background:rgba(0,0,0,0.15);border-radius:10px;padding:10px">
@@ -2207,9 +2207,11 @@ CARBS: [net carbs]g | FAT: [fat]g | PROTEIN: [protein]g`;
             <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px">
               ${s.ingredients.map(ing=>`<span style="font-size:11px;padding:3px 9px;background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.2);border-radius:6px;color:#c0d0e0">${ing}</span>`).join('')}
             </div>
-            <button onclick="addMealToShop(${JSON.stringify(s.ingredients).replace(/"/g,"'")},'${s.name.replace(/'/g,"&#39;")}')" style="width:100%;padding:9px;background:linear-gradient(135deg,rgba(0,230,118,0.15),rgba(76,201,240,0.1));border:1px solid rgba(0,230,118,0.3);border-radius:9px;color:var(--green);font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">
-              🛒 Add Ingredients to Shopping List
-            </button>
+            <div style="display:flex;gap:6px;margin-top:4px">
+              <button onclick="saveAIMealFavorite(this)" style="flex:1;padding:8px;background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.3);border-radius:9px;color:#ffc107;font-size:11px;font-weight:700;cursor:pointer">⭐ Save</button>
+              <button onclick="addAIMealToTracker(this)" style="flex:1;padding:8px;background:rgba(76,201,240,0.1);border:1px solid rgba(76,201,240,0.3);border-radius:9px;color:var(--blue);font-size:11px;font-weight:700;cursor:pointer">📊 Track</button>
+              <button onclick="addMealToShop_btn(this)" style="flex:1;padding:8px;background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.3);border-radius:9px;color:var(--green);font-size:11px;font-weight:700;cursor:pointer">🛒 Shop</button>
+            </div>
           </div>`:''}
         </div>`).join('')}
       </div>`;
@@ -2239,7 +2241,7 @@ function addMealToShop(ingredients, mealName){
 }
 
 // ====== UNIFIED JOURNAL (Mood + Weight + Photo + Notes) ======
-let selectedMoodEmoji='😊',selectedMoodLabel='Good',selectedSymptoms=[],journalEntries=[],weightLog=[],currentPhotoData=null;
+let selectedMoodEmoji='😊',selectedMoodLabel='Good',selectedSymptoms=[],journalEntries=[],weightLog=[],currentPhotoData=null,currentPhotos=[];
 
 document.getElementById('moodDate').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
 
@@ -2259,26 +2261,40 @@ function toggleSym(el){
 function handlePhoto(input){
   const file=input.files[0];if(!file)return;
   const reader=new FileReader();
-  reader.onload=e=>{
-    currentPhotoData=e.target.result;
-    document.getElementById('photoImg').src=currentPhotoData;
-    document.getElementById('photoPreview').style.display='block';
-    document.getElementById('photoLabel').style.display='none';
-  };
+  reader.onload=e=>{ currentPhotoData=e.target.result; };
   reader.readAsDataURL(file);
-  // Reset input so same file can be picked again
-  input.value='';
-}
-function removePhoto(){
-  currentPhotoData=null;
-  document.getElementById('photoPreview').style.display='none';
-  document.getElementById('photoLabel').style.display='flex';
-  document.getElementById('photoInput').value='';
-  document.getElementById('photoInputCamera').value='';
 }
 
-// Weight unit preference
-function saveWeightUnitPref(unit){
+function handleMultiPhoto(input){
+  const files = Array.from(input.files);
+  if(!files.length) return;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      currentPhotos.push(e.target.result);
+      renderMultiPhotoPreview();
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value="";
+}
+
+function renderMultiPhotoPreview(){
+  const container = document.getElementById("multiPhotoPreview");
+  if(!container) return;
+  container.innerHTML = currentPhotos.map((photo, i) => `<div style="position:relative;width:80px;height:80px"><img src="${photo}" style="width:80px;height:80px;object-fit:cover;border-radius:10px"/><button onclick="removePhotoAt(${i})" style="position:absolute;top:-4px;right:-4px;background:#ff4d6d;border:none;color:#fff;border-radius:50%;width:22px;height:22px;font-size:11px;cursor:pointer">✕</button></div>`).join("");
+}
+
+function removePhotoAt(i){
+  currentPhotos.splice(i,1);
+  renderMultiPhotoPreview();
+}
+
+function removePhoto(){
+  currentPhotos=[];
+  currentPhotoData=null;
+  renderMultiPhotoPreview();
+}
   localStorage.setItem('kb_weightUnit', unit);
   document.getElementById('weightInput').placeholder = 'Weight in ' + unit;
   updateWeightDisplay();
@@ -2346,6 +2362,7 @@ function saveUnifiedEntry(){
     title:title||date+' Entry',
     body,
     photo:currentPhotoData||null,
+    photos:[...currentPhotos],
     weightKg
   };
 
@@ -2360,6 +2377,8 @@ function saveUnifiedEntry(){
   // Reset form
   document.getElementById('journalTitle').value='';
   document.getElementById('journalBody').value='';
+  currentPhotos=[];
+  renderMultiPhotoPreview();
   document.getElementById('weightInput').value='';
   document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
   document.querySelectorAll('.sym-btn').forEach(b=>b.classList.remove('selected'));
@@ -2412,7 +2431,7 @@ function renderUnifiedHistory(){
       </div>
 
       <!-- Photo -->
-      ${e.photo?`<img src="${e.photo}" style="width:100%;border-radius:10px;max-height:200px;object-fit:cover;margin-bottom:10px" onclick="viewPhoto('${e.id}')" />`:''}
+      ${(e.photos&&e.photos.length)?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">${e.photos.map((p,pi)=>`<img src="${p}" style="width:${e.photos.length===1?'100%':'calc(50% - 3px)'};height:${e.photos.length===1?'180px':'120px'};border-radius:10px;object-fit:cover;cursor:pointer" onclick="viewPhotoFull('${e.id}',${pi})" />`).join('')}</div>`:(e.photo?`<img src="${e.photo}" style="width:100%;border-radius:10px;max-height:200px;object-fit:cover;margin-bottom:10px" onclick="viewPhoto('${e.id}')" />`:'') }
 
       <!-- Weight -->
       ${e.weightKg?`<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(199,125,255,0.1);border:1px solid rgba(199,125,255,0.25);border-radius:8px;padding:5px 10px;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--purple)">⚖️ ${e.weightKg} kg</div>`:''}
@@ -2427,6 +2446,30 @@ function renderUnifiedHistory(){
 }
 
 // Full-screen photo viewer
+function viewPhotoFull(id, idx){
+  const entry=journalEntries.find(e=>e.id==id);
+  if(!entry) return;
+  const photos = entry.photos && entry.photos.length ? entry.photos : (entry.photo ? [entry.photo] : []);
+  if(!photos.length) return;
+  let current = idx || 0;
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center';
+  const update = () => {
+    modal.innerHTML = `
+      <button onclick="this.closest('div').remove()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:none;color:#fff;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer">✕</button>
+      <img src="${photos[current]}" style="max-width:95vw;max-height:80vh;object-fit:contain;border-radius:12px"/>
+      ${photos.length>1?`<div style="display:flex;gap:12px;margin-top:16px;align-items:center">
+        <button onclick="changePh(-1)" style="background:rgba(255,255,255,0.1);border:none;color:#fff;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer">←</button>
+        <span style="color:#fff;font-size:13px">${current+1} / ${photos.length}</span>
+        <button onclick="changePh(1)" style="background:rgba(255,255,255,0.1);border:none;color:#fff;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer">→</button>
+      </div>`:''}`;
+    modal.querySelector('button[onclick*="changePh(-1)"]')?.addEventListener('click',()=>{if(current>0){current--;update();}});
+    modal.querySelector('button[onclick*="changePh(1)"]')?.addEventListener('click',()=>{if(current<photos.length-1){current++;update();}});
+  };
+  update();
+  document.body.appendChild(modal);
+}
+
 function viewPhoto(id){
   const entry=journalEntries.find(e=>e.id==id);if(!entry||!entry.photo)return;
   const overlay=document.createElement('div');
@@ -2574,6 +2617,7 @@ function startFast(){
   document.getElementById('fastStopBtn').disabled=false;
   document.getElementById('fastStatus').className='fast-status fasting';
   document.getElementById('fastStatus').textContent='🔥 Fasting';
+  document.getElementById('editFastTimeBtn').style.display='block';
   fastInterval=setInterval(updateFastTimer,1000);
   updateFastTimer();
   showToast('⏱️ Fast started!');
@@ -2603,6 +2647,7 @@ function stopFast(){
 
   document.getElementById('fastStartBtn').disabled=false;
   document.getElementById('fastStopBtn').disabled=true;
+  document.getElementById('editFastTimeBtn').style.display='none';
   document.getElementById('fastStatus').className='fast-status eating';
   document.getElementById('fastStatus').textContent='🍽️ Eating Window';
   document.getElementById('fastLabel').textContent='Completed '+label+' fast!';
@@ -2611,6 +2656,41 @@ function stopFast(){
   document.getElementById('fastPct').textContent='0%';
   renderFastBenefits(0);
   showToast('🎉 Fast complete! '+label);
+}
+
+function showEditFastTime(){
+  const now = new Date();
+  const startDate = new Date(fastStart);
+  // Format for datetime-local input
+  const pad = n => String(n).padStart(2,'0');
+  const val = `${startDate.getFullYear()}-${pad(startDate.getMonth()+1)}-${pad(startDate.getDate())}T${pad(startDate.getHours())}:${pad(startDate.getMinutes())}`;
+  const maxVal = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML = `<div style="background:#1a2332;border-radius:20px;padding:24px;max-width:400px;width:100%">
+    <div style="font-size:20px;font-weight:800;font-family:'Syne',sans-serif;margin-bottom:6px">✏️ Edit Fast Start Time</div>
+    <div style="font-size:13px;color:#8ab0c8;margin-bottom:16px">Forgot to start the timer? Set when you actually began fasting.</div>
+    <input type="datetime-local" id="editFastInput" value="${val}" max="${maxVal}"
+      style="width:100%;padding:13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,154,60,0.4);border-radius:12px;color:#fff;font-size:14px;margin-bottom:16px;outline:none;font-family:'DM Sans',sans-serif"/>
+    <button onclick="applyEditFastTime()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--orange),#e65100);color:#fff;border:none;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;margin-bottom:10px">Save Start Time</button>
+    <button onclick="this.closest('div').parentElement.remove()" style="width:100%;padding:12px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#5a7a9a;font-size:13px;cursor:pointer">Cancel</button>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function applyEditFastTime(){
+  const input = document.getElementById('editFastInput');
+  if(!input) return;
+  const newStart = new Date(input.value).getTime();
+  if(isNaN(newStart) || newStart > Date.now()){ showToast('❌ Invalid time'); return; }
+  fastStart = newStart;
+  localStorage.setItem('kb_fastStart', fastStart);
+  clearInterval(fastInterval);
+  fastInterval = setInterval(updateFastTimer, 1000);
+  updateFastTimer();
+  input.closest('div').parentElement.remove();
+  showToast('✅ Fast start time updated!');
 }
 
 function updateFastTimer(){
@@ -3662,13 +3742,16 @@ obFinish=function(){_origObFinish();saveAll();};
 // ====== API KEY SYSTEM ======
 // ====== BACKEND CONFIG ======
 const BACKEND_URL = 'https://elegant-bunny-caf8da.netlify.app/.netlify/functions';
-const STRIPE_PUBLISHABLE_KEY = 'pk_test_51T8ZMgEEHtcYystOMr5OlO8XjWK8R7vWGdyDCdlmL13wFz1015RScI4TcNBi29EnWoZ1UhtXoj4Sq06u2t52qOOn000sWk1mxG';
+const STRIPE_PUBLISHABLE_KEY = 'pk_live_51T9TTiCoDWOwozcwQQi3o2yhjMXQBgvpnFjoueuPSUiCPmuwEXJzSIaGBLfv8WJUrm93DjXxyDdk4kvPRQUpJVkz00TTDrZNeO';
 
 // ====== AUTH STATE ======
 let kbUser = null; // { userId, email, plan, token }
 
-function getAuthToken(){ return kbUser?.token || localStorage.getItem('kb_token') || null; }
+function getAuthToken(){ return kbUser?.token || localStorage.getItem('kb_token') || sessionStorage.getItem('kb_token') || null; }
 function getApiKey(){ return null; } // No longer used - all AI goes through backend
+
+// Keep me logged in helper
+function rememberMe(){ return localStorage.getItem('kb_rememberMe') === 'true'; }
 
 function promptApiKey(onSuccess){
   const old=document.getElementById('apiKeyModal');if(old)old.remove();
@@ -3810,6 +3893,7 @@ if(localStorage.getItem('kb_onboardDone')==='true'){
     isFasting=true;
     document.getElementById('fastStartBtn').disabled=true;
     document.getElementById('fastStopBtn').disabled=false;
+    const efb=document.getElementById('editFastTimeBtn');if(efb)efb.style.display='block';
     document.getElementById('fastStatus').className='fast-status fasting';
     document.getElementById('fastStatus').textContent='🔥 Fasting';
     fastInterval=setInterval(updateFastTimer,1000);
@@ -3818,10 +3902,10 @@ if(localStorage.getItem('kb_onboardDone')==='true'){
   }
 }
 
-// Show API key setup prompt if no key saved yet (after a short delay)
+// Auth prompt if not signed in (after short delay)
 setTimeout(()=>{
-  if(!getApiKey()&&localStorage.getItem('kb_onboardDone')==='true'){
-    promptApiKey();
+  if(!kbUser && localStorage.getItem('kb_onboardDone')==='true' && !localStorage.getItem('kb_token')){
+    // Don't auto-prompt, let user explore first
   }
 },1500);
 
@@ -3901,8 +3985,15 @@ async function submitAuth(){
 
     // Login success
     kbUser = { userId: data.userId, email: data.email, plan: data.plan, token: data.token };
-    localStorage.setItem('kb_token', data.token);
-    localStorage.setItem('kb_user', JSON.stringify({ userId: data.userId, email: data.email, plan: data.plan }));
+    const keepLogged = document.getElementById('keepMeLoggedIn')?.checked !== false;
+    localStorage.setItem('kb_rememberMe', keepLogged ? 'true' : 'false');
+    if(keepLogged){
+      localStorage.setItem('kb_token', data.token);
+      localStorage.setItem('kb_user', JSON.stringify({ userId: data.userId, email: data.email, plan: data.plan }));
+    } else {
+      sessionStorage.setItem('kb_token', data.token);
+      sessionStorage.setItem('kb_user', JSON.stringify({ userId: data.userId, email: data.email, plan: data.plan }));
+    }
     closeAuthModal();
     updateAuthUI();
     showToast('👋 Welcome back, '+data.email.split('@')[0]+'!');
@@ -3957,6 +4048,169 @@ async function manageSubscription(){
   }catch(err){ showToast('❌ '+err.message); }
 }
 
+
+// ====== AI MEAL FAVORITES ======
+let aiMealFavorites = JSON.parse(localStorage.getItem('kb_aiMealFavs') || '[]');
+
+function saveAIMealFavorite(btn){
+  // Get meal data from parent snack-item
+  const item = btn.closest('.snack-item') || btn.parentElement.parentElement.parentElement;
+  const name = item.querySelector('.snack-name')?.textContent || 'AI Meal';
+  const desc = item.querySelector('.snack-desc')?.textContent || '';
+  const macro = item.querySelector('.snack-macro')?.textContent || '';
+  const fav = { id: Date.now(), name, desc, macro, savedAt: new Date().toLocaleDateString() };
+  aiMealFavorites.unshift(fav);
+  if(aiMealFavorites.length > 50) aiMealFavorites = aiMealFavorites.slice(0,50);
+  localStorage.setItem('kb_aiMealFavs', JSON.stringify(aiMealFavorites));
+  showToast('⭐ Saved to favorites!');
+  btn.textContent = '✅ Saved!';
+  btn.disabled = true;
+}
+
+function addAIMealToTracker(btn){
+  const item = btn.closest('.snack-item') || btn.parentElement.parentElement.parentElement;
+  const name = item.querySelector('.snack-name')?.textContent || 'AI Meal';
+  const macro = item.querySelector('.snack-macro')?.textContent || '';
+  // Try to parse macros
+  let cal = 300, fat = 20, protein = 25, carbs = 5;
+  const carbMatch = macro.match(/(\d+)g?\s*(?:net\s*)?carbs/i);
+  const fatMatch = macro.match(/(\d+)g?\s*fat/i);
+  const protMatch = macro.match(/(\d+)g?\s*protein/i);
+  const calMatch = macro.match(/(\d+)\s*(?:kcal|cal)/i);
+  if(carbMatch) carbs = parseInt(carbMatch[1]);
+  if(fatMatch) fat = parseInt(fatMatch[1]);
+  if(protMatch) protein = parseInt(protMatch[1]);
+  if(calMatch) cal = parseInt(calMatch[1]);
+  else cal = Math.round(fat*9 + protein*4 + carbs*4);
+
+  const entry = {
+    id: Date.now(), name, amount: '1 serving',
+    cal, fat, protein, carbs,
+    time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
+  };
+  foodLog.push(entry);
+  saveFoodLog();
+  updateCalBar();
+  renderFoodLog();
+  showToast('📊 Added to tracker!');
+  btn.textContent = '✅ Tracked!';
+  btn.disabled = true;
+}
+
+function addMealToShop_btn(btn){
+  const item = btn.closest('.snack-item') || btn.parentElement.parentElement.parentElement;
+  const name = item.querySelector('.snack-name')?.textContent || 'AI Meal';
+  const ingSpans = item.querySelectorAll('span[style*="rgba(0,230,118"]');
+  const ingredients = Array.from(ingSpans).map(s => s.textContent.trim()).filter(Boolean);
+  if(ingredients.length) addMealToShop(ingredients, name);
+  else showToast('No ingredients to add');
+}
+
+// ====== SETTINGS ======
+function showSettings(){
+  const modal = document.createElement('div');
+  modal.id = 'settingsModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;overflow-y:auto;padding:20px';
+  const isPro = kbUser?.plan === 'pro';
+  const isLoggedIn = !!kbUser;
+  modal.innerHTML = `<div style="max-width:480px;margin:0 auto">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+      <button onclick="document.getElementById('settingsModal').remove()" style="background:rgba(255,255,255,0.07);border:none;border-radius:10px;padding:8px 12px;color:#fff;font-size:16px;cursor:pointer">←</button>
+      <h2 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin:0">Settings</h2>
+    </div>
+
+    <!-- Account Section -->
+    <div style="background:#1a2332;border-radius:16px;padding:16px;margin-bottom:16px">
+      <div style="font-size:11px;color:#5a7a9a;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Account</div>
+      ${isLoggedIn ? `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#00e676,#00c853);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#000">${kbUser.email[0].toUpperCase()}</div>
+          <div>
+            <div style="font-weight:700;font-size:14px">${kbUser.email}</div>
+            <div style="font-size:12px;color:${isPro?'#00e676':'#5a7a9a'}">${isPro?'⚡ KetoBuddy Pro':'Free Plan'}</div>
+          </div>
+        </div>
+        ${!isPro ? `<button onclick="document.getElementById('settingsModal').remove();showUpgradeModal()" style="width:100%;padding:12px;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;margin-bottom:8px">🚀 Upgrade to Pro — $4.99/mo</button>` : `<button onclick="document.getElementById('settingsModal').remove();manageSubscription()" style="width:100%;padding:12px;background:rgba(0,230,118,0.1);color:#00e676;border:1px solid rgba(0,230,118,0.3);border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;margin-bottom:8px">⚡ Manage Subscription</button>`}
+        <button onclick="document.getElementById('settingsModal').remove();signOut()" style="width:100%;padding:12px;background:rgba(255,77,109,0.1);color:#ff4d6d;border:1px solid rgba(255,77,109,0.2);border-radius:12px;font-weight:700;font-size:14px;cursor:pointer">Sign Out</button>
+      ` : `
+        <button onclick="document.getElementById('settingsModal').remove();showAuthModal()" style="width:100%;padding:12px;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer">🔑 Sign In / Create Account</button>
+      `}
+    </div>
+
+    <!-- AI Meal Favorites -->
+    <div style="background:#1a2332;border-radius:16px;padding:16px;margin-bottom:16px">
+      <div style="font-size:11px;color:#5a7a9a;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">⭐ Saved AI Meals (${aiMealFavorites.length})</div>
+      ${aiMealFavorites.length === 0 ? '<div style="color:#5a7a9a;font-size:13px">No saved meals yet. Generate meals in AI Chef and tap ⭐ Save.</div>' :
+        aiMealFavorites.slice(0,10).map(f => `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700">${f.name}</div>
+            <div style="font-size:11px;color:#5a7a9a">${f.macro||f.desc||''} · ${f.savedAt}</div>
+          </div>
+          <button onclick="addFavToTracker(${f.id})" style="padding:6px 10px;background:rgba(76,201,240,0.1);border:1px solid rgba(76,201,240,0.3);border-radius:8px;color:var(--blue);font-size:11px;font-weight:700;cursor:pointer">📊 Track</button>
+          <button onclick="deleteFavMeal(${f.id})" style="padding:6px 8px;background:rgba(255,77,109,0.1);border:1px solid rgba(255,77,109,0.2);border-radius:8px;color:#ff4d6d;font-size:11px;cursor:pointer">🗑</button>
+        </div>`).join('')
+      }
+    </div>
+
+    <!-- Preferences -->
+    <div style="background:#1a2332;border-radius:16px;padding:16px;margin-bottom:16px">
+      <div style="font-size:11px;color:#5a7a9a;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Preferences</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+        <div>
+          <div style="font-size:14px;font-weight:600">Weight Unit</div>
+          <div style="font-size:12px;color:#5a7a9a">Pounds or kilograms</div>
+        </div>
+        <select id="settingsWeightUnit" onchange="localStorage.setItem('kb_weightUnit',this.value)" style="background:#0f1923;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px 10px;color:#fff;font-size:13px">
+          <option value="lbs" ${(localStorage.getItem('kb_weightUnit')||'lbs')==='lbs'?'selected':''}>lbs</option>
+          <option value="kg" ${localStorage.getItem('kb_weightUnit')==='kg'?'selected':''}>kg</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0">
+        <div>
+          <div style="font-size:14px;font-weight:600">Stay Logged In</div>
+          <div style="font-size:12px;color:#5a7a9a">Remember me between sessions</div>
+        </div>
+        <input type="checkbox" ${localStorage.getItem('kb_rememberMe')!=='false'?'checked':''} onchange="localStorage.setItem('kb_rememberMe',this.checked?'true':'false')" style="width:20px;height:20px;accent-color:#00e676;cursor:pointer"/>
+      </div>
+    </div>
+
+    <!-- App Info -->
+    <div style="background:#1a2332;border-radius:16px;padding:16px;margin-bottom:32px">
+      <div style="font-size:11px;color:#5a7a9a;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">App Info</div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)"><span style="font-size:13px;color:#8ab0c8">Version</span><span style="font-size:13px">5.1.0</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)"><span style="font-size:13px;color:#8ab0c8">Website</span><a href="https://ketobuddytracker.netlify.app" style="font-size:13px;color:#00e676">ketobuddytracker.netlify.app</a></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0"><span style="font-size:13px;color:#8ab0c8">Support</span><a href="mailto:support@ketobuddy.app" style="font-size:13px;color:#00e676">support@ketobuddy.app</a></div>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function addFavToTracker(id){
+  const fav = aiMealFavorites.find(f => f.id === id);
+  if(!fav) return;
+  const entry = {
+    id: Date.now(), name: fav.name, amount: '1 serving',
+    cal: 300, fat: 20, protein: 25, carbs: 5,
+    time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
+  };
+  foodLog.push(entry);
+  saveFoodLog();
+  updateCalBar();
+  renderFoodLog();
+  showToast('📊 Added to tracker!');
+}
+
+function deleteFavMeal(id){
+  aiMealFavorites = aiMealFavorites.filter(f => f.id !== id);
+  localStorage.setItem('kb_aiMealFavs', JSON.stringify(aiMealFavorites));
+  showSettings();
+  // Re-open settings
+  const old = document.getElementById('settingsModal');
+  if(old) old.remove();
+  showSettings();
+}
+
 function signOut(){
   kbUser = null;
   localStorage.removeItem('kb_token');
@@ -4004,8 +4258,8 @@ function updateAuthUI(){
 
 // Restore session on load
 (function restoreSession(){
-  const token = localStorage.getItem('kb_token');
-  const user = localStorage.getItem('kb_user');
+  const token = localStorage.getItem('kb_token') || sessionStorage.getItem('kb_token');
+  const user = localStorage.getItem('kb_user') || sessionStorage.getItem('kb_user');
   if(token && user){
     try{
       const u = JSON.parse(user);
@@ -4061,6 +4315,10 @@ function updateAuthUI(){
     <input id="authPassword" type="password" placeholder="Password"
       style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:13px;color:#fff;font-size:14px;margin-bottom:16px;outline:none;font-family:'DM Sans',sans-serif"/>
     <div id="authError" style="display:none;background:rgba(255,77,109,0.15);border:1px solid rgba(255,77,109,0.3);border-radius:10px;padding:10px 14px;font-size:13px;color:#ff4d6d;margin-bottom:14px"></div>
+    <label style="display:flex;align-items:center;gap:8px;margin-bottom:14px;cursor:pointer">
+      <input type="checkbox" id="keepMeLoggedIn" checked style="width:16px;height:16px;accent-color:#00e676"/>
+      <span style="font-size:13px;color:#8ab0c8">Keep me logged in</span>
+    </label>
     <button onclick="submitAuth()" id="authSubmitBtn"
       style="width:100%;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:12px;padding:14px;font-weight:800;font-size:15px;cursor:pointer;margin-bottom:10px;font-family:'DM Sans',sans-serif">
       Sign In
