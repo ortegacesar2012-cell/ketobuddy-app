@@ -3968,8 +3968,17 @@ async function callAI(prompt, maxTokens=1500){
     throw new Error(err.message||'AI error '+res.status);
   }
   const data=await res.json();
+  // Check for API-level errors
+  if(data.error){
+    throw new Error(data.error.message || data.error || 'AI error');
+  }
+  if(!data.content || !Array.isArray(data.content)){
+    console.error('Unexpected AI response:', JSON.stringify(data));
+    throw new Error('Unexpected response from AI. Please try again.');
+  }
   // Increment usage counter (not for pro)
   if(getPlan() !== 'pro') incrementAIUsage();
+  updateAIUsageBanner();
   return data.content.map(c=>c.text||'').join('');
 }
 
