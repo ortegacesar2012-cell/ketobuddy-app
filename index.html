@@ -672,6 +672,10 @@ body::before{content:'';position:fixed;top:-200px;left:-200px;width:600px;height
   <!-- AI CHEF -->
   <div id="sec-snack" class="section">
     <div class="sec-head"><h2>AI Chef 🤖</h2><p>Get personalised keto meals & snacks instantly</p></div>
+    <div id="aiUsageBanner" style="background:rgba(199,125,255,0.08);border:1px solid rgba(199,125,255,0.2);border-radius:12px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:13px;color:#c0d0e0" id="aiUsageText">🤖 Loading...</span>
+      <button onclick="showUpgradeModal()" id="aiUpgradeBtn" style="display:none;padding:6px 12px;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer">Upgrade Now</button>
+    </div>
 
     <!-- Mode toggle -->
     <div class="inner-tabs" style="margin-bottom:14px">
@@ -2084,6 +2088,39 @@ function toggleSnackTag(el){el.classList.toggle('active');}
 function selectCarbLimit(el,val){document.querySelectorAll('[id^=carb-]').forEach(b=>b.classList.remove('active'));el.classList.add('active');selectedCarbLimit=val;}
 function selectServings(el,val){document.querySelectorAll('[id^=srv-]').forEach(b=>b.classList.remove('active'));el.classList.add('active');selectedServings=val;}
 
+function updateAIUsageBanner(){
+  const banner = document.getElementById('aiUsageBanner');
+  const text = document.getElementById('aiUsageText');
+  const upgradeBtn = document.getElementById('aiUpgradeBtn');
+  if(!banner) return;
+  const plan = getPlan();
+  const remaining = getRemainingAI();
+
+  if(plan === 'pro'){
+    text.innerHTML = '⚡ <strong style="color:#00e676">Pro</strong> — Unlimited AI searches';
+    if(upgradeBtn) upgradeBtn.style.display = 'none';
+  } else if(plan === 'basic'){
+    if(remaining === 0){
+      text.innerHTML = '🚫 <strong style="color:#ff4d6d">0 searches left this month</strong>';
+      if(upgradeBtn){ upgradeBtn.textContent = 'Upgrade to Pro'; upgradeBtn.style.display = 'block'; }
+    } else {
+      text.innerHTML = '🤖 <strong style="color:#4cc9f0">' + remaining + ' / ' + AI_BASIC_MONTHLY + '</strong> searches this month';
+      if(upgradeBtn) upgradeBtn.style.display = remaining <= 10 ? 'block' : 'none';
+      if(upgradeBtn) upgradeBtn.textContent = 'Go Pro $4.99';
+    }
+  } else {
+    // free
+    if(remaining === 0){
+      text.innerHTML = '🚫 <strong style="color:#ff4d6d">Free trial used up</strong> — upgrade to continue';
+      if(upgradeBtn){ upgradeBtn.textContent = 'Upgrade'; upgradeBtn.style.display = 'block'; }
+    } else {
+      text.innerHTML = '🎁 <strong style="color:#ffc107">' + remaining + ' of ' + AI_FREE_LIMIT + '</strong> free trial searches left';
+      if(upgradeBtn) upgradeBtn.style.display = remaining <= 3 ? 'block' : 'none';
+      if(upgradeBtn) upgradeBtn.textContent = 'Upgrade $1.99';
+    }
+  }
+}
+
 function setChefMode(mode, btn){
   chefMode=mode;
   document.getElementById('chef-meal-opts').style.display=mode==='meal'?'block':'none';
@@ -2097,6 +2134,7 @@ function setChefMode(mode, btn){
 }
 
 async function generateChef(){
+  updateAIUsageBanner();
   const ingredients=document.getElementById('snackIngredients').value.trim();
   const tags=[...document.querySelectorAll('.snack-tag-btn.active')].map(b=>b.textContent.trim()).join(', ');
   const btn=document.getElementById('snackBtn'),result=document.getElementById('snackResult');
@@ -3500,33 +3538,41 @@ function calAddFoodItem(foodIdx){
 }
 
 function calRenderJournalView(){
+function calRenderJournalView(){
   const dateStr = window._calEditDate;
   const entry = journalEntries.find(e=>new Date(e.date).toDateString()===dateStr);
   const viewEl = document.getElementById('calJournalView');
   const editEl = document.getElementById('calJournalEdit');
   editEl.style.display = 'none';
   document.getElementById('calJournalEditBtn').textContent = '✏️ Edit';
-
   if(!entry){
-    viewEl.innerHTML = '<div style="font-size:12px;color:var(--muted)">No journal entry for this day. Tap ✏️ Edit to add one.</div>';
+    viewEl.innerHTML = '<div style="font-size:13px;color:var(--muted)">No journal entry for this day.</div>';
     return;
   }
-  viewEl.innerHTML = `
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
-      <span style="font-size:22px">${entry.moodEmoji||'📓'}</span>
-      <div>
-        <div style="font-size:13px;font-weight:700">${entry.moodLabel||''} ${entry.energy?'· Energy '+entry.energy+'/10':''}</div>
-        ${entry.weight?`<div style="font-size:12px;color:var(--muted)">⚖️ ${entry.weight}${entry.weightUnit||'lbs'}</div>`:''}
-      </div>
-    </div>
-    ${entry.symptoms?.length?`<div style="font-size:12px;color:var(--muted);margin-bottom:6px">${entry.symptoms.join(' · ')}</div>`:''}
-    ${entry.title?`<div style="font-size:13px;font-weight:700;margin-bottom:4px">${entry.title}</div>`:''}
-    ${entry.body?`<div style="font-size:12px;color:#c0d0e0;line-height:1.6">${entry.body}</div>`:''}`;
+  const allPhotos = (entry.photos && entry.photos.length) ? entry.photos : (entry.photo ? [entry.photo] : []);
+  let html = "";
+  html += '<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">';
+  html += '<span style="font-size:28px">' + (entry.emoji||entry.moodEmoji||'📓') + '</span>';
+  html += '<div><div style="font-size:14px;font-weight:700">' + (entry.mood||entry.moodLabel||'No mood') + (entry.energy ? ' · Energy ' + entry.energy + '/10' : '') + '</div>';
+  if(entry.weightKg) html += '<div style="font-size:12px;color:var(--muted)">⚖️ ' + (entry.weightKg*2.20462).toFixed(1) + ' lbs</div>';
+  html += '</div></div>';
+  if(entry.symptoms && entry.symptoms.length) html += '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">' + entry.symptoms.join(' · ') + '</div>';
+  if(entry.title && entry.title !== entry.date+' Entry') html += '<div style="font-size:13px;font-weight:700;margin-bottom:6px">' + entry.title + '</div>';
+  if(entry.body) html += '<div style="font-size:13px;color:#c0d0e0;line-height:1.7;margin-bottom:8px">' + entry.body + '</div>';
+  if(allPhotos.length){
+    html += '<div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">📸 Photos</div>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+    allPhotos.forEach(function(p,pi){
+      var w = allPhotos.length===1 ? '100%' : 'calc(50% - 3px)';
+      var h = allPhotos.length===1 ? '160px' : '100px';
+      html += '<img src="' + p + '" style="width:' + w + ';height:' + h + ';object-fit:cover;border-radius:10px;cursor:pointer" onclick="viewPhotoFull(\'' + entry.id + '\',' + pi + ')"/>';
+    });
+    html += '</div>';
+  }
+  viewEl.innerHTML = html;
 }
 
 let _calEditMoodEmoji='😐', _calEditMoodLabel='Okay';
-function calToggleJournalEdit(){
-  const editEl = document.getElementById('calJournalEdit');
   const btn = document.getElementById('calJournalEditBtn');
   const isOpen = editEl.style.display !== 'none';
   if(isOpen){ editEl.style.display='none'; btn.textContent='✏️ Edit'; return; }
@@ -3667,11 +3713,46 @@ function drawWeightGraph(){
 }
 
 // ====== PERSISTENCE (localStorage) ======
+function compressJournalEntries(entries){
+  // Save entries WITHOUT photos (photos stored separately to avoid 5MB limit)
+  return entries.map(e => {
+    const {photo, photos, ...rest} = e;
+    return rest;
+  });
+}
+
+function saveJournalPhotos(entries){
+  // Save photos separately, keyed by entry id
+  const photoMap = {};
+  entries.forEach(e => {
+    if(e.photo) photoMap[e.id + '_main'] = e.photo;
+    if(e.photos && e.photos.length) photoMap[e.id + '_multi'] = e.photos;
+  });
+  try {
+    localStorage.setItem('kb_journalPhotos', JSON.stringify(photoMap));
+  } catch(err) {
+    // Photos too large - save without them
+    console.warn('Photos too large for localStorage, saving without');
+  }
+}
+
+function loadJournalPhotos(entries){
+  try {
+    const photoMap = JSON.parse(localStorage.getItem('kb_journalPhotos') || '{}');
+    return entries.map(e => ({
+      ...e,
+      photo: photoMap[e.id + '_main'] || e.photo || null,
+      photos: photoMap[e.id + '_multi'] || e.photos || []
+    }));
+  } catch(err) { return entries; }
+}
+
 function saveAll(){
   try{
     localStorage.setItem('kb_obData',JSON.stringify(obData));
     localStorage.setItem('kb_macroGoals',JSON.stringify(macroGoals));
-    localStorage.setItem('kb_journalEntries',JSON.stringify(journalEntries));
+    localStorage.setItem('kb_journalEntries',JSON.stringify(compressJournalEntries(journalEntries)));
+    saveJournalPhotos(journalEntries);
     localStorage.setItem('kb_weightLog',JSON.stringify(weightLog));
     localStorage.setItem('kb_foodLog',JSON.stringify(foodLogEntries));
     localStorage.setItem('kb_shopItems',JSON.stringify(shopItems));
@@ -3690,7 +3771,7 @@ function loadAll(){
     const mg=localStorage.getItem('kb_macroGoals');
     if(mg) macroGoals={...macroGoals,...JSON.parse(mg)};
     const je=localStorage.getItem('kb_journalEntries');
-    if(je) journalEntries=JSON.parse(je);
+    if(je){ journalEntries=JSON.parse(je); journalEntries=loadJournalPhotos(journalEntries); }
     const wl=localStorage.getItem('kb_weightLog');
     if(wl) weightLog=JSON.parse(wl);
     const fl=localStorage.getItem('kb_foodLog');
@@ -3802,11 +3883,63 @@ function saveApiKey(){
 }
 
 // ====== AI CALLER — central function for all API calls ======
+// ===== PRICING TIERS =====
+// Free: 10 searches total (lifetime trial)
+// Basic $1.99/mo: 100 searches/month  
+// Pro $4.99/mo: unlimited + PDF export + all future features
+const AI_FREE_LIMIT = 10;
+const AI_BASIC_MONTHLY = 100;
+
+function getPlan(){ return kbUser?.plan || 'free'; }
+function isBasic(){ return getPlan() === 'basic'; }
+function isPro(){ return getPlan() === 'pro'; }
+
+// Usage tracking - resets monthly for paid plans
+function getUsageKey(){
+  const now = new Date();
+  return 'kb_aiUsage_' + now.getFullYear() + '_' + now.getMonth();
+}
+function getAIUsage(){
+  const plan = getPlan();
+  if(plan === 'free') return parseInt(localStorage.getItem('kb_aiUsage')||'0');
+  return parseInt(localStorage.getItem(getUsageKey())||'0');
+}
+function incrementAIUsage(){
+  const plan = getPlan();
+  if(plan === 'free'){
+    localStorage.setItem('kb_aiUsage', getAIUsage()+1);
+  } else {
+    localStorage.setItem(getUsageKey(), getAIUsage()+1);
+  }
+}
+function getRemainingAI(){
+  const plan = getPlan();
+  if(plan === 'pro') return Infinity;
+  if(plan === 'basic') return Math.max(0, AI_BASIC_MONTHLY - getAIUsage());
+  return Math.max(0, AI_FREE_LIMIT - getAIUsage());
+}
+function getAILimit(){
+  const plan = getPlan();
+  if(plan === 'pro') return Infinity;
+  if(plan === 'basic') return AI_BASIC_MONTHLY;
+  return AI_FREE_LIMIT;
+}
+
 async function callAI(prompt, maxTokens=1500){
   const token = getAuthToken();
   if(!token){
     showAuthModal();
     throw new Error('Please sign in to use AI features');
+  }
+  // Check usage limits by plan
+  const plan = getPlan();
+  if(plan !== 'pro'){
+    const remaining = getRemainingAI();
+    if(remaining <= 0){
+      showUpgradeModal();
+      if(plan === 'free') throw new Error('You\'ve used all ' + AI_FREE_LIMIT + ' free AI searches. Upgrade to keep going!');
+      if(plan === 'basic') throw new Error('You\'ve used all ' + AI_BASIC_MONTHLY + ' searches this month. Upgrade to Pro for unlimited!');
+    }
   }
   const res = await fetch(BACKEND_URL+'/ai',{
     method:'POST',
@@ -3835,6 +3968,8 @@ async function callAI(prompt, maxTokens=1500){
     throw new Error(err.message||'AI error '+res.status);
   }
   const data=await res.json();
+  // Increment usage counter (not for pro)
+  if(getPlan() !== 'pro') incrementAIUsage();
   return data.content.map(c=>c.text||'').join('');
 }
 
@@ -3937,8 +4072,7 @@ function showAuthModal(){
 }
 function closeAuthModal(){ document.getElementById('authModal').style.display = 'none'; }
 
-function showUpgradeModal(){ document.getElementById('upgradeModal').style.display = 'flex'; }
-function closeUpgradeModal(){ document.getElementById('upgradeModal').style.display = 'none'; }
+// showUpgradeModal and closeUpgradeModal defined in startCheckout block
 
 function switchAuthTab(tab){
   _authTab = tab;
@@ -4011,27 +4145,53 @@ async function submitAuth(){
   btn.disabled = false;
 }
 
+let _selectedPlan = 'pro'; // default to pro
+
+function selectPlan(plan){
+  _selectedPlan = plan;
+  // Reset both cards
+  ['basic','pro'].forEach(p => {
+    const card = document.getElementById('planCard_' + p);
+    const check = document.getElementById('planCheck_' + p);
+    if(card) card.style.opacity = p === plan ? '1' : '0.6';
+    if(check) check.style.display = p === plan ? 'flex' : 'none';
+  });
+  const btn = document.getElementById('checkoutBtn');
+  if(btn){
+    if(plan === 'basic') btn.innerHTML = '🚀 Get Basic — $1.99/mo';
+    else btn.innerHTML = '⚡ Get Pro — $4.99/mo';
+    btn.style.background = plan === 'basic'
+      ? 'linear-gradient(135deg,#4cc9f0,#0096c7)'
+      : 'linear-gradient(135deg,#00e676,#00c853)';
+  }
+}
+
+function showUpgradeModal(){
+  document.getElementById('upgradeModal').style.display = 'flex';
+  // Default select pro
+  setTimeout(() => selectPlan('pro'), 50);
+}
+
+function closeUpgradeModal(){ document.getElementById('upgradeModal').style.display = 'none'; }
+
 async function startCheckout(){
   const token = getAuthToken();
   if(!token){ closeUpgradeModal(); showAuthModal(); return; }
   const btn = document.getElementById('checkoutBtn');
+  const planLabel = _selectedPlan === 'basic' ? '$1.99/mo' : '$4.99/mo';
   btn.textContent = 'Loading...'; btn.disabled = true;
   try{
-    console.log('Calling stripe with token:', token ? 'present' : 'missing');
     const res = await fetch(BACKEND_URL+'/stripe', {
       method: 'POST',
       headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body: JSON.stringify({ action: 'create-checkout' })
+      body: JSON.stringify({ action: 'create-checkout', plan: _selectedPlan })
     });
-    console.log('Stripe response status:', res.status);
     const data = await res.json();
-    console.log('Stripe response data:', JSON.stringify(data));
     if(data.url) window.location.href = data.url;
-    else throw new Error(data.error || data.message || 'Checkout failed: '+JSON.stringify(data));
+    else throw new Error(data.error || data.message || 'Checkout failed');
   }catch(err){
-    console.error('Checkout error:', err);
     alert('Checkout error: '+err.message);
-    btn.textContent = '🚀 Upgrade to Pro — $4.99/mo'; btn.disabled = false;
+    btn.textContent = '🚀 Get Started'; btn.disabled = false;
   }
 }
 
@@ -4131,7 +4291,7 @@ function showSettings(){
             <div style="font-size:12px;color:${isPro?'#00e676':'#5a7a9a'}">${isPro?'⚡ KetoBuddy Pro':'Free Plan'}</div>
           </div>
         </div>
-        ${!isPro ? `<button onclick="document.getElementById('settingsModal').remove();showUpgradeModal()" style="width:100%;padding:12px;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;margin-bottom:8px">🚀 Upgrade to Pro — $4.99/mo</button>` : `<button onclick="document.getElementById('settingsModal').remove();manageSubscription()" style="width:100%;padding:12px;background:rgba(0,230,118,0.1);color:#00e676;border:1px solid rgba(0,230,118,0.3);border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;margin-bottom:8px">⚡ Manage Subscription</button>`}
+        ${!isPro ? `<button onclick="document.getElementById('settingsModal').remove();showUpgradeModal()" style="width:100%;padding:12px;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;margin-bottom:8px">🚀 Upgrade — from $1.99/mo</button>` : `<button onclick="document.getElementById('settingsModal').remove();manageSubscription()" style="width:100%;padding:12px;background:rgba(0,230,118,0.1);color:#00e676;border:1px solid rgba(0,230,118,0.3);border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;margin-bottom:8px">⚡ Manage Subscription</button>`}
         <button onclick="document.getElementById('settingsModal').remove();signOut()" style="width:100%;padding:12px;background:rgba(255,77,109,0.1);color:#ff4d6d;border:1px solid rgba(255,77,109,0.2);border-radius:12px;font-weight:700;font-size:14px;cursor:pointer">Sign Out</button>
       ` : `
         <button onclick="document.getElementById('settingsModal').remove();showAuthModal()" style="width:100%;padding:12px;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer">🔑 Sign In / Create Account</button>
@@ -4239,7 +4399,7 @@ function updateAuthUI(){
       authBtn.onclick = () => {
         const menu = document.createElement('div');
         menu.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:flex-end;justify-content:center';
-        const upgradeBtn = !isPro ? '<button id="menuUpgradeBtn" style="width:100%;padding:14px;background:#00e676;color:#000;font-weight:700;border:none;border-radius:10px;font-size:15px;margin-bottom:10px;cursor:pointer">🚀 Upgrade to Pro — $4.99/mo</button>' : '<button id="menuManageBtn" style="width:100%;padding:14px;background:#00e676;color:#000;font-weight:700;border:none;border-radius:10px;font-size:15px;margin-bottom:10px;cursor:pointer">⚡ Manage Subscription</button>';
+        const upgradeBtn = !isPro ? '<button id="menuUpgradeBtn" style="width:100%;padding:14px;background:#00e676;color:#000;font-weight:700;border:none;border-radius:10px;font-size:15px;margin-bottom:10px;cursor:pointer">🚀 Upgrade — from $1.99/mo</button>' : '<button id="menuManageBtn" style="width:100%;padding:14px;background:#00e676;color:#000;font-weight:700;border:none;border-radius:10px;font-size:15px;margin-bottom:10px;cursor:pointer">⚡ Manage Subscription</button>';
         menu.innerHTML = '<div style="background:#1a2332;border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:20px">'+upgradeBtn+'<button id="menuSignOutBtn" style="width:100%;padding:14px;background:rgba(255,255,255,0.07);color:#ff4444;font-weight:700;border:none;border-radius:10px;font-size:15px;margin-bottom:10px;cursor:pointer">Sign Out</button><button id="menuCancelBtn" style="width:100%;padding:14px;background:rgba(255,255,255,0.05);color:#aaa;font-weight:700;border:none;border-radius:10px;font-size:15px;cursor:pointer">Cancel</button></div>';
         document.body.appendChild(menu);
         const close = () => menu.remove();
@@ -4286,7 +4446,7 @@ function updateAuthUI(){
   // Check for payment success
   const params = new URLSearchParams(window.location.search);
   if(params.get('payment')==='success'){
-    showToast('🎉 Welcome to KetoBuddy Pro!');
+    showToast('🎉 Welcome to KetoBuddy! Your plan is now active!');
     // Re-verify to get updated plan
     setTimeout(()=>{
       if(getAuthToken()) fetch(BACKEND_URL+'/auth',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+getAuthToken()},body:JSON.stringify({action:'verify'})})
@@ -4333,33 +4493,66 @@ function updateAuthUI(){
 </div>
 
 <!-- ====== UPGRADE MODAL ====== -->
-<div id="upgradeModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;padding:20px">
-  <div style="background:#0f1923;border-radius:24px;padding:28px 24px;width:100%;max-width:400px;border:1px solid rgba(0,230,118,0.2)">
+<div id="upgradeModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;align-items:center;justify-content:center;padding:16px;overflow-y:auto">
+  <div style="background:#0d1520;border-radius:24px;padding:24px 20px;width:100%;max-width:420px;border:1px solid rgba(255,255,255,0.08)">
+
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-size:40px;margin-bottom:8px">⚡</div>
-      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#00e676">KetoBuddy Pro</div>
-      <div style="font-size:13px;color:#5a7a9a;margin-top:4px">Unlock all AI features</div>
+      <div style="font-size:36px;margin-bottom:6px">🥑</div>
+      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800">Choose Your Plan</div>
+      <div style="font-size:13px;color:#5a7a9a;margin-top:4px">Cancel anytime · No hidden fees</div>
     </div>
-    <div style="background:rgba(0,230,118,0.05);border:1px solid rgba(0,230,118,0.15);border-radius:16px;padding:16px;margin-bottom:20px">
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="color:#00e676;font-size:18px">🤖</span> AI food search & meal suggestions</div>
-        <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="color:#00e676;font-size:18px">📸</span> Barcode scanner</div>
-        <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="color:#00e676;font-size:18px">👨‍🍳</span> AI Chef meal planner</div>
-        <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="color:#00e676;font-size:18px">📊</span> Advanced macro analysis</div>
+
+    <!-- BASIC PLAN -->
+    <div id="planCard_basic" onclick="selectPlan('basic')" style="border:2px solid rgba(76,201,240,0.4);border-radius:16px;padding:16px;margin-bottom:10px;cursor:pointer;background:rgba(76,201,240,0.05);position:relative">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#4cc9f0">Basic</div>
+          <div style="font-size:12px;color:#5a7a9a;margin-top:2px">Great for getting started</div>
+        </div>
+        <div style="text-align:right">
+          <span style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#4cc9f0">$1.99</span>
+          <span style="font-size:11px;color:#5a7a9a">/mo</span>
+        </div>
       </div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#c0d0e0">
+        <div>🤖 100 AI searches per month</div>
+        <div>🍽️ AI Chef meals & snacks</div>
+        <div>📊 Full macro tracker</div>
+        <div>⏱️ Fasting timer</div>
+      </div>
+      <div id="planCheck_basic" style="display:none;position:absolute;top:12px;right:12px;width:22px;height:22px;background:#4cc9f0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px">✓</div>
     </div>
-    <div style="text-align:center;margin-bottom:16px">
-      <span style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:#00e676">$4.99</span>
-      <span style="color:#5a7a9a;font-size:14px">/month</span>
-      <div style="font-size:12px;color:#5a7a9a;margin-top:2px">Cancel anytime</div>
+
+    <!-- PRO PLAN -->
+    <div id="planCard_pro" onclick="selectPlan('pro')" style="border:2px solid rgba(0,230,118,0.5);border-radius:16px;padding:16px;margin-bottom:16px;cursor:pointer;background:rgba(0,230,118,0.06);position:relative">
+      <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#00e676,#00c853);color:#000;font-size:11px;font-weight:800;padding:3px 12px;border-radius:20px;white-space:nowrap">⚡ MOST POPULAR</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#00e676">Pro</div>
+          <div style="font-size:12px;color:#5a7a9a;margin-top:2px">For serious keto warriors</div>
+        </div>
+        <div style="text-align:right">
+          <span style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#00e676">$4.99</span>
+          <span style="font-size:11px;color:#5a7a9a">/mo</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#c0d0e0">
+        <div>🚀 <strong>Unlimited</strong> AI searches</div>
+        <div>🍽️ AI Chef meals & snacks</div>
+        <div>📄 Export data as PDF</div>
+        <div>📊 Advanced stats & graphs</div>
+        <div>⭐ All future Pro features first</div>
+      </div>
+      <div id="planCheck_pro" style="display:none;position:absolute;top:12px;right:12px;width:22px;height:22px;background:#00e676;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px">✓</div>
     </div>
+
     <button onclick="startCheckout()" id="checkoutBtn"
-      style="width:100%;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:12px;padding:14px;font-weight:800;font-size:15px;cursor:pointer;margin-bottom:10px;font-family:'DM Sans',sans-serif">
-      🚀 Upgrade to Pro — $4.99/mo
+      style="width:100%;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:14px;padding:15px;font-weight:800;font-size:16px;cursor:pointer;margin-bottom:10px;font-family:'Syne',sans-serif">
+      🚀 Get Started
     </button>
     <button onclick="closeUpgradeModal()"
-      style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;color:#5a7a9a;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">
-      Keep free plan
+      style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px;color:#5a7a9a;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">
+      Keep free plan (10 searches total)
     </button>
   </div>
 </div>
