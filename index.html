@@ -3389,7 +3389,13 @@ function renderCalendar(){
   for(let i=0;i<firstDay;i++) html+='<div></div>';
   for(let d=1;d<=daysInMonth;d++){
     const dateStr=new Date(calYear,calMonth,d).toDateString();
-    const entry=journalEntries.find(e=>new Date(e.date).toDateString()===dateStr);
+    const entry=journalEntries.find(e=>{
+      if(!e.date) return false;
+      try{
+        const ed=new Date(e.date); const cd=new Date(dateStr);
+        return ed.getFullYear()===cd.getFullYear()&&ed.getMonth()===cd.getMonth()&&ed.getDate()===cd.getDate();
+      }catch(e){return false;}
+    });
     const ketoDay=ketoCheckInDates.find(c=>c.date===dateStr&&c.keto);
     const isToday=today.getDate()===d&&today.getMonth()===calMonth&&today.getFullYear()===calYear;
     const isPast=new Date(calYear,calMonth,d)<today;
@@ -3538,9 +3544,20 @@ function calAddFoodItem(foodIdx){
 }
 
 function calRenderJournalView(){
-function calRenderJournalView(){
   const dateStr = window._calEditDate;
-  const entry = journalEntries.find(e=>new Date(e.date).toDateString()===dateStr);
+  // Match entry by date - handles multiple date formats
+  const entry = journalEntries.find(e=>{
+    if(!e.date) return false;
+    try {
+      const entryDate = new Date(e.date);
+      if(entryDate.toDateString() === dateStr) return true;
+      // Also check if dateStr matches the stored date string directly
+      const calDate = new Date(dateStr);
+      return entryDate.getFullYear()===calDate.getFullYear() &&
+             entryDate.getMonth()===calDate.getMonth() &&
+             entryDate.getDate()===calDate.getDate();
+    } catch(e){ return false; }
+  });
   const viewEl = document.getElementById('calJournalView');
   const editEl = document.getElementById('calJournalEdit');
   editEl.style.display = 'none';
@@ -3573,6 +3590,8 @@ function calRenderJournalView(){
 }
 
 let _calEditMoodEmoji='😐', _calEditMoodLabel='Okay';
+function calToggleJournalEdit(){
+  const editEl = document.getElementById('calJournalEdit');
   const btn = document.getElementById('calJournalEditBtn');
   const isOpen = editEl.style.display !== 'none';
   if(isOpen){ editEl.style.display='none'; btn.textContent='✏️ Edit'; return; }
