@@ -329,6 +329,59 @@ window.onload = () => {
   }
   // Your other init code...
 };
+  // ====== REFINED KETO MACRO CALCULATION (add this) ======
+function calculateKetoPlan(userData) {
+  const { sex, age, heightCm, weightKg, activityLevel, goal, ketoExperience } = userData;
+
+  // 1. BMR - Mifflin-St Jeor
+  let bmr = 10 * weightKg + 6.25 * heightCm - 5 * age;
+  bmr += sex === 'male' ? 5 : -161;
+
+  // 2. TDEE
+  const multipliers = {
+    sedentary: 1.2,
+    light: 1.375,
+    moderate: 1.55,
+    active: 1.725,
+    athlete: 1.9
+  };
+  let tdee = Math.round(bmr * multipliers[activityLevel]);
+
+  // 3. Calorie Target
+  let calories = tdee;
+  if (goal === 'lose_fast') calories = Math.max(Math.round(tdee * 0.75), sex === 'female' ? 1200 : 1500);
+  else if (goal === 'lose_slow') calories = Math.max(Math.round(tdee * 0.85), sex === 'female' ? 1200 : 1500);
+  else if (goal === 'muscle') calories = Math.round(tdee * 1.10);
+  else if (goal === 'muscle_fast') calories = Math.round(tdee * 1.20);
+
+  // 4. Net Carbs
+  let netCarbs = ketoExperience === 'new' ? 30 : ketoExperience === 'some' ? 25 : 20;
+  if (goal === 'muscle' || goal === 'muscle_fast') netCarbs += 5;
+
+  // 5. Protein
+  let gPerKg = (goal === 'lose_fast' || goal === 'lose_slow') ? 1.7 : 2.0;
+  if (ketoExperience === 'new') gPerKg -= 0.2;
+  const protein = Math.round(weightKg * gPerKg);
+
+  // 6. Fat
+  const carbCal = netCarbs * 4;
+  const proteinCal = protein * 4;
+  let fatCal = calories - carbCal - proteinCal;
+  const fat = Math.max(Math.round(fatCal / 9), 60);
+
+  // Percentages
+  const carbPct = Math.round((carbCal / calories) * 100);
+  const proteinPct = Math.round((proteinCal / calories) * 100);
+  const fatPct = 100 - carbPct - proteinPct;
+
+  return {
+    calories: Math.round(calories),
+    netCarbs,
+    protein,
+    fat,
+    percentages: { carbs: carbPct, protein: proteinPct, fat: fatPct }
+  };
+}
 </script>
 </body>
 </html>
