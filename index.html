@@ -395,6 +395,18 @@ body::before{content:'';position:fixed;top:-200px;left:-200px;width:600px;height
 .ob-back{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;margin-bottom:16px;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:4px;}
 .ob-result-card{background:var(--card);border-radius:16px;padding:18px;margin-bottom:12px;border:1.5px solid var(--border);}
 .ob-macro-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}
+.ob-pie-wrap{display:flex;align-items:center;gap:16px;}
+.ob-pie{width:120px;height:120px;border-radius:50%;flex-shrink:0;position:relative;background:conic-gradient(#ff4d6d 0% 10%,#4cc9f0 10% 35%,#ffc107 35% 100%);}
+.ob-pie-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;background:#0d1520;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+.ob-pie-legend{flex:1;display:flex;flex-direction:column;gap:8px;}
+.ob-pie-legend-item{display:flex;align-items:center;gap:8px;font-size:13px;}
+.ob-pie-legend-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
+.ob-pie-leg-item{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:#c0d0e0;padding:4px 0;}
+.ob-pie-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0;margin-top:2px;}
+.keto-score-badge{display:inline-block;padding:8px 18px;border-radius:20px;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;margin-bottom:4px;}
+.keto-score-excellent{background:linear-gradient(135deg,rgba(0,230,118,0.2),rgba(0,200,83,0.1));color:#00e676;border:1px solid rgba(0,230,118,0.3);}
+.keto-score-good{background:linear-gradient(135deg,rgba(76,201,240,0.2),rgba(0,150,199,0.1));color:#4cc9f0;border:1px solid rgba(76,201,240,0.3);}
+.keto-score-beginner{background:linear-gradient(135deg,rgba(255,193,7,0.2),rgba(255,152,0,0.1));color:#ffc107;border:1px solid rgba(255,193,7,0.3);}
 .ob-macro-box{background:rgba(0,0,0,0.25);border-radius:12px;padding:14px;text-align:center;}
 .ob-macro-val{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;}
 .ob-macro-label{font-size:12px;color:var(--muted);margin-top:3px;}
@@ -502,27 +514,49 @@ body::before{content:'';position:fixed;top:-200px;left:-200px;width:600px;height
     <!-- SCREEN 6: Results -->
     <div class="ob-screen" id="obs-6">
       <button class="ob-back" onclick="obBack(6)">← Back</button>
-      <div class="ob-title">Your personalised plan <span id="ob-name-display"></span>! 🎉</div>
-      <div class="ob-sub">Based on your info — here are your daily targets</div>
+      <div class="ob-title">Your Personalised Keto Plan, <span id="ob-name-display"></span>! 🎉</div>
+      <div class="ob-sub">Based on your body & goals — here are your daily targets</div>
 
-      <div class="ob-result-card" style="border-color:rgba(255,154,60,0.3);margin-bottom:14px">
-        <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">🔥 Daily Calorie Goal</div>
-        <div style="font-family:'Syne',sans-serif;font-size:42px;font-weight:800;color:var(--orange)" id="ob-cal-display">—</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px" id="ob-cal-sub">calories per day</div>
-        <div style="margin-top:10px;font-size:12px;line-height:1.6;color:#c0d0e0" id="ob-tdee-breakdown"></div>
+      <!-- Keto Score Badge -->
+      <div style="text-align:center;margin-bottom:14px">
+        <div class="keto-score-badge" id="ob-keto-badge">⚡ Loading...</div>
       </div>
 
+      <!-- Calorie Goal -->
+      <div class="ob-result-card" style="border-color:rgba(255,154,60,0.3);margin-bottom:14px;text-align:center">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">🔥 Daily Energy Target</div>
+        <div style="font-family:'Syne',sans-serif;font-size:56px;font-weight:800;color:var(--orange);line-height:1" id="ob-cal-display">—</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px" id="ob-cal-sub">calories per day</div>
+        <div style="margin-top:12px;font-size:12px;line-height:1.7;color:#c0d0e0;text-align:left" id="ob-tdee-breakdown"></div>
+      </div>
+
+      <!-- Macro Pie Chart + Legend -->
+      <div class="ob-result-card" style="margin-bottom:14px">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">📊 Macro Breakdown</div>
+        <div class="ob-pie-wrap">
+          <div class="ob-pie" id="ob-pie-chart">
+            <div class="ob-pie-center">
+              <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#fff" id="ob-pie-cal">—</div>
+              <div style="font-size:9px;color:var(--muted)">kcal</div>
+            </div>
+          </div>
+          <div class="ob-pie-legend" id="ob-pie-legend"></div>
+        </div>
+      </div>
+
+      <!-- Macro Cards -->
       <div class="ob-macro-grid" id="ob-macro-grid"></div>
 
-      <div class="ob-result-card" style="margin-bottom:14px">
-        <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">📊 What this means</div>
+      <!-- Goal Explanation -->
+      <div class="ob-result-card" style="margin-bottom:16px">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">💡 What this means for you</div>
         <div style="font-size:13px;color:#c0d0e0;line-height:1.7" id="ob-explain"></div>
       </div>
 
-      <button class="ob-next" onclick="obFinish()" style="background:linear-gradient(135deg,var(--orange),#ff6b35)">
+      <button class="ob-next" onclick="obFinish()" style="background:linear-gradient(135deg,#00e676,#00c853);color:#000;font-size:17px">
         Start My Keto Journey 🚀
       </button>
-      <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px">You can update these anytime in the Tracker settings</div>
+      <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px">You can update these anytime in Settings</div>
     </div>
   </div>
 </div>
@@ -3046,34 +3080,91 @@ function obCalculateAndShow(){
   document.getElementById('obs-6').classList.add('active');
   ob_currentScreen=6;obProgress(6);
 
-  document.getElementById('ob-name-display').textContent=obData.name;
-  document.getElementById('ob-cal-display').textContent=goalCal.toLocaleString();
+  const fatGFinal = Math.max(fatG, 40);
+  const carbsPct  = Math.round(carbsCal / goalCal * 100);
+  const fatPct    = Math.round(fatGFinal * 9 / goalCal * 100);
+  const protPct   = Math.round(proteinCal / goalCal * 100);
+
+  document.getElementById('ob-name-display').textContent = obData.name;
+  document.getElementById('ob-cal-display').textContent  = goalCal.toLocaleString();
+  document.getElementById('ob-pie-cal').textContent      = goalCal.toLocaleString();
 
   const goalIcon={lose_fast:'🔥 Fast loss',lose_slow:'📉 Gradual loss',maintain:'⚖️ Maintenance',muscle:'💪 Lean gains',muscle_fast:'🏋️ Bulk'}[obData.goal]||'';
-  document.getElementById('ob-cal-sub').textContent=`${goalIcon} · TDEE ${tdee.toLocaleString()} kcal`;
+  document.getElementById('ob-cal-sub').textContent = goalIcon + ' · TDEE ' + tdee.toLocaleString() + ' kcal';
 
-  document.getElementById('ob-tdee-breakdown').innerHTML=
-    `<strong>How we got here:</strong><br>
-    Your body burns <strong>${Math.round(bmr).toLocaleString()} kcal</strong> just at rest (BMR).<br>
-    With your <strong>${obData.activityLabel.toLowerCase()}</strong> lifestyle × ${obData.activityFactor}, that's <strong>${tdee.toLocaleString()} kcal/day</strong> (TDEE).<br>
-    ${obData.goalOffset!==0?`Your ${obData.goalOffset>0?'+'+obData.goalOffset:obData.goalOffset} kcal ${obData.goalOffset>0?'surplus':'deficit'} brings your goal to <strong>${goalCal.toLocaleString()} kcal</strong>.`:`You eat at full maintenance: <strong>${goalCal.toLocaleString()} kcal</strong>.`}`;
+  document.getElementById('ob-tdee-breakdown').innerHTML =
+    '<strong>How we got here:</strong><br>' +
+    'Your body burns <strong>' + Math.round(bmr).toLocaleString() + ' kcal</strong> at rest (BMR).<br>' +
+    'With your <strong>' + obData.activityLabel.toLowerCase() + '</strong> lifestyle, that\'s <strong>' + tdee.toLocaleString() + ' kcal/day</strong> (TDEE).<br>' +
+    (obData.goalOffset !== 0
+      ? 'Your ' + (obData.goalOffset > 0 ? '+' : '') + obData.goalOffset + ' kcal ' + (obData.goalOffset > 0 ? 'surplus' : 'deficit') + ' brings your goal to <strong>' + goalCal.toLocaleString() + ' kcal</strong>.'
+      : 'You eat at full maintenance: <strong>' + goalCal.toLocaleString() + ' kcal</strong>.');
 
-  const macroData=[
-    {label:'Carbs',val:carbsG,unit:'g',pct:Math.round(carbsCal/goalCal*100),color:'var(--red)'},
-    {label:'Fat',val:Math.max(fatG,40),unit:'g',pct:Math.round(Math.max(fatG,40)*9/goalCal*100),color:'var(--yellow)'},
-    {label:'Protein',val:proteinG,unit:'g',pct:Math.round(proteinCal/goalCal*100),color:'var(--blue)'},
+  // ===== KETO SCORE BADGE =====
+  const badge = document.getElementById('ob-keto-badge');
+  let badgeText, badgeBg, badgeColor;
+  if(carbsG <= 20 && (obData.ketoLevel === 'adapted' || obData.ketoLevel === 'expert')){
+    badgeText = '🔥 Elite Keto Setup'; badgeBg = 'rgba(0,230,118,0.15)'; badgeColor = '#00e676';
+  } else if(carbsG <= 25){
+    badgeText = '⚡ Excellent Keto Setup'; badgeBg = 'rgba(0,230,118,0.1)'; badgeColor = '#00e676';
+  } else if(obData.ketoLevel === 'new'){
+    badgeText = '💪 Perfect for Beginners'; badgeBg = 'rgba(76,201,240,0.1)'; badgeColor = '#4cc9f0';
+  } else {
+    badgeText = '✅ Solid Keto Plan'; badgeBg = 'rgba(255,193,7,0.1)'; badgeColor = '#ffc107';
+  }
+  badge.textContent = badgeText;
+  badge.style.background = badgeBg;
+  badge.style.color = badgeColor;
+  badge.style.border = '1px solid ' + badgeColor.replace(')', ',0.3)').replace('rgb', 'rgba');
+
+  // ===== PIE CHART (CSS conic-gradient) =====
+  // Colors: carbs=red, fat=yellow/orange, protein=blue
+  const pieChart = document.getElementById('ob-pie-chart');
+  const c1 = '#ff4d6d', c2 = '#ffc107', c3 = '#4cc9f0';
+  const seg1End = carbsPct;
+  const seg2End = carbsPct + fatPct;
+  pieChart.style.background =
+    'conic-gradient(' +
+      c1 + ' 0% ' + seg1End + '%,' +
+      c2 + ' ' + seg1End + '% ' + seg2End + '%,' +
+      c3 + ' ' + seg2End + '% 100%' +
+    ')';
+
+  // Pie legend
+  document.getElementById('ob-pie-legend').innerHTML = [
+    {color:c1, label:'Carbs', val:carbsG+'g', pct:carbsPct+'%', tip:'Stay under for ketosis'},
+    {color:c2, label:'Fat',   val:fatGFinal+'g', pct:fatPct+'%',   tip:'Your primary fuel source'},
+    {color:c3, label:'Protein',val:proteinG+'g',pct:protPct+'%',  tip:'Preserve muscle mass'},
+  ].map(l =>
+    '<div class="ob-pie-leg-item">' +
+      '<div class="ob-pie-dot" style="background:' + l.color + '"></div>' +
+      '<div><strong style="color:#fff">' + l.label + '</strong> ' + l.val + ' <span style="color:var(--muted)">(' + l.pct + ')</span>' +
+      '<div style="font-size:10px;color:#5a7a9a">' + l.tip + '</div></div>' +
+    '</div>'
+  ).join('');
+
+  // ===== MACRO CARDS =====
+  const macroCards = [
+    {emoji:'🥑', label:'Carbs',   val:carbsG,    unit:'g', pct:carbsPct, color:'var(--red)',    tip:'Stay under '+carbsG+'g for ketosis'},
+    {emoji:'🔥', label:'Fat',     val:fatGFinal, unit:'g', pct:fatPct,   color:'var(--yellow)', tip:'Your body\'s main energy source'},
+    {emoji:'💪', label:'Protein', val:proteinG,  unit:'g', pct:protPct,  color:'var(--blue)',   tip:'Protect and build your muscles'},
   ];
-  document.getElementById('ob-macro-grid').innerHTML=macroData.map(m=>`
-    <div class="ob-macro-box">
-      <div class="ob-macro-val" style="color:${m.color}">${m.val}<span style="font-size:14px">${m.unit}</span></div>
-      <div class="ob-macro-label">${m.label}</div>
-      <div class="ob-macro-pct" style="color:${m.color}">${m.pct}% of calories</div>
-    </div>`).join('')+
-    `<div class="ob-macro-box">
-      <div class="ob-macro-val" style="color:var(--orange)">${goalCal}<span style="font-size:14px">kcal</span></div>
-      <div class="ob-macro-label">Total Cal</div>
-      <div class="ob-macro-pct" style="color:var(--orange)">daily goal</div>
-    </div>`;
+  document.getElementById('ob-macro-grid').innerHTML = macroCards.map(m =>
+    '<div class="ob-macro-box" style="position:relative;overflow:hidden">' +
+      '<div style="font-size:20px;margin-bottom:4px">' + m.emoji + '</div>' +
+      '<div class="ob-macro-val" style="color:' + m.color + '">' + m.val + '<span style="font-size:14px">' + m.unit + '</span></div>' +
+      '<div class="ob-macro-label">' + m.label + '</div>' +
+      '<div class="ob-macro-pct" style="color:' + m.color + '">' + m.pct + '% of kcal</div>' +
+      '<div style="font-size:10px;color:#5a7a9a;margin-top:4px;line-height:1.4">' + m.tip + '</div>' +
+    '</div>'
+  ).join('') +
+    '<div class="ob-macro-box">' +
+      '<div style="font-size:20px;margin-bottom:4px">⚡</div>' +
+      '<div class="ob-macro-val" style="color:var(--orange)">' + goalCal + '<span style="font-size:14px">kcal</span></div>' +
+      '<div class="ob-macro-label">Total</div>' +
+      '<div class="ob-macro-pct" style="color:var(--orange)">daily goal</div>' +
+      '<div style="font-size:10px;color:#5a7a9a;margin-top:4px;line-height:1.4">Your energy target</div>' +
+    '</div>';
 
   const goalExplains={
     lose_fast:`You're in a 500 kcal daily deficit. At this rate you could lose around 0.5kg per week. Keep carbs ultra low (${carbsG}g) to stay in ketosis and burn fat efficiently. Drink plenty of water!`,
