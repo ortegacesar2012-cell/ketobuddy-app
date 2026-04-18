@@ -1552,13 +1552,82 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
 </div>
 
 <!-- BOTTOM NAV -->
+
+  <!-- ===== AI MEAL PLANNER ===== -->
+  <div id="sec-planner" class="section">
+    <div class="sec-head">
+      <h2>AI Meal Planner 📅</h2>
+      <p>Generate a full day of meals & snacks to hit your goals</p>
+    </div>
+
+    <!-- Daily goal summary -->
+    <div id="plannerGoalBar" style="background:linear-gradient(135deg,rgba(0,230,118,0.08),rgba(76,201,240,0.05));border:1px solid rgba(0,230,118,0.15);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;gap:12px;align-items:center">
+      <div style="font-size:24px">🎯</div>
+      <div style="flex:1">
+        <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.8px">Your Daily Target</div>
+        <div style="font-size:13px;color:#c0d0e0;margin-top:3px" id="plannerGoalText">Loading goals...</div>
+      </div>
+    </div>
+
+    <!-- What do you have -->
+    <div style="margin-bottom:12px">
+      <div class="snack-input-label">🛒 What ingredients do you have?</div>
+      <div class="inp-icon">
+        <span class="ic">🥩</span>
+        <input class="inp" type="text" id="plannerIngredients" placeholder="e.g. chicken, eggs, avocado, cheese..."/>
+      </div>
+    </div>
+
+    <!-- Meal preferences -->
+    <div style="margin-bottom:12px">
+      <div class="snack-input-label">🍽️ Meal style preferences?</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px" id="plannerStyleTags">
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐄</span><span>Carnivore</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌱</span><span>Veggie</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌶️</span><span>Spicy</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍳</span><span>Simple</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐟</span><span>Seafood</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥗</span><span>Fresh</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍕</span><span>Comfort</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>⚡</span><span>Meal Prep</span></button>
+      </div>
+    </div>
+
+    <!-- Snack style -->
+    <div style="margin-bottom:14px">
+      <div class="snack-input-label">🍿 Snack style?</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px" id="plannerSnackTags">
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧀</span><span>Savory</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍫</span><span>Sweet</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>💪</span><span>Protein</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>⚡</span><span>Quick</span></button>
+      </div>
+    </div>
+
+    <!-- Carb target -->
+    <div style="margin-bottom:16px">
+      <div class="snack-input-label">🥑 Daily carb strictness?</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
+        <button class="snack-tag-btn" id="plan-strict" onclick="selectPlanCarbs(this,'strict')">🔒 Strict<br><span style="font-size:10px;color:var(--muted)">&lt;20g/day</span></button>
+        <button class="snack-tag-btn active" id="plan-moderate" onclick="selectPlanCarbs(this,'moderate')">⚖️ Moderate<br><span style="font-size:10px;color:var(--muted)">&lt;50g/day</span></button>
+        <button class="snack-tag-btn" id="plan-flexible" onclick="selectPlanCarbs(this,'flexible')">🔓 Flexible<br><span style="font-size:10px;color:var(--muted)">&lt;75g/day</span></button>
+      </div>
+    </div>
+
+    <button class="btn btn-g" id="plannerBtn" onclick="generateDayPlan()" style="background:linear-gradient(135deg,#00e676,#00c853);color:#000;font-size:16px;font-weight:800;margin-bottom:6px">
+      📅 Generate My Day Plan
+    </button>
+
+    <div id="plannerResult"></div>
+  </div>
+
 <div class="bottom-nav">
   <button class="nav-btn active" onclick="switchSection('scanner',this)"><span class="ni">🔍</span>Scan</button>
   <button class="nav-btn" onclick="switchSection('snack',this)"><span class="ni">🤖</span>Chef</button>
-  <button class="nav-btn" onclick="switchSection('journal',this)"><span class="ni">📓</span>Journal</button>
+  <button class="nav-btn" onclick="switchSection('planner',this)"><span class="ni">📅</span>Plan</button>
   <button class="nav-btn" onclick="switchSection('tracker',this)"><span class="ni">📊</span>Track</button>
+  <button class="nav-btn" onclick="switchSection('journal',this)"><span class="ni">📓</span>Journal</button>
   <button class="nav-btn" onclick="switchSection('fast',this)"><span class="ni">⏱️</span>Fast</button>
-  <button class="nav-btn" onclick="switchSection('shop',this)"><span class="ni">🛒</span>Shop</button>
 </div>
 
 <script>
@@ -1570,6 +1639,7 @@ function switchSection(id,btn){
   btn.classList.add('active');
   if(id==='snack') setTimeout(updateAIUsageBanner, 50);
   if(id==='tracker') setTimeout(renderSavedMealsInTracker, 50);
+  if(id==='planner') setTimeout(initPlannerGoalBar, 50);
 }
 function switchInner(showId,btn){
   // find parent tab group and deactivate all siblings
@@ -4862,6 +4932,286 @@ function deleteFavMeal(id){
   const old = document.getElementById('settingsModal');
   if(old) old.remove();
   showSettings();
+}
+
+
+// ===== AI MEAL PLANNER =====
+let plannerCarbMode = 'moderate';
+
+function selectPlanCarbs(btn, mode){
+  plannerCarbMode = mode;
+  ['plan-strict','plan-moderate','plan-flexible'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.remove('active');
+  });
+  btn.classList.add('active');
+}
+
+function initPlannerGoalBar(){
+  const el = document.getElementById('plannerGoalText');
+  if(!el) return;
+  if(macroGoals && macroGoals.cal){
+    el.textContent = macroGoals.cal+' kcal · '+macroGoals.carbs+'g carbs · '+macroGoals.protein+'g protein · '+macroGoals.fat+'g fat';
+  } else {
+    el.textContent = 'Complete onboarding to set your goals';
+  }
+}
+
+async function generateDayPlan(){
+  const btn = document.getElementById('plannerBtn');
+  const result = document.getElementById('plannerResult');
+  const ingredients = document.getElementById('plannerIngredients').value.trim();
+
+  // Get style tags
+  const styleTags = [...document.querySelectorAll('#plannerStyleTags .chef-tag-active')]
+    .map(b=>b.querySelectorAll('span')[1]?.textContent||'').join(', ');
+  const snackTags = [...document.querySelectorAll('#plannerSnackTags .chef-tag-active')]
+    .map(b=>b.querySelectorAll('span')[1]?.textContent||'').join(', ');
+
+  const carbLimits = {strict:20, moderate:50, flexible:75};
+  const dailyCarbs = carbLimits[plannerCarbMode] || 50;
+  const goals = macroGoals || {cal:1800, carbs:dailyCarbs, protein:120, fat:130};
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Planning your day...';
+  result.innerHTML = `<div style="text-align:center;padding:32px">
+    <div class="pulse" style="font-size:36px">📅</div>
+    <p style="color:var(--muted);margin-top:12px;font-size:13px">AI is building your perfect keto day...</p>
+    <p style="color:var(--muted);font-size:11px;margin-top:4px">Breakfast · Lunch · Dinner · 2 Snacks</p>
+  </div>`;
+
+  try {
+    const favNames = aiMealFavorites.slice(0,10).map(f=>f.name).join(', ');
+    const prompt = `You are a professional keto nutritionist. Create a complete keto meal plan for one day.
+
+Daily goals: ${goals.cal} calories, ${dailyCarbs}g net carbs max, ${goals.protein}g protein, ${goals.fat}g fat
+${ingredients ? 'Available ingredients: '+ingredients : 'Use common keto ingredients.'}
+${styleTags ? 'Meal preferences: '+styleTags : ''}
+${snackTags ? 'Snack preferences: '+snackTags : ''}
+${favNames ? 'Do NOT repeat these saved meals: '+favNames : ''}
+
+Create exactly: 1 Breakfast, 1 Lunch, 1 Dinner, 2 Snacks.
+Make sure the total hits close to the daily goals.
+
+For each meal/snack use EXACTLY this format:
+
+MEAL: [Breakfast|Lunch|Dinner|Snack]
+NAME: [recipe name]
+DESC: [1 sentence description]
+INGREDIENTS: [comma-separated with quantities]
+STEPS: [2-4 steps separated by |]
+CARBS: [net carbs]g | FAT: [fat]g | PROTEIN: [protein]g | CALS: [calories]
+
+---`;
+
+    const text = await callAI(prompt, 2500);
+
+    // Parse each meal block
+    const blocks = text.split(/(?=MEAL:)/g).filter(b=>b.trim());
+    const meals = blocks.map(block=>{
+      const lines = block.split('\n').filter(l=>l.trim());
+      const mealType = lines.find(l=>l.startsWith('MEAL:'))?.replace('MEAL:','').trim() || 'Meal';
+      const name = lines.find(l=>l.startsWith('NAME:'))?.replace('NAME:','').trim() || 'Keto Meal';
+      const desc = lines.find(l=>l.startsWith('DESC:'))?.replace('DESC:','').trim() || '';
+      const ingLine = lines.find(l=>l.startsWith('INGREDIENTS:'))?.replace('INGREDIENTS:','').trim() || '';
+      const stepsLine = lines.find(l=>l.startsWith('STEPS:'))?.replace('STEPS:','').trim() || '';
+      const macros = lines.find(l=>l.startsWith('CARBS:'))?.replace('CARBS:','').trim() || '';
+      const ingredients = ingLine.split(',').map(i=>i.trim()).filter(Boolean);
+      const steps = stepsLine.split('|').map(s=>s.trim()).filter(Boolean);
+      // Parse macros
+      const carbMatch = macros.match(/(\d+)g/);
+      const fatMatch = macros.match(/FAT:\s*(\d+)g/i);
+      const protMatch = macros.match(/PROTEIN:\s*(\d+)g/i);
+      const calMatch = macros.match(/CALS:\s*(\d+)/i);
+      return {
+        mealType, name, desc, ingredients, steps, macros,
+        carbs: carbMatch?parseInt(carbMatch[1]):0,
+        fat: fatMatch?parseInt(fatMatch[1]):0,
+        protein: protMatch?parseInt(protMatch[1]):0,
+        calories: calMatch?parseInt(calMatch[1]):0
+      };
+    }).filter(m=>m.name);
+
+    if(!meals.length) throw new Error('Could not parse meal plan. Please try again.');
+
+    // Calculate totals
+    const totals = meals.reduce((a,m)=>({
+      cal: a.cal+m.calories, carbs: a.carbs+m.carbs,
+      fat: a.fat+m.fat, protein: a.protein+m.protein
+    }), {cal:0,carbs:0,fat:0,protein:0});
+
+    // Meal type icons
+    const typeIcon = {Breakfast:'🌅',Lunch:'☀️',Dinner:'🌙',Snack:'🍿'};
+    const typeColor = {Breakfast:'rgba(255,154,60,0.1)',Lunch:'rgba(76,201,240,0.1)',Dinner:'rgba(199,125,255,0.1)',Snack:'rgba(0,230,118,0.08)'};
+    const typeBorder = {Breakfast:'rgba(255,154,60,0.3)',Lunch:'rgba(76,201,240,0.3)',Dinner:'rgba(199,125,255,0.3)',Snack:'rgba(0,230,118,0.25)'};
+    const typeTextColor = {Breakfast:'var(--orange)',Lunch:'var(--blue)',Dinner:'var(--purple)',Snack:'var(--green)'};
+
+    // Build HTML
+    const totalCal = totals.cal||1;
+    const cd = Math.round((totals.carbs*4/totalCal)*360);
+    const pd = Math.round((totals.protein*4/totalCal)*360);
+
+    result.innerHTML = `
+      <!-- Day totals summary -->
+      <div style="background:linear-gradient(135deg,rgba(0,230,118,0.08),rgba(76,201,240,0.05));border:1px solid rgba(0,230,118,0.2);border-radius:16px;padding:14px;margin-bottom:16px">
+        <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📊 Day Totals</div>
+        <div style="display:flex;align-items:center;gap:14px">
+          <div style="width:56px;height:56px;border-radius:50%;background:conic-gradient(#ff4d6d 0deg ${cd}deg,#4cc9f0 ${cd}deg ${cd+pd}deg,#ffd166 ${cd+pd}deg 360deg);flex-shrink:0;position:relative">
+            <div style="position:absolute;inset:6px;background:#0d1822;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">${Math.round(totals.cal)}</div>
+          </div>
+          <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:4px">
+            <div style="font-size:12px"><span style="color:var(--red)">🥑 ${totals.carbs}g</span> carbs</div>
+            <div style="font-size:12px"><span style="color:var(--yellow)">🔥 ${totals.fat}g</span> fat</div>
+            <div style="font-size:12px"><span style="color:var(--blue)">💪 ${totals.protein}g</span> protein</div>
+            <div style="font-size:12px"><span style="color:var(--green)">${Math.round(totals.cal)}</span> kcal</div>
+          </div>
+        </div>
+        <!-- Goal progress bars -->
+        <div style="margin-top:10px;display:flex;flex-direction:column;gap:5px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:11px;color:var(--muted);width:60px">Calories</span>
+            <div style="flex:1;height:6px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden">
+              <div style="height:100%;border-radius:4px;background:var(--green);width:${Math.min(Math.round(totals.cal/goals.cal*100),100)}%;transition:width 0.5s"></div>
+            </div>
+            <span style="font-size:11px;color:var(--muted)">${Math.round(totals.cal/goals.cal*100)}%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:11px;color:var(--muted);width:60px">Carbs</span>
+            <div style="flex:1;height:6px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden">
+              <div style="height:100%;border-radius:4px;background:${totals.carbs>dailyCarbs?'var(--red)':'var(--red)'};width:${Math.min(Math.round(totals.carbs/dailyCarbs*100),100)}%"></div>
+            </div>
+            <span style="font-size:11px;color:${totals.carbs>dailyCarbs?'var(--red)':'var(--muted)'}">${totals.carbs}g</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:11px;color:var(--muted);width:60px">Protein</span>
+            <div style="flex:1;height:6px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden">
+              <div style="height:100%;border-radius:4px;background:var(--blue);width:${Math.min(Math.round(totals.protein/goals.protein*100),100)}%"></div>
+            </div>
+            <span style="font-size:11px;color:var(--muted)">${totals.protein}g</span>
+          </div>
+        </div>
+        <button onclick="addAllPlanToTracker()" style="width:100%;margin-top:12px;padding:11px;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer">
+          📊 Log All Meals to Tracker
+        </button>
+      </div>
+
+      <!-- Individual meals -->
+      ${meals.map((m,i)=>`
+        <div style="background:${typeColor[m.mealType]||'rgba(255,255,255,0.04)'};border:1px solid ${typeBorder[m.mealType]||'rgba(255,255,255,0.08)'};border-radius:16px;padding:16px;margin-bottom:12px" data-meal-idx="${i}">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+            <div>
+              <div style="font-size:11px;font-weight:700;color:${typeTextColor[m.mealType]||'var(--muted)'};text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px">${typeIcon[m.mealType]||'🍽️'} ${m.mealType}</div>
+              <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800">${m.name}</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;margin-left:10px">
+              <div style="font-size:13px;font-weight:700;color:var(--green)">${m.calories} kcal</div>
+              <div style="font-size:10px;color:var(--muted)">${m.carbs}g carbs</div>
+            </div>
+          </div>
+          ${m.desc?`<div style="font-size:13px;color:#8ab0c8;margin-bottom:10px;line-height:1.5">${m.desc}</div>`:''}
+          <!-- Macro mini bar -->
+          <div style="display:flex;gap:6px;margin-bottom:10px">
+            <div style="flex:1;text-align:center;padding:6px;background:rgba(255,77,109,0.08);border-radius:8px">
+              <div style="font-size:13px;font-weight:700;color:var(--red)">${m.carbs}g</div>
+              <div style="font-size:9px;color:var(--muted)">carbs</div>
+            </div>
+            <div style="flex:1;text-align:center;padding:6px;background:rgba(255,209,102,0.08);border-radius:8px">
+              <div style="font-size:13px;font-weight:700;color:var(--yellow)">${m.fat}g</div>
+              <div style="font-size:9px;color:var(--muted)">fat</div>
+            </div>
+            <div style="flex:1;text-align:center;padding:6px;background:rgba(76,201,240,0.08);border-radius:8px">
+              <div style="font-size:13px;font-weight:700;color:var(--blue)">${m.protein}g</div>
+              <div style="font-size:9px;color:var(--muted)">protein</div>
+            </div>
+          </div>
+          ${m.ingredients.length?`
+          <div style="margin-bottom:10px">
+            <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">🛒 Ingredients</div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px">
+              ${m.ingredients.map(ing=>`<span style="font-size:11px;padding:3px 9px;background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.2);border-radius:6px;color:#c0d0e0">${ing}</span>`).join('')}
+            </div>
+          </div>`:''}
+          ${m.steps.length?`
+          <div style="margin-bottom:12px">
+            <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">👨‍🍳 How to Make It</div>
+            ${m.steps.map((step,si)=>`<div style="display:flex;gap:8px;margin-bottom:5px;font-size:12px;color:#c0d0e0;line-height:1.5"><span style="background:${typeTextColor[m.mealType]||'var(--purple)'};color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;margin-top:1px">${si+1}</span><span>${step}</span></div>`).join('')}
+          </div>`:''}
+          <div style="display:flex;gap:8px">
+            <button onclick="logPlanMeal(${i})" style="flex:1;padding:9px;background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.25);border-radius:10px;color:var(--green);font-size:12px;font-weight:700;cursor:pointer">📊 Log to Tracker</button>
+            <button onclick="savePlanMealFav(${i})" style="padding:9px 12px;background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.25);border-radius:10px;color:#ffc107;font-size:12px;font-weight:700;cursor:pointer">⭐</button>
+            <button onclick="addPlanToShop(${i})" style="padding:9px 12px;background:rgba(76,201,240,0.1);border:1px solid rgba(76,201,240,0.25);border-radius:10px;color:var(--blue);font-size:12px;font-weight:700;cursor:pointer">🛒</button>
+          </div>
+        </div>`).join('')}
+    `;
+
+    // Store plan data for actions
+    window._currentDayPlan = meals;
+
+  } catch(e){
+    result.innerHTML=`<div class="card"><p style="color:var(--red);font-size:13px">⚠️ ${e.message||'Could not generate plan. Try again.'}</p></div>`;
+  }
+
+  btn.disabled=false;
+  btn.textContent='📅 Generate My Day Plan';
+}
+
+function logPlanMeal(idx){
+  const meals = window._currentDayPlan;
+  if(!meals||!meals[idx]) return;
+  const m = meals[idx];
+  const mealCatMap = {Breakfast:'🌅 Breakfast',Lunch:'☀️ Lunch',Dinner:'🌙 Dinner',Snack:'🍿 Snack'};
+  addToLog({
+    name: m.name,
+    calories: m.calories,
+    carbs: m.carbs,
+    fat: m.fat,
+    protein: m.protein,
+    category: 'AI Planner',
+    keto: m.carbs <= 15
+  }, mealCatMap[m.mealType] || '🍽️ Other');
+  showToast('📊 '+m.name+' logged!');
+}
+
+function addAllPlanToTracker(){
+  const meals = window._currentDayPlan;
+  if(!meals||!meals.length) return;
+  const mealCatMap = {Breakfast:'🌅 Breakfast',Lunch:'☀️ Lunch',Dinner:'🌙 Dinner',Snack:'🍿 Snack'};
+  meals.forEach(m=>{
+    addToLog({
+      name: m.name,
+      calories: m.calories,
+      carbs: m.carbs,
+      fat: m.fat,
+      protein: m.protein,
+      category: 'AI Planner',
+      keto: m.carbs <= 15
+    }, mealCatMap[m.mealType] || '🍽️ Other');
+  });
+  showToast('✅ All '+meals.length+' meals logged!');
+  setTimeout(()=>switchSection('tracker', document.querySelector('.nav-btn[onclick*="tracker"]')), 600);
+}
+
+function savePlanMealFav(idx){
+  const meals = window._currentDayPlan;
+  if(!meals||!meals[idx]) return;
+  const m = meals[idx];
+  aiMealFavorites.unshift({
+    id: Date.now(),
+    name: m.name,
+    desc: m.desc,
+    macro: m.macros,
+    savedAt: new Date().toLocaleDateString()
+  });
+  if(aiMealFavorites.length>50) aiMealFavorites=aiMealFavorites.slice(0,50);
+  localStorage.setItem('kb_aiMealFavs', JSON.stringify(aiMealFavorites));
+  showToast('⭐ '+m.name+' saved!');
+}
+
+function addPlanToShop(idx){
+  const meals = window._currentDayPlan;
+  if(!meals||!meals[idx]) return;
+  const m = meals[idx];
+  if(m.ingredients.length) addMealToShop(m.ingredients, m.name);
 }
 
 function signOut(){
