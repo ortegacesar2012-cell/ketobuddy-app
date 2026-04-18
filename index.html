@@ -108,6 +108,12 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
 .snack-tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px;}
 .snack-tag-btn{padding:7px 14px;background:var(--card2);border:1.5px solid var(--border);border-radius:20px;color:var(--muted);cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
 .snack-tag-btn.active{border-color:var(--purple);color:var(--purple);background:rgba(199,125,255,0.08);}
+.chef-tag-btn{background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:10px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+.chef-tag-btn span:first-child{font-size:24px;line-height:1;}
+.chef-tag-btn span:last-child{font-size:10px;color:var(--muted);font-weight:600;text-align:center;line-height:1.2;}
+.chef-tag-btn:active{transform:scale(0.95);}
+.chef-tag-active,.chef-tag-btn.chef-tag-active{border-color:var(--purple);background:rgba(199,125,255,0.12);box-shadow:0 2px 10px rgba(199,125,255,0.15);}
+.chef-tag-active span:last-child,.chef-tag-btn.chef-tag-active span:last-child{color:var(--purple);}
 .snack-result{background:var(--card);border-radius:16px;padding:16px;margin-top:14px;border:1px solid var(--border);}
 .snack-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
 .snack-item:last-child{border-bottom:none;}
@@ -651,15 +657,46 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
       <span style="font-size:11px;color:var(--purple);font-weight:700">🤖 AI-Powered</span>
       <span style="font-size:11px;color:var(--muted)">· Knows millions of foods & brands</span>
     </div>
-    <div class="chips" id="quickChips">
-      <button class="chip" onclick="qs('Avocado')">🥑 Avocado</button>
-      <button class="chip" onclick="qs('Eggs')">🥚 Eggs</button>
-      <button class="chip" onclick="qs('Salmon')">🐟 Salmon</button>
-      <button class="chip" onclick="qs('Chicken breast')">🍗 Chicken</button>
-      <button class="chip" onclick="qs('Oreo cookies')">🍪 Oreo</button>
-      <button class="chip" onclick="qs('Strawberry')">🍓 Strawberry</button>
-      <button class="chip" onclick="qs('White rice')">🍚 Rice</button>
-      <button class="chip" onclick="qs('Cheddar cheese')">🧀 Cheese</button>
+    <div id="quickChips">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">⚡ Keto-Friendly Foods — Tap to look up</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+        <button onclick="qs('Avocado')" style="background:rgba(0,230,118,0.07);border:1px solid rgba(0,230,118,0.2);border-radius:14px;padding:12px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:28px">🥑</span><span style="font-size:11px;color:#c0d0e0;font-weight:600">Avocado</span>
+        </button>
+        <button onclick="qs('Eggs')" style="background:rgba(255,209,102,0.07);border:1px solid rgba(255,209,102,0.2);border-radius:14px;padding:12px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:28px">🥚</span><span style="font-size:11px;color:#c0d0e0;font-weight:600">Eggs</span>
+        </button>
+        <button onclick="qs('Salmon fillet')" style="background:rgba(76,201,240,0.07);border:1px solid rgba(76,201,240,0.2);border-radius:14px;padding:12px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:28px">🐟</span><span style="font-size:11px;color:#c0d0e0;font-weight:600">Salmon</span>
+        </button>
+        <button onclick="qs('Chicken breast')" style="background:rgba(255,154,60,0.07);border:1px solid rgba(255,154,60,0.2);border-radius:14px;padding:12px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:28px">🍗</span><span style="font-size:11px;color:#c0d0e0;font-weight:600">Chicken</span>
+        </button>
+        <button onclick="qs('Bacon strips')" style="background:rgba(255,77,109,0.07);border:1px solid rgba(255,77,109,0.2);border-radius:14px;padding:12px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:28px">🥓</span><span style="font-size:11px;color:#c0d0e0;font-weight:600">Bacon</span>
+        </button>
+        <button onclick="qs('Cheddar cheese')" style="background:rgba(255,209,102,0.07);border:1px solid rgba(255,209,102,0.2);border-radius:14px;padding:12px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:28px">🧀</span><span style="font-size:11px;color:#c0d0e0;font-weight:600">Cheese</span>
+        </button>
+        <button onclick="qs('Butter')" style="background:rgba(255,209,102,0.07);border:1px solid rgba(255,209,102,0.2);border-radius:14px;padding:12px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:28px">🧈</span><span style="font-size:11px;color:#c0d0e0;font-weight:600">Butter</span>
+        </button>
+        <button onclick="qs('Ground beef 80 percent lean')" style="background:rgba(255,77,109,0.07);border:1px solid rgba(255,77,109,0.2);border-radius:14px;padding:12px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:28px">🥩</span><span style="font-size:11px;color:#c0d0e0;font-weight:600">Beef</span>
+        </button>
+        <button onclick="qs('Almonds')" style="background:rgba(199,125,255,0.07);border:1px solid rgba(199,125,255,0.2);border-radius:14px;padding:12px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:28px">🌰</span><span style="font-size:11px;color:#c0d0e0;font-weight:600">Almonds</span>
+        </button>
+        <button onclick="qs('Broccoli')" style="background:rgba(0,230,118,0.07);border:1px solid rgba(0,230,118,0.2);border-radius:14px;padding:12px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:28px">🥦</span><span style="font-size:11px;color:#c0d0e0;font-weight:600">Broccoli</span>
+        </button>
+        <button onclick="qs('Heavy whipping cream')" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:12px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:28px">🥛</span><span style="font-size:11px;color:#c0d0e0;font-weight:600">Cream</span>
+        </button>
+        <button onclick="qs('Tuna canned in water')" style="background:rgba(76,201,240,0.07);border:1px solid rgba(76,201,240,0.2);border-radius:14px;padding:12px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:28px">🐠</span><span style="font-size:11px;color:#c0d0e0;font-weight:600">Tuna</span>
+        </button>
+      </div>
     </div>
     <div id="emptyState" class="empty-st"><div class="ei">🔬</div><p>Scan a barcode or type any food name — AI looks up real nutrition instantly</p></div>
     <div id="searchResults"></div>
@@ -739,6 +776,7 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
     <div class="inner-tabs" style="margin-bottom:14px">
       <button class="inner-tab active" id="chef-tab-snack" onclick="setChefMode('snack',this)">🍿 Snacks</button>
       <button class="inner-tab" id="chef-tab-meal" onclick="setChefMode('meal',this)">🍽️ Meals</button>
+      <button class="inner-tab" id="chef-tab-favs" onclick="setChefMode('favs',this)">⭐ Saved</button>
     </div>
 
     <!-- Ingredients -->
@@ -752,21 +790,24 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
 
     <!-- Meal-specific options (hidden for snacks) -->
     <div id="chef-meal-opts" style="display:none;margin-bottom:12px">
-      <div class="snack-input-label">Meal type?</div>
-      <div class="snack-tags" id="mealTypeTags">
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">🌅 Breakfast</button>
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">☀️ Lunch</button>
-        <button class="snack-tag-btn active" onclick="toggleSnackTag(this)">🌙 Dinner</button>
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">⚡ Meal Prep</button>
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">🥗 Salad</button>
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">🍲 One Pan</button>
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">🐄 Carnivore</button>
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">🌱 Vegetarian</button>
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">💪 High Protein</button>
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">🧁 Dessert</button>
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">🍳 30-Min Meal</button>
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">🍕 Comfort Food</button>
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">🌶️ Spicy</button>
+      <div class="snack-input-label">What type of meal?</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="mealTypeTags">
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌅</span><span>Breakfast</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>☀️</span><span>Lunch</span></button>
+        <button class="chef-tag-btn chef-tag-active" onclick="toggleChefTag(this)"><span>🌙</span><span>Dinner</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>⚡</span><span>Meal Prep</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥗</span><span>Salad</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍲</span><span>One Pan</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐄</span><span>Carnivore</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌱</span><span>Veggie</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>💪</span><span>High Protein</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧁</span><span>Dessert</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍳</span><span>Quick</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍕</span><span>Comfort</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌶️</span><span>Spicy</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐟</span><span>Seafood</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥩</span><span>Red Meat</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍜</span><span>Asian Style</span></button>
       </div>
       <div style="margin-top:10px">
         <div class="snack-input-label">Difficulty?</div>
@@ -789,19 +830,24 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
 
     <!-- Snack-specific craving tags -->
     <div id="chef-snack-opts" style="margin-bottom:12px">
-      <div class="snack-input-label">Craving type?</div>
-      <div class="snack-tags" id="cravingTags">
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">🧀 Savory</button>
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">🍫 Sweet</button>
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">🥜 Crunchy</button>
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">🥛 Creamy</button>
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">⚡ Quick &lt;5 min</button>
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">💪 High Protein</button>
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">🧁 Dessert</button>
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">🥐 Pastry Style</button>
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">🍦 No-Cook</button>
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">🐄 Carnivore</button>
-        <button class="snack-tag-btn" onclick="toggleSnackTag(this)">🌱 Dairy-Free</button>
+      <div class="snack-input-label">What are you craving?</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="cravingTags">
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧀</span><span>Savory</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍫</span><span>Sweet</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥜</span><span>Crunchy</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥛</span><span>Creamy</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>⚡</span><span>Quick</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>💪</span><span>Protein</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧁</span><span>Dessert</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥐</span><span>Pastry</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍦</span><span>No-Cook</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐄</span><span>Carnivore</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌱</span><span>Vegan</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌶️</span><span>Spicy</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🫐</span><span>Fruity</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥗</span><span>Fresh</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧂</span><span>Salty</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍳</span><span>Cooked</span></button>
       </div>
     </div>
 
@@ -818,6 +864,15 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
 
     <button class="btn btn-g" id="snackBtn" onclick="generateChef()" style="background:linear-gradient(135deg,var(--purple),#9c27b0);box-shadow:0 4px 16px rgba(199,125,255,0.25);margin-bottom:4px">🤖 Generate Ideas</button>
     <div id="snackResult"></div>
+
+    <!-- FAVORITES PANEL -->
+    <div id="chef-favs-panel" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:14px;font-weight:700">⭐ Saved Meals & Snacks</div>
+        <button onclick="clearAllFavorites()" style="font-size:11px;color:#ff4d6d;background:none;border:none;cursor:pointer">Clear All</button>
+      </div>
+      <div id="favsPanelList"></div>
+    </div>
   </div>
 
   <!-- MOOD JOURNAL -->
@@ -1125,12 +1180,6 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
       </div>
     </div>
 
-    <!-- Saved AI Meals quick access -->
-    <div id="savedMealsStrip" style="display:none;margin-bottom:12px">
-      <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">⭐ Saved AI Meals — Tap to Log</div>
-      <div id="savedMealsRow" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px"></div>
-    </div>
-
     <!-- Big visible Goals button -->
     <button onclick="showTrackerSettings()" style="width:100%;padding:13px;background:linear-gradient(135deg,rgba(199,125,255,0.15),rgba(76,201,240,0.1));border:1.5px solid rgba(199,125,255,0.35);border-radius:14px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:8px">
@@ -1163,8 +1212,32 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
             <div style="font-size:10px;color:var(--muted)" id="cal-status-label">kcal left</div>
           </div>
         </div>
-        <div class="cal-bar-bg" style="margin-bottom:4px"><div class="cal-bar-fill" id="cal-bar" style="width:0%"></div></div>
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted)"><span>0</span><span id="cal-pct-label">0%</span><span id="cal-goal-end">—</span></div>
+        <!-- Thicker calorie bar -->
+        <div style="background:rgba(255,255,255,0.05);border-radius:10px;height:14px;overflow:hidden;margin-bottom:6px;position:relative">
+          <div class="cal-bar-fill" id="cal-bar" style="width:0%;height:100%;border-radius:10px"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:10px"><span>0</span><span id="cal-pct-label">0%</span><span id="cal-goal-end">—</span></div>
+        <!-- Protein + Carbs mini bars below calories -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:2px">
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px">
+              <span style="color:var(--blue);font-weight:600">💪 Protein</span>
+              <span id="protein-mini-label" style="color:var(--muted)">0g</span>
+            </div>
+            <div style="background:rgba(76,201,240,0.1);border-radius:6px;height:7px;overflow:hidden">
+              <div id="protein-mini-bar" style="height:100%;background:linear-gradient(90deg,var(--blue),#90e0ef);border-radius:6px;transition:width 0.5s;width:0%"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px">
+              <span style="color:var(--red);font-weight:600">🥑 Carbs</span>
+              <span id="carbs-mini-label" style="color:var(--muted)">0g</span>
+            </div>
+            <div style="background:rgba(255,77,109,0.1);border-radius:6px;height:7px;overflow:hidden">
+              <div id="carbs-mini-bar" style="height:100%;background:linear-gradient(90deg,var(--red),#ff8fa3);border-radius:6px;transition:width 0.5s;width:0%"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Macro comparison cards -->
@@ -2278,6 +2351,9 @@ let selectedCarbLimit='5g', chefMode='snack', selectedServings='1', selectedDiff
 
 function toggleSnackTag(el){el.classList.toggle('active');}
 function selectCarbLimit(el,val){document.querySelectorAll('[id^=carb-]').forEach(b=>b.classList.remove('active'));el.classList.add('active');selectedCarbLimit=val;}
+function toggleChefTag(btn){
+  btn.classList.toggle('chef-tag-active');
+}
 function selectServings(btn,val){selectedServings=val;document.querySelectorAll('[id^="srv-"]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
 function selectDifficulty(btn,val){selectedDifficulty=val;document.querySelectorAll('[id^="diff-"]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
 function selectServings(el,val){document.querySelectorAll('[id^=srv-]').forEach(b=>b.classList.remove('active'));el.classList.add('active');selectedServings=val;}
@@ -2306,17 +2382,56 @@ function updateAIUsageBanner(){
 
 function setChefMode(mode, btn){
   chefMode=mode;
+  // Show/hide panels
+  const isFavs = mode==='favs';
   document.getElementById('chef-meal-opts').style.display=mode==='meal'?'block':'none';
   document.getElementById('chef-snack-opts').style.display=mode==='snack'?'block':'none';
-  document.getElementById('chef-carb-label').textContent=mode==='meal'?'Max carbs per meal?':'Max carbs per snack?';
-  document.getElementById('snackBtn').textContent=mode==='meal'?'🤖 Generate Meal Ideas':'🤖 Generate Snack Ideas';
-  document.getElementById('chef-ing-label').textContent=mode==='meal'?'What ingredients do you have?':'What do you have available?';
+  document.getElementById('chef-carb-label').parentElement.style.display=isFavs?'none':'block';
+  document.getElementById('snackBtn').style.display=isFavs?'none':'block';
+  document.querySelector('.snack-input-label').closest('div[style*="margin-bottom:12px"]').style.display=isFavs?'none':'block';
+  document.getElementById('chef-favs-panel').style.display=isFavs?'block':'none';
+  document.getElementById('snackResult').innerHTML='';
+
+  if(!isFavs){
+    document.getElementById('chef-carb-label').textContent=mode==='meal'?'Max carbs per meal?':'Max carbs per snack?';
+    document.getElementById('snackBtn').textContent=mode==='meal'?'🤖 Generate Meal Ideas':'🤖 Generate Snack Ideas';
+    document.getElementById('chef-ing-label').textContent=mode==='meal'?'What ingredients do you have?':'What do you have available?';
+    document.querySelectorAll('#cravingTags .chef-tag-active, #mealTypeTags .chef-tag-active').forEach(t=>t.classList.remove('chef-tag-active'));
+    document.getElementById('snackIngredients').value='';
+  } else {
+    renderFavsPanel();
+  }
   document.querySelectorAll('#sec-snack .inner-tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('snackResult').innerHTML='';
-  // Clear all active tags when switching mode to avoid cross-contamination
-  document.querySelectorAll('#cravingTags .snack-tag-btn, #mealTypeTags .snack-tag-btn').forEach(t=>t.classList.remove('active'));
-  document.getElementById('snackIngredients').value='';
+}
+
+function renderFavsPanel(){
+  const list = document.getElementById('favsPanelList');
+  if(!list) return;
+  if(!aiMealFavorites.length){
+    list.innerHTML='<div class="empty-st"><div class="ei">⭐</div><p>No saved meals yet.<br>Generate meals and tap ⭐ Save!</p></div>';
+    return;
+  }
+  list.innerHTML = aiMealFavorites.map(f=>`
+    <div style="background:rgba(255,193,7,0.06);border:1px solid rgba(255,193,7,0.2);border-radius:14px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div style="font-size:14px;font-weight:700;color:#ffc107;flex:1">${f.name}</div>
+        <button onclick="deleteFavMeal(${f.id})" style="background:none;border:none;color:#ff4d6d;font-size:16px;cursor:pointer;margin-left:8px">🗑</button>
+      </div>
+      ${f.desc?`<div style="font-size:12px;color:#8ab0c8;margin-bottom:8px">${f.desc}</div>`:''}
+      ${f.macro?`<div style="font-size:11px;color:#00e676;margin-bottom:8px">📊 ${f.macro}</div>`:''}
+      <div style="display:flex;gap:8px">
+        <button onclick="addFavToTracker(${f.id})" style="flex:1;padding:8px;background:rgba(76,201,240,0.1);border:1px solid rgba(76,201,240,0.3);border-radius:9px;color:var(--blue);font-size:12px;font-weight:700;cursor:pointer">📊 Log to Tracker</button>
+      </div>
+    </div>`).join('');
+}
+
+function clearAllFavorites(){
+  if(!confirm('Clear all saved meals?')) return;
+  aiMealFavorites=[];
+  localStorage.setItem('kb_aiMealFavs','[]');
+  renderFavsPanel();
+  showToast('🗑 Favorites cleared');
 }
 
 async function generateChef(){
@@ -2325,7 +2440,10 @@ async function generateChef(){
   // Only get tags from the relevant section to avoid cross-contamination
   const isMeal=chefMode==='meal';
   const tagSection=isMeal?'#mealTypeTags':'#cravingTags';
-  const tags=[...document.querySelectorAll(tagSection+' .snack-tag-btn.active')].map(b=>b.textContent.trim()).join(', ');
+  // Support both old snack-tag-btn.active and new chef-tag-active
+  const tags=[...document.querySelectorAll(tagSection+' .snack-tag-btn.active, '+tagSection+' .chef-tag-active')]
+    .map(b=>{ const spans=b.querySelectorAll('span'); return spans.length>1?spans[1].textContent.trim():b.textContent.trim(); })
+    .join(', ');
   const btn=document.getElementById('snackBtn'),result=document.getElementById('snackResult');
   btn.disabled=true;
   btn.textContent='Generating...';
@@ -2362,8 +2480,9 @@ Be creative - suggest different snacks each time, not the same classics.
 
 For each snack respond in EXACTLY this format:
 SNACK: [name]
-DESC: [1-2 sentence description and how to make it]
+DESC: [1-2 sentence description]
 INGREDIENTS: [comma-separated list e.g. "2 tbsp almond butter, 1 stalk celery"]
+STEPS: [2-3 simple prep steps separated by | ]
 CARBS: [net carbs]g | FAT: [fat]g | PROTEIN: [protein]g`;
     }
 
@@ -2420,8 +2539,10 @@ CARBS: [net carbs]g | FAT: [fat]g | PROTEIN: [protein]g`;
         const desc=lines.find(l=>l.startsWith('DESC:'))?.replace('DESC:','').trim()||'';
         const ingLine=lines.find(l=>l.startsWith('INGREDIENTS:'))?.replace('INGREDIENTS:','').trim()||'';
         const macros=lines.find(l=>l.startsWith('CARBS:'))?.replace('CARBS:','').trim()||'';
+        const stepsLine=lines.find(l=>l.startsWith('STEPS:'))?.replace('STEPS:','').trim()||'';
         const ingredients=ingLine.split(',').map(i=>i.trim()).filter(Boolean);
-        return {name,desc,ingredients,macros};
+        const steps=stepsLine.split('|').map(s=>s.trim()).filter(Boolean);
+        return {name,desc,ingredients,steps,macros};
       });
       result.innerHTML=`<div class="snack-result">
         <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:14px;color:var(--purple)">🎯 Your Personalised Snack Ideas</div>
@@ -2441,6 +2562,10 @@ CARBS: [net carbs]g | FAT: [fat]g | PROTEIN: [protein]g`;
             <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px">
               ${s.ingredients.map(ing=>`<span style="font-size:11px;padding:3px 9px;background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.2);border-radius:6px;color:#c0d0e0">${ing}</span>`).join('')}
             </div>
+            ${s.steps&&s.steps.length?`<div style="margin-bottom:8px">
+              <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">👨‍🍳 How to Make It</div>
+              ${s.steps.map((step,si)=>`<div style="display:flex;gap:8px;margin-bottom:5px;font-size:12px;color:#c0d0e0;line-height:1.5"><span style="background:var(--purple);color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;margin-top:1px">${si+1}</span><span>${step}</span></div>`).join('')}
+            </div>`:''}
             <div style="display:flex;gap:6px;margin-top:4px">
               <button onclick="saveAIMealFavorite(this)" style="flex:1;padding:8px;background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.3);border-radius:9px;color:#ffc107;font-size:11px;font-weight:700;cursor:pointer">⭐ Save</button>
               <button onclick="addAIMealToTracker(this)" style="flex:1;padding:8px;background:rgba(76,201,240,0.1);border:1px solid rgba(76,201,240,0.3);border-radius:9px;color:var(--blue);font-size:11px;font-weight:700;cursor:pointer">📊 Track</button>
@@ -3309,6 +3434,17 @@ function updateTrackerDisplay(){
   document.getElementById('cal-bar').style.width=calPct+'%';
   document.getElementById('cal-bar').className='cal-bar-fill'+(over?' over':'');
   document.getElementById('cal-pct-label').textContent=Math.round(calPct)+'%';
+  // Update protein + carbs mini bars
+  const protPct=Math.min((t.protein/macroGoals.protein)*100,100);
+  const carbPct=Math.min((t.carbs/macroGoals.carbs)*100,100);
+  const protBar=document.getElementById('protein-mini-bar');
+  const carbBar=document.getElementById('carbs-mini-bar');
+  const protLbl=document.getElementById('protein-mini-label');
+  const carbLbl=document.getElementById('carbs-mini-label');
+  if(protBar){protBar.style.width=protPct+'%';protLbl.textContent=Math.round(t.protein)+'g / '+macroGoals.protein+'g';}
+  if(carbBar){carbBar.style.width=carbPct+'%';carbLbl.textContent=Math.round(t.carbs)+'g / '+macroGoals.carbs+'g';
+    carbBar.style.background=t.carbs>macroGoals.carbs?'linear-gradient(90deg,#ff4d6d,#ff8fa3)':'linear-gradient(90deg,var(--red),#ff8fa3)';
+  }
   renderMacroCards(t);
   renderMacroBars(t);
 }
@@ -3365,12 +3501,21 @@ function renderMacroBars(t){
   }).join('');
 }
 
-function addToLog(food){
-  const entry={...food,logId:Date.now()};
+function addToLog(food, category){
+  // Auto-detect category by time of day if not specified
+  if(!category){
+    const h=new Date().getHours();
+    if(h>=5&&h<11) category='🌅 Breakfast';
+    else if(h>=11&&h<15) category='☀️ Lunch';
+    else if(h>=15&&h<18) category='🍿 Snack';
+    else if(h>=18&&h<23) category='🌙 Dinner';
+    else category='🍽️ Other';
+  }
+  const entry={...food,logId:Date.now(),mealCategory:category};
   foodLogEntries.unshift(entry);
   renderFoodLog();
   updateTrackerDisplay();
-  showToast('✅ '+food.name+' added!');
+  showToast('✅ '+food.name+' added to '+category+'!');
   // Keep today's food archived in real-time so calendar can show it
   try{
     const todayKey=new Date().toDateString();
@@ -3407,21 +3552,49 @@ function renderSavedMealsInTracker(){
 function renderFoodLog(){
   const el=document.getElementById('foodLog');
   if(!foodLogEntries.length){el.innerHTML='<div class="empty-st" style="padding:18px"><div class="ei" style="font-size:32px">🍽️</div><p>Search above to add meals to your log</p></div>';return;}
-  el.innerHTML=`<div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Today's Food Log</div>`+
-    foodLogEntries.map(e=>`
-    <div class="log-item-row" style="margin-bottom:7px">
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:600">${e.name}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px">
-          <span style="color:var(--red)">${e.carbs}g carbs</span> ·
-          <span style="color:var(--yellow)">${e.fat}g fat</span> ·
-          <span style="color:var(--blue)">${e.protein}g protein</span> ·
-          <span style="color:var(--orange)">${e.calories} kcal</span>
-        </div>
-      </div>
-      <button class="log-rm" onclick="removeFromLog(${e.logId})">✕</button>
-      <button onclick="openEditFood(${e.logId})" style="background:rgba(199,125,255,0.15);border:1px solid rgba(199,125,255,0.3);border-radius:7px;padding:5px 9px;color:var(--purple);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-left:5px">✏️</button>
-    </div>`).join('');
+  const mealOrder=['🌅 Breakfast','☀️ Lunch','🍿 Snack','🌙 Dinner','🍽️ Other'];
+  // Group entries by meal category
+  const groups={};
+  foodLogEntries.forEach(e=>{
+    const cat=e.mealCategory||'🍽️ Other';
+    if(!groups[cat]) groups[cat]=[];
+    groups[cat].push(e);
+  });
+  // Sort groups by mealOrder
+  const sortedGroups=[];
+  mealOrder.forEach(cat=>{ if(groups[cat]) sortedGroups.push([cat,groups[cat]]); });
+  Object.keys(groups).filter(c=>!mealOrder.includes(c)).forEach(c=>sortedGroups.push([c,groups[c]]));
+
+  el.innerHTML=sortedGroups.map(([cat,items])=>{
+    const ct=items.reduce((a,e)=>({cal:a.cal+(e.calories||0),carbs:a.carbs+(e.carbs||0),fat:a.fat+(e.fat||0),protein:a.protein+(e.protein||0)}),{cal:0,carbs:0,fat:0,protein:0});
+    const tc=ct.cal||1;
+    const cd=Math.round((ct.carbs*4/tc)*360);
+    const pd=Math.round((ct.protein*4/tc)*360);
+    return '<div style="margin-bottom:16px">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'+
+        '<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px">'+cat+'</div>'+
+        '<div style="display:flex;align-items:center;gap:8px">'+
+          '<div style="width:26px;height:26px;border-radius:50%;background:conic-gradient(#ff4d6d 0deg '+cd+'deg,#4cc9f0 '+cd+'deg '+(cd+pd)+'deg,#ffd166 '+(cd+pd)+'deg 360deg)"></div>'+
+          '<span style="font-size:11px;color:var(--muted)">'+(Math.round(ct.cal))+' kcal</span>'+
+        '</div>'+
+      '</div>'+
+      items.map(e=>
+        '<div class="log-item-row" style="margin-bottom:7px">'+
+          '<div style="flex:1">'+
+            '<div style="font-size:13px;font-weight:600">'+e.name+'</div>'+
+            '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+
+              '<span style="color:var(--red)">'+(e.carbs||0)+'g carbs</span> · '+
+              '<span style="color:var(--yellow)">'+(e.fat||0)+'g fat</span> · '+
+              '<span style="color:var(--blue)">'+(e.protein||0)+'g protein</span> · '+
+              '<span style="color:var(--orange)">'+(e.calories||0)+' kcal</span>'+
+            '</div>'+
+          '</div>'+
+          '<button class="log-rm" onclick="removeFromLog('+e.logId+')">✕</button>'+
+          '<button onclick="openEditFood('+e.logId+')" style="background:rgba(199,125,255,0.15);border:1px solid rgba(199,125,255,0.3);border-radius:7px;padding:5px 9px;color:var(--purple);font-size:11px;cursor:pointer;margin-left:5px">✏️</button>'+
+        '</div>'
+      ).join('')+
+    '</div>';
+  }).join('');
 }
 
 function showLogSugg(q){
@@ -3765,12 +3938,22 @@ function calRenderFoodLog(){
   const totCarb = foods.reduce((s,f)=>s+(f.carbs||0),0);
   const totFat  = foods.reduce((s,f)=>s+(f.fat||0),0);
   const totProt = foods.reduce((s,f)=>s+(f.protein||0),0);
-  macroEl.style.display = 'flex';
-  macroEl.innerHTML = `
-    <span>📊 <b style="color:var(--text)">${Math.round(totCal)} kcal</b></span>
-    <span style="color:var(--red)">${totCarb.toFixed(1)}g carbs</span>
-    <span style="color:var(--yellow)">${totFat.toFixed(1)}g fat</span>
-    <span style="color:var(--blue)">${totProt.toFixed(1)}g prot</span>`;
+  macroEl.style.display = 'block';
+  // Mini pie for the day
+  const tc2=totCal||1;
+  const cd2=Math.round((totCarb*4/tc2)*360);
+  const pd2=Math.round((totProt*4/tc2)*360);
+  macroEl.innerHTML = `<div style="display:flex;align-items:center;gap:10px;padding:8px 0">
+    <div style="width:40px;height:40px;border-radius:50%;background:conic-gradient(#ff4d6d 0deg ${cd2}deg,#4cc9f0 ${cd2}deg ${cd2+pd2}deg,#ffd166 ${cd2+pd2}deg 360deg);flex-shrink:0"></div>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:700;color:var(--text)">📊 ${Math.round(totCal)} kcal</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px">
+        <span style="color:var(--red)">${totCarb.toFixed(1)}g carbs</span> ·
+        <span style="color:var(--yellow)">${totFat.toFixed(1)}g fat</span> ·
+        <span style="color:var(--blue)">${totProt.toFixed(1)}g protein</span>
+      </div>
+    </div>
+  </div>`;
 
   listEl.innerHTML = foods.map((f,i)=>`
     <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px">
@@ -3947,7 +4130,13 @@ function calSaveJournal(){
 }
 
 function drawWeightGraph(){
+  // Wait for canvas to be visible and have proper dimensions
   const canvas=document.getElementById('weightGraphCanvas');
+  if(!canvas) return;
+  if(canvas.offsetWidth === 0){
+    setTimeout(drawWeightGraph, 100);
+    return;
+  }
   const emptyEl=document.getElementById('weightGraphEmpty');
   // Sort oldest→newest using timestamp (most reliable)
   const pts=weightLog.filter(w=>w.kg).sort((a,b)=>(a.timestamp||0)-(b.timestamp||0));
@@ -4026,28 +4215,43 @@ function compressJournalEntries(entries){
 }
 
 function saveJournalPhotos(entries){
-  // Save photos separately, keyed by entry id
   const photoMap = {};
   entries.forEach(e => {
-    if(e.photo) photoMap[e.id + '_main'] = e.photo;
-    if(e.photos && e.photos.length) photoMap[e.id + '_multi'] = e.photos;
+    if(e.photo){ photoMap[e.id + '_main'] = e.photo; photoMap[e.id + '_date'] = e.date; }
+    if(e.photos && e.photos.length){ photoMap[e.id + '_multi'] = e.photos; }
   });
   try {
     localStorage.setItem('kb_journalPhotos', JSON.stringify(photoMap));
   } catch(err) {
-    // Photos too large - save without them
-    console.warn('Photos too large for localStorage, saving without');
+    // If too large, try saving just the most recent 3 entries with photos
+    try {
+      const recentMap = {};
+      const withPhotos = entries.filter(e => e.photo || (e.photos && e.photos.length)).slice(0,3);
+      withPhotos.forEach(e => {
+        if(e.photo) recentMap[e.id + '_main'] = e.photo;
+        if(e.photos && e.photos.length) recentMap[e.id + '_multi'] = e.photos;
+      });
+      localStorage.setItem('kb_journalPhotos', JSON.stringify(recentMap));
+    } catch(e2) { console.warn('Photos too large even for partial save'); }
   }
 }
 
 function loadJournalPhotos(entries){
   try {
     const photoMap = JSON.parse(localStorage.getItem('kb_journalPhotos') || '{}');
-    return entries.map(e => ({
-      ...e,
-      photo: photoMap[e.id + '_main'] || e.photo || null,
-      photos: photoMap[e.id + '_multi'] || e.photos || []
-    }));
+    return entries.map(e => {
+      // Try by id first, then by date as fallback
+      const byId = photoMap[e.id + '_main'];
+      const multiById = photoMap[e.id + '_multi'];
+      // Also try searching by date key
+      const dateKey = Object.keys(photoMap).find(k => k.endsWith('_main') && 
+        photoMap[k.replace('_main','_date')] === e.date);
+      return {
+        ...e,
+        photo: byId || e.photo || null,
+        photos: multiById || e.photos || []
+      };
+    });
   } catch(err) { return entries; }
 }
 
@@ -4560,21 +4764,7 @@ function showSettings(){
       `}
     </div>
 
-    <!-- AI Meal Favorites -->
-    <div style="background:#1a2332;border-radius:16px;padding:16px;margin-bottom:16px">
-      <div style="font-size:11px;color:#5a7a9a;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">⭐ Saved AI Meals (${aiMealFavorites.length})</div>
-      ${aiMealFavorites.length === 0 ? '<div style="color:#5a7a9a;font-size:13px">No saved meals yet. Generate meals in AI Chef and tap ⭐ Save.</div>' :
-        aiMealFavorites.slice(0,10).map(f => `
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-          <div style="flex:1">
-            <div style="font-size:13px;font-weight:700">${f.name}</div>
-            <div style="font-size:11px;color:#5a7a9a">${f.macro||f.desc||''} · ${f.savedAt}</div>
-          </div>
-          <button onclick="addFavToTracker(${f.id})" style="padding:6px 10px;background:rgba(76,201,240,0.1);border:1px solid rgba(76,201,240,0.3);border-radius:8px;color:var(--blue);font-size:11px;font-weight:700;cursor:pointer">📊 Track</button>
-          <button onclick="deleteFavMeal(${f.id})" style="padding:6px 8px;background:rgba(255,77,109,0.1);border:1px solid rgba(255,77,109,0.2);border-radius:8px;color:#ff4d6d;font-size:11px;cursor:pointer">🗑</button>
-        </div>`).join('')
-      }
-    </div>
+    <!-- Saved meals moved to AI Chef > Saved tab -->
 
     <!-- Preferences -->
     <div style="background:#1a2332;border-radius:16px;padding:16px;margin-bottom:16px">
