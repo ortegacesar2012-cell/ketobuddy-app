@@ -698,7 +698,14 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
         </button>
       </div>
     </div>
-    <div id="emptyState" class="empty-st"><div class="ei">🔬</div><p>Scan a barcode or type any food name — AI looks up real nutrition instantly</p></div>
+    <div id="emptyState">
+      <!-- Recent searches -->
+      <div id="recentSearchSection" style="margin-bottom:16px">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">🕐 Recent Searches</div>
+        <div id="recentSearchList"></div>
+      </div>
+      <div style="text-align:center;padding:16px 0;color:var(--muted);font-size:13px">🔬 Search any food or scan a barcode</div>
+    </div>
     <div id="searchResults"></div>
   </div>
 
@@ -779,6 +786,7 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
       <button class="inner-tab" id="chef-tab-favs" onclick="setChefMode('favs',this)">⭐ Saved</button>
     </div>
 
+    <div id="chef-generate-area">
     <!-- Ingredients -->
     <div style="margin-bottom:12px">
       <div class="snack-input-label" id="chef-ing-label">What do you have available?</div>
@@ -863,6 +871,7 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
     </div>
 
     <button class="btn btn-g" id="snackBtn" onclick="generateChef()" style="background:linear-gradient(135deg,var(--purple),#9c27b0);box-shadow:0 4px 16px rgba(199,125,255,0.25);margin-bottom:4px">🤖 Generate Ideas</button>
+    </div><!-- end chef-generate-area -->
     <div id="snackResult"></div>
 
     <!-- FAVORITES PANEL -->
@@ -1925,6 +1934,7 @@ All values are per 100g. Use accurate real-world nutrition data.`;
     const text=await callAI(prompt,1500);
     const items=JSON.parse(text.replace(/```json|```/g,'').trim());
     if(items&&items.length){
+      if(items[0]) addRecentSearch(q, items[0]);
       const cards=items.map(item=>{
         const keto=(item.carbs-item.fiber)<=10;
         const netCarbs=+(item.carbs-(item.fiber||0)).toFixed(1);
@@ -2268,6 +2278,38 @@ async function handleFoodImage(input){
   input.value='';
 }
 
+
+// ===== RECENT SEARCHES =====
+let recentSearches = JSON.parse(localStorage.getItem('kb_recentSearches') || '[]');
+
+function addRecentSearch(name, foodObj){
+  recentSearches = recentSearches.filter(r => r.name !== name);
+  recentSearches.unshift({ name, food: foodObj, ts: Date.now() });
+  if(recentSearches.length > 8) recentSearches = recentSearches.slice(0, 8);
+  localStorage.setItem('kb_recentSearches', JSON.stringify(recentSearches));
+  renderRecentSearches();
+}
+
+function renderRecentSearches(){
+  const el = document.getElementById('recentSearchList');
+  if(!el) return;
+  const section = document.getElementById('recentSearchSection');
+  if(!recentSearches.length){
+    if(section) section.style.display = 'none';
+    return;
+  }
+  if(section) section.style.display = 'block';
+  el.innerHTML = recentSearches.map(r => `
+    <div onclick="qs('${r.name.replace(/'/g,"\'")}'')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;margin-bottom:6px;cursor:pointer">
+      <span style="font-size:18px">🕐</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${r.name}</div>
+        ${r.food ? `<div style="font-size:11px;color:var(--muted)">${r.food.carbs}g carbs · ${r.food.calories} kcal</div>` : ''}
+      </div>
+      <span style="font-size:12px;color:var(--muted)">→</span>
+    </div>`).join('');
+}
+
 function stopBarcodeScanner(){
   if(barcodeStream){barcodeStream.getTracks().forEach(t=>t.stop());barcodeStream=null;}
   clearInterval(barcodeInterval);
@@ -2386,9 +2428,7 @@ function setChefMode(mode, btn){
   const isFavs = mode==='favs';
   document.getElementById('chef-meal-opts').style.display=mode==='meal'?'block':'none';
   document.getElementById('chef-snack-opts').style.display=mode==='snack'?'block':'none';
-  document.getElementById('chef-carb-label').parentElement.style.display=isFavs?'none':'block';
-  document.getElementById('snackBtn').style.display=isFavs?'none':'block';
-  document.querySelector('.snack-input-label').closest('div[style*="margin-bottom:12px"]').style.display=isFavs?'none':'block';
+  document.getElementById('chef-generate-area').style.display=isFavs?'none':'block';
   document.getElementById('chef-favs-panel').style.display=isFavs?'block':'none';
   document.getElementById('snackResult').innerHTML='';
 
@@ -4887,12 +4927,13 @@ function updateAuthUI(){
           kbUser.plan = d.plan;
           localStorage.setItem('kb_user', JSON.stringify({userId:d.userId,email:d.email,plan:d.plan}));
           updateAuthUI();
+          updateAIUsageBanner(); // refresh banner now that plan is confirmed
         } else {
-          // Token expired
           kbUser=null; localStorage.removeItem('kb_token'); localStorage.removeItem('kb_user');
           updateAuthUI();
+          updateAIUsageBanner();
         }
-      }).catch(()=>{});
+      }).catch(()=>{ updateAIUsageBanner(); });
     }catch(e){}
   }
   // Check for payment success
@@ -4907,6 +4948,7 @@ function updateAuthUI(){
     window.history.replaceState({}, '', '/');
   }
   setTimeout(updateAuthUI, 100);
+  setTimeout(renderRecentSearches, 200);
 })();
 
 </script>
