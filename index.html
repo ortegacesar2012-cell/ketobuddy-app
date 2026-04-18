@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -387,8 +388,11 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
 .ob-wrap{max-width:500px;margin:0 auto;padding:24px 20px 40px;width:100%;}
 .ob-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;}
 .ob-logo-icon{width:48px;height:48px;background:linear-gradient(135deg,#00e676,#00bcd4);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;}
-.ob-progress{display:flex;gap:5px;margin-bottom:28px;}
-.ob-dot{height:4px;border-radius:3px;flex:1;background:rgba(255,255,255,0.1);transition:background 0.3s;}
+.ob-progress{margin-bottom:24px;}
+.ob-step-label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+.ob-step-label span{color:var(--orange);font-size:13px;font-weight:800;}
+.ob-dots{display:flex;gap:5px;}
+.ob-dot{height:4px;border-radius:3px;flex:1;background:rgba(255,255,255,0.1);transition:all 0.3s;}
 .ob-dot.done{background:var(--green);}
 .ob-dot.active{background:var(--orange);}
 .ob-screen{display:none;animation:fadeIn 0.3s ease;}
@@ -444,8 +448,11 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
       </div>
     </div>
     <div class="ob-progress" id="obProgress">
-      <div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div>
-      <div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div>
+      <div class="ob-step-label"><span id="ob-step-text">Step 1 of 5</span><span id="ob-step-pct">0%</span></div>
+      <div class="ob-dots">
+        <div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div>
+        <div class="ob-dot"></div><div class="ob-dot"></div>
+      </div>
     </div>
 
     <!-- SCREEN 1: Basic info -->
@@ -467,23 +474,44 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
       <button class="ob-back" onclick="obBack(2)">← Back</button>
       <div class="ob-title">Your measurements</div>
       <div class="ob-sub">Used to calculate your exact calorie needs 📏</div>
-      <div class="ob-label">Age</div>
-      <input class="ob-inp" id="ob-age" type="number" placeholder="e.g. 30" min="13" max="100"/>
-      <div class="ob-label">Height</div>
-      <div style="display:flex;gap:8px;margin-bottom:14px">
-        <input class="ob-inp" id="ob-heightcm" type="number" placeholder="cm  (e.g. 175)" min="100" max="250" style="margin-bottom:0;flex:1"/>
-        <span style="color:var(--muted);align-self:center;font-size:13px">or</span>
-        <input class="ob-inp" id="ob-heightft" type="number" placeholder="ft" min="3" max="8" style="margin-bottom:0;width:60px"/>
-        <input class="ob-inp" id="ob-heightin" type="number" placeholder="in" min="0" max="11" style="margin-bottom:0;width:60px"/>
+
+      <!-- Unit toggle -->
+      <div style="display:flex;background:rgba(255,255,255,0.04);border-radius:10px;padding:3px;margin-bottom:18px;gap:3px;border:1px solid rgba(255,255,255,0.06)">
+        <button id="unit-metric" onclick="setObUnits('metric')" style="flex:1;padding:8px;border:none;border-radius:7px;background:linear-gradient(135deg,#1a2d42,#162032);color:#fff;font-weight:700;font-size:13px;cursor:pointer">📏 Metric (cm/kg)</button>
+        <button id="unit-imperial" onclick="setObUnits('imperial')" style="flex:1;padding:8px;border:none;border-radius:7px;background:transparent;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer">🇺🇸 Imperial (ft/lbs)</button>
       </div>
+
+      <div class="ob-label">Age</div>
+      <input class="ob-inp" id="ob-age" type="number" placeholder="e.g. 30" min="13" max="100" oninput="liveUpdateMacroPreview()"/>
+
+      <!-- Metric height -->
+      <div id="height-metric">
+        <div class="ob-label">Height</div>
+        <input class="ob-inp" id="ob-heightcm" type="number" placeholder="Height in cm (e.g. 175)" min="100" max="250" oninput="liveUpdateMacroPreview()"/>
+      </div>
+      <!-- Imperial height -->
+      <div id="height-imperial" style="display:none">
+        <div class="ob-label">Height</div>
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <input class="ob-inp" id="ob-heightft" type="number" placeholder="ft" min="3" max="8" style="margin-bottom:0;flex:1" oninput="liveUpdateMacroPreview()"/>
+          <input class="ob-inp" id="ob-heightin" type="number" placeholder="in" min="0" max="11" style="margin-bottom:0;flex:1" oninput="liveUpdateMacroPreview()"/>
+        </div>
+      </div>
+
+      <!-- Weight -->
       <div class="ob-label">Current weight</div>
       <div style="display:flex;gap:8px;margin-bottom:14px">
-        <input class="ob-inp" id="ob-weight" type="number" placeholder="e.g. 80" min="30" max="400" style="margin-bottom:0;flex:1"/>
-        <select class="ob-inp" id="ob-wunit" style="margin-bottom:0;width:80px">
+        <input class="ob-inp" id="ob-weight" type="number" placeholder="e.g. 80" min="30" max="400" style="margin-bottom:0;flex:1" oninput="liveUpdateMacroPreview()"/>
+        <div id="ob-wunit-display" style="align-self:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 14px;font-size:14px;font-weight:700;color:var(--muted);min-width:52px;text-align:center">kg</div>
+        <select class="ob-inp" id="ob-wunit" style="display:none;margin-bottom:0;width:80px">
           <option value="kg">kg</option>
           <option value="lbs">lbs</option>
         </select>
       </div>
+
+      <!-- Live macro preview -->
+      <div id="ob-live-preview" style="display:none;background:rgba(255,154,60,0.06);border:1px solid rgba(255,154,60,0.2);border-radius:12px;padding:12px;margin-bottom:14px"></div>
+
       <button class="ob-next" onclick="obNext(2)">Continue →</button>
     </div>
 
@@ -539,7 +567,7 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
 
       <!-- Keto Score Badge -->
       <div style="text-align:center;margin-bottom:14px">
-        <div class="keto-score-badge" id="ob-keto-badge">⚡ Loading...</div>
+        <div class="keto-score-badge keto-score-good" id="ob-keto-badge">💪 Your Keto Plan</div>
       </div>
 
       <!-- Calorie Goal -->
@@ -700,11 +728,33 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
     </div>
     <div id="emptyState">
       <!-- Recent searches -->
-      <div id="recentSearchSection" style="margin-bottom:16px">
+      <div id="recentSearchSection" style="display:none;margin-bottom:16px">
         <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">🕐 Recent Searches</div>
         <div id="recentSearchList"></div>
       </div>
-      <div style="text-align:center;padding:16px 0;color:var(--muted);font-size:13px">🔬 Search any food or scan a barcode</div>
+      <!-- Quick nav shortcuts -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+        <button onclick="switchSection('tracker',document.querySelector('.nav-btn[onclick*=tracker]'))" style="padding:14px 10px;background:rgba(76,201,240,0.07);border:1px solid rgba(76,201,240,0.2);border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px">
+          <span style="font-size:26px">📊</span>
+          <span style="font-size:12px;color:var(--blue);font-weight:700">View Tracker</span>
+          <span style="font-size:10px;color:var(--muted)">See today's macros</span>
+        </button>
+        <button onclick="switchSection('planner',document.querySelector('.nav-btn[onclick*=planner]'))" style="padding:14px 10px;background:rgba(0,230,118,0.07);border:1px solid rgba(0,230,118,0.2);border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px">
+          <span style="font-size:26px">📅</span>
+          <span style="font-size:12px;color:var(--green);font-weight:700">Meal Planner</span>
+          <span style="font-size:10px;color:var(--muted)">Plan your full day</span>
+        </button>
+        <button onclick="switchSection('snack',document.querySelector('.nav-btn[onclick*=snack]'))" style="padding:14px 10px;background:rgba(199,125,255,0.07);border:1px solid rgba(199,125,255,0.2);border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px">
+          <span style="font-size:26px">🤖</span>
+          <span style="font-size:12px;color:var(--purple);font-weight:700">AI Chef</span>
+          <span style="font-size:10px;color:var(--muted)">Get meal ideas</span>
+        </button>
+        <button onclick="switchSection('journal',document.querySelector('.nav-btn[onclick*=journal]'))" style="padding:14px 10px;background:rgba(255,154,60,0.07);border:1px solid rgba(255,154,60,0.2);border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px">
+          <span style="font-size:26px">📓</span>
+          <span style="font-size:12px;color:var(--orange);font-weight:700">Journal</span>
+          <span style="font-size:10px;color:var(--muted)">Log your day</span>
+        </button>
+      </div>
     </div>
     <div id="searchResults"></div>
   </div>
@@ -775,7 +825,7 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
   <div id="sec-snack" class="section">
     <div class="sec-head"><h2>AI Chef 🤖</h2><p>Get personalised keto meals & snacks instantly</p></div>
     <div id="aiUsageBanner" style="background:rgba(199,125,255,0.08);border:1px solid rgba(199,125,255,0.2);border-radius:12px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
-      <span style="font-size:13px;color:#c0d0e0" id="aiUsageText">🤖 Loading...</span>
+      <span style="font-size:13px;color:#c0d0e0" id="aiUsageText">🎁 10 free AI searches included</span>
       <button onclick="showUpgradeModal()" id="aiUpgradeBtn" style="display:none;padding:6px 12px;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer">Upgrade Now</button>
     </div>
 
@@ -1565,7 +1615,7 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
       <div style="font-size:26px">🎯</div>
       <div style="flex:1">
         <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.8px">Your Daily Target</div>
-        <div style="font-size:13px;color:#c0d0e0;margin-top:3px" id="plannerGoalText">Loading goals...</div>
+        <div style="font-size:13px;color:#c0d0e0;margin-top:3px" id="plannerGoalText">~1,800 kcal · 25g carbs · 120g protein · 130g fat</div>
       </div>
     </div>
 
@@ -3285,12 +3335,61 @@ let obData={name:'',sex:'male',age:0,heightCm:0,weightKg:0,activityFactor:1.2,ac
 let macroGoals={cal:1600,carbs:25,fat:120,protein:100};
 let ob_currentScreen=1;
 
+const OB_STEP_NAMES=['','Name','Measurements','Activity','Your Goal','Keto Level',''];
 function obProgress(n){
   document.querySelectorAll('.ob-dot').forEach((d,i)=>{
     d.classList.toggle('done',i<n-1);
     d.classList.toggle('active',i===n-1);
   });
+  const stepText=document.getElementById('ob-step-text');
+  const stepPct=document.getElementById('ob-step-pct');
+  if(stepText) stepText.textContent = n>=6 ? '🎉 Plan ready!' : 'Step '+n+' of 5 — '+OB_STEP_NAMES[n];
+  if(stepPct) stepPct.textContent = n>=6 ? '100%' : Math.round(((n-1)/5)*100)+'%';
+  liveUpdateMacroPreview();
 }
+
+function liveUpdateMacroPreview(){
+  // Instant calorie estimate as user types on screen 2
+  const preview = document.getElementById('ob-live-preview');
+  if(!preview) return;
+  const age=parseInt(document.getElementById('ob-age')?.value)||0;
+  const cm=parseFloat(document.getElementById('ob-heightcm')?.value)||0;
+  const ft=parseFloat(document.getElementById('ob-heightft')?.value)||0;
+  const inch=parseFloat(document.getElementById('ob-heightin')?.value)||0;
+  const wval=parseFloat(document.getElementById('ob-weight')?.value)||0;
+  const wunit=document.getElementById('ob-wunit')?.value||'kg';
+  const heightCm=cm||(ft?(ft*30.48+inch*2.54):0);
+  const weightKg=wunit==='lbs'?wval/2.20462:wval;
+  if(!age||!heightCm||!weightKg){ preview.style.display='none'; return; }
+  const sex=obData.sex||'male';
+  const bmr=sex==='male'?10*weightKg+6.25*heightCm-5*age+5:10*weightKg+6.25*heightCm-5*age-161;
+  const tdee=Math.round(bmr*(obData.activityFactor||1.2));
+  const goal=tdee+(obData.goalOffset||-250);
+  const carbs=30, protein=Math.round(weightKg*1.8), fat=Math.round((goal-carbs*4-protein*4)/9);
+  preview.style.display='block';
+  preview.innerHTML='<div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">⚡ Live Estimate</div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    +'<span style="background:rgba(255,154,60,0.1);border:1px solid rgba(255,154,60,0.25);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--orange)">🔥 ~'+goal+' kcal</span>'
+    +'<span style="background:rgba(255,77,109,0.08);border:1px solid rgba(255,77,109,0.2);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--red)">🥑 '+carbs+'g carbs</span>'
+    +'<span style="background:rgba(76,201,240,0.08);border:1px solid rgba(76,201,240,0.2);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--blue)">💪 '+protein+'g protein</span>'
+    +'<span style="background:rgba(255,209,102,0.08);border:1px solid rgba(255,209,102,0.2);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--yellow)">🧈 '+Math.max(fat,30)+'g fat</span>'
+    +'</div>';
+}
+
+function setObUnits(mode){
+  const isMetric = mode === 'metric';
+  document.getElementById('unit-metric').style.background = isMetric ? 'linear-gradient(135deg,#1a2d42,#162032)' : 'transparent';
+  document.getElementById('unit-metric').style.color = isMetric ? '#fff' : 'var(--muted)';
+  document.getElementById('unit-imperial').style.background = !isMetric ? 'linear-gradient(135deg,#1a2d42,#162032)' : 'transparent';
+  document.getElementById('unit-imperial').style.color = !isMetric ? '#fff' : 'var(--muted)';
+  document.getElementById('height-metric').style.display = isMetric ? 'block' : 'none';
+  document.getElementById('height-imperial').style.display = isMetric ? 'none' : 'block';
+  document.getElementById('ob-wunit-display').textContent = isMetric ? 'kg' : 'lbs';
+  document.getElementById('ob-wunit').value = isMetric ? 'kg' : 'lbs';
+  window._obUnits = mode;
+  liveUpdateMacroPreview();
+}
+
 function obPickSex(s){obData.sex=s;['m','f'].forEach(x=>document.getElementById('sex-'+x).classList.remove('sel'));document.getElementById('sex-'+s[0]).classList.add('sel');}
 function obPickActivity(el,label,factor){obData.activityFactor=factor;obData.activityLabel=label;document.querySelectorAll('#ob-activity-list .ob-goal-choice').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');}
 function obPickGoal(el,key,label,offset){obData.goal=key;obData.goalLabel=label;obData.goalOffset=offset;document.querySelectorAll('#ob-goal-list .ob-goal-choice').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');}
@@ -5009,12 +5108,25 @@ async function generateDayPlan(){
   const goals = macroGoals || {cal:1800, carbs:dailyCarbs, protein:120, fat:130};
 
   btn.disabled = true;
-  btn.textContent = '⏳ Planning your day...';
-  result.innerHTML = `<div style="text-align:center;padding:32px">
-    <div class="pulse" style="font-size:36px">📅</div>
-    <p style="color:var(--muted);margin-top:12px;font-size:13px">AI is building your perfect keto day...</p>
-    <p style="color:var(--muted);font-size:11px;margin-top:4px">Breakfast · Lunch · Dinner · 2 Snacks</p>
-  </div>`;
+  btn.textContent = '⏳ Building your plan...';
+
+  // Show skeleton cards immediately so it feels instant
+  result.innerHTML = `
+    <div style="background:rgba(0,230,118,0.04);border:1px solid rgba(0,230,118,0.1);border-radius:16px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📊 Calculating your day totals...</div>
+      <div style="display:flex;gap:8px">
+        ${['🌅 Breakfast','☀️ Lunch','🌙 Dinner','🍿 Snack 1','🍿 Snack 2'].slice(0,plannerMealCount||5).map(m=>`
+          <div style="flex:1;background:rgba(255,255,255,0.03);border-radius:10px;padding:10px 6px;text-align:center">
+            <div style="font-size:16px;margin-bottom:4px">${m.split(' ')[0]}</div>
+            <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;margin-bottom:4px"></div>
+            <div style="height:6px;background:rgba(255,255,255,0.04);border-radius:4px;width:70%;margin:0 auto"></div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">
+      <div class="pulse" style="font-size:28px;margin-bottom:8px">🤖</div>
+      AI is crafting your meals...
+    </div>`;
 
   try {
     const favNames = aiMealFavorites.slice(0,10).map(f=>f.name).join(', ');
