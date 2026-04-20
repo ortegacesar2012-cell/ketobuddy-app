@@ -5085,9 +5085,12 @@ function initPlannerGoalBar(){
   const el = document.getElementById('plannerGoalText');
   if(!el) return;
   if(macroGoals && macroGoals.cal){
-    el.textContent = macroGoals.cal+' kcal · '+macroGoals.carbs+'g carbs · '+macroGoals.protein+'g protein · '+macroGoals.fat+'g fat';
+    el.innerHTML = '<span style="color:var(--orange)">🔥 '+macroGoals.cal+' kcal</span>'
+      +' · <span style="color:var(--red)">🥑 '+macroGoals.carbs+'g carbs</span>'
+      +' · <span style="color:var(--blue)">💪 '+macroGoals.protein+'g protein</span>'
+      +' · <span style="color:var(--yellow)">🧈 '+macroGoals.fat+'g fat</span>';
   } else {
-    el.textContent = 'Complete onboarding to set your goals';
+    el.innerHTML = '<span style="color:var(--orange)">⚠️ Complete onboarding first to set your personal goals</span>';
   }
 }
 
@@ -5102,9 +5105,14 @@ async function generateDayPlan(){
   const snackTags = [...document.querySelectorAll('#plannerSnackTags .chef-tag-active')]
     .map(b=>b.querySelectorAll('span')[1]?.textContent||'').join(', ');
 
-  const carbLimits = {strict:20, moderate:50, flexible:75};
-  const dailyCarbs = carbLimits[plannerCarbMode] || 50;
-  const goals = macroGoals || {cal:1800, carbs:dailyCarbs, protein:120, fat:130};
+  // Use actual user goals from onboarding — don't override them
+  const goals = (macroGoals && macroGoals.cal > 0) ? macroGoals : {cal:1800, carbs:25, protein:120, fat:130};
+  // Carb mode adjusts the carb limit relative to user's goal
+  const carbModeMultiplier = {strict:0.8, moderate:1.0, flexible:1.5};
+  const dailyCarbs = Math.round(goals.carbs * (carbModeMultiplier[plannerCarbMode] || 1.0));
+  const targetCal = goals.cal;
+  const targetProtein = goals.protein;
+  const targetFat = goals.fat;
 
   btn.disabled = true;
   btn.textContent = '⏳ Building your plan...';
@@ -5136,17 +5144,22 @@ async function generateDayPlan(){
     };
     const mealStructure = mealStructures[plannerMealCount] || mealStructures[5];
 
-    const prompt = `You are a professional keto nutritionist. Create a complete keto meal plan for one day.
+    const prompt = `You are a professional keto nutritionist and macro calculator. Create a keto meal plan for one day that PRECISELY hits these targets:
 
-Daily goals: ${goals.cal} calories, ${dailyCarbs}g net carbs max, ${goals.protein}g protein, ${goals.fat}g fat
-${ingredients ? 'Available ingredients: '+ingredients : 'Use common keto ingredients — be creative and varied.'}
-${styleTags ? 'Cuisine/diet style: '+styleTags : ''}
+DAILY TARGETS (you MUST hit these):
+- Calories: ${targetCal} kcal (±100 is acceptable)
+- Net Carbs: ${dailyCarbs}g MAX
+- Protein: ${targetProtein}g (±15g is acceptable)
+- Fat: ${targetFat}g (±15g is acceptable)
+
+${ingredients ? 'Use these ingredients: '+ingredients : 'Use common keto ingredients.'}
+${styleTags ? 'Style preference: '+styleTags : ''}
 ${snackTags ? 'Snack style: '+snackTags : ''}
-${favNames ? 'Do NOT repeat these saved meals: '+favNames : ''}
-Be creative — avoid boring repetitive meals. Use varied cooking methods and flavors.
+${favNames ? 'Do NOT repeat: '+favNames : ''}
+
+IMPORTANT: Plan your meals to hit the targets. If protein goal is ${targetProtein}g total, divide it across all meals. If calories goal is ${targetCal}, make sure all meals add up to ~${targetCal} kcal.
 
 Create exactly: ${mealStructure}.
-Make sure the total hits close to the daily goals.
 
 For each meal/snack use EXACTLY this format:
 
@@ -5155,12 +5168,8 @@ NAME: [recipe name]
 DESC: [1 sentence description]
 INGREDIENTS: [comma-separated with quantities]
 STEPS: [2-4 steps separated by |]
-CARBS: [net carbs]g | FAT: [fat]g | PROTEIN: [protein]g | CALS: [calories]
-
----`;
-
+CARBS: [net carbs]g | FAT: [fat]g | PROTEIN: [protein]g | CALS: [calories]`
     const text = await callAI(prompt, 2500);
-
     // Parse each meal block
     const blocks = text.split(/(?=MEAL:)/g).filter(b=>b.trim());
     const meals = blocks.map(block=>{
@@ -5201,6 +5210,26 @@ CARBS: [net carbs]g | FAT: [fat]g | PROTEIN: [protein]g | CALS: [calories]
     const typeBorder = {Breakfast:'rgba(255,154,60,0.3)',Lunch:'rgba(76,201,240,0.3)',Dinner:'rgba(199,125,255,0.3)',Snack:'rgba(0,230,118,0.25)'};
     const typeTextColor = {Breakfast:'var(--orange)',Lunch:'var(--blue)',Dinner:'var(--purple)',Snack:'var(--green)'};
 
+    // Build macro bars HTML outside template literal to avoid nesting issues
+    const macroBarsHtml = [
+      {label:'Calories',val:Math.round(totals.cal),target:targetCal,unit:'kcal',color:'var(--green)'},
+      {label:'Carbs',val:totals.carbs,target:dailyCarbs,unit:'g',color:'var(--red)'},
+      {label:'Protein',val:totals.protein,target:targetProtein,unit:'g',color:'var(--blue)'},
+      {label:'Fat',val:totals.fat,target:targetFat,unit:'g',color:'var(--yellow)'},
+    ].map(function(m){
+      var pct=Math.min(Math.round(m.val/m.target*100),100);
+      var over=m.val>m.target*1.15;
+      var close=pct>=85&&pct<=115;
+      var barColor=over?'var(--red)':m.color;
+      var txtColor=over?'var(--red)':close?'var(--green)':'var(--muted)';
+      return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'
+        +'<span style="font-size:11px;color:var(--muted);width:56px">'+m.label+'</span>'
+        +'<div style="flex:1;height:7px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden">'
+        +'<div style="height:100%;border-radius:4px;background:'+barColor+';width:'+pct+'%;transition:width 0.6s"></div></div>'
+        +'<span style="font-size:11px;color:'+txtColor+'">'+m.val+m.unit+' / '+m.target+m.unit+'</span>'
+        +'</div>';
+    }).join('');
+
     // Build HTML
     const totalCal = totals.cal||1;
     const cd = Math.round((totals.carbs*4/totalCal)*360);
@@ -5223,27 +5252,7 @@ CARBS: [net carbs]g | FAT: [fat]g | PROTEIN: [protein]g | CALS: [calories]
         </div>
         <!-- Goal progress bars -->
         <div style="margin-top:10px;display:flex;flex-direction:column;gap:5px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:11px;color:var(--muted);width:60px">Calories</span>
-            <div style="flex:1;height:6px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden">
-              <div style="height:100%;border-radius:4px;background:var(--green);width:${Math.min(Math.round(totals.cal/goals.cal*100),100)}%;transition:width 0.5s"></div>
-            </div>
-            <span style="font-size:11px;color:var(--muted)">${Math.round(totals.cal/goals.cal*100)}%</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:11px;color:var(--muted);width:60px">Carbs</span>
-            <div style="flex:1;height:6px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden">
-              <div style="height:100%;border-radius:4px;background:${totals.carbs>dailyCarbs?'var(--red)':'var(--red)'};width:${Math.min(Math.round(totals.carbs/dailyCarbs*100),100)}%"></div>
-            </div>
-            <span style="font-size:11px;color:${totals.carbs>dailyCarbs?'var(--red)':'var(--muted)'}">${totals.carbs}g</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:11px;color:var(--muted);width:60px">Protein</span>
-            <div style="flex:1;height:6px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden">
-              <div style="height:100%;border-radius:4px;background:var(--blue);width:${Math.min(Math.round(totals.protein/goals.protein*100),100)}%"></div>
-            </div>
-            <span style="font-size:11px;color:var(--muted)">${totals.protein}g</span>
-          </div>
+          ${macroBarsHtml}
         </div>
         <button onclick="addAllPlanToTracker()" style="width:100%;margin-top:12px;padding:11px;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer">
           📊 Log All Meals to Tracker
