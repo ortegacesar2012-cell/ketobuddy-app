@@ -837,81 +837,127 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
     </div>
 
     <div id="chef-generate-area">
-    <!-- Ingredients -->
-    <div style="margin-bottom:12px">
-      <div class="snack-input-label" id="chef-ing-label">What do you have available?</div>
+
+    <!-- Specific search field -->
+    <div style="margin-bottom:14px">
+      <div class="snack-input-label" id="chef-search-label">🔍 Looking for something specific?</div>
       <div class="inp-icon">
-        <span class="ic">🛒</span>
+        <span class="ic">✨</span>
+        <input class="inp" type="text" id="chefSpecificSearch" placeholder="e.g. sugar-free strawberry sauce, keto pizza, chicken bowl..."/>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Type anything — AI finds the closest keto version</div>
+    </div>
+
+    <!-- Ingredients -->
+    <div style="margin-bottom:14px">
+      <div class="snack-input-label" id="chef-ing-label">🛒 Ingredients you have?</div>
+      <div class="inp-icon">
+        <span class="ic">🥩</span>
         <input class="inp" type="text" id="snackIngredients" placeholder="e.g. eggs, cheese, avocado, chicken..."/>
       </div>
     </div>
 
-    <!-- Meal-specific options (hidden for snacks) -->
+    <!-- Meal-specific options -->
     <div id="chef-meal-opts" style="display:none;margin-bottom:12px">
-      <div class="snack-input-label">What type of meal?</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="mealTypeTags">
+
+      <div class="snack-input-label">🕐 Meal time?</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:12px">
         <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌅</span><span>Breakfast</span></button>
         <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>☀️</span><span>Lunch</span></button>
         <button class="chef-tag-btn chef-tag-active" onclick="toggleChefTag(this)"><span>🌙</span><span>Dinner</span></button>
         <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>⚡</span><span>Meal Prep</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥗</span><span>Salad</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍲</span><span>One Pan</span></button>
+      </div>
+
+      <div class="snack-input-label">🌍 Cuisine &amp; style?</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px" id="mealTypeTags">
+        <!-- American & Western -->
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍔</span><span>American</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥩</span><span>BBQ</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍕</span><span>Comfort</span></button>
         <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐄</span><span>Carnivore</span></button>
+        <!-- Latin -->
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇲🇽</span><span>Mexican</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇧🇷</span><span>Brazilian</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🫔</span><span>Latin</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌶️</span><span>Spicy</span></button>
+        <!-- Asian -->
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍜</span><span>Asian</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇯🇵</span><span>Japanese</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇰🇷</span><span>Korean</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇨🇳</span><span>Chinese</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇹🇭</span><span>Thai</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇻🇳</span><span>Vietnamese</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍛</span><span>Indian</span></button>
+        <!-- Mediterranean & European -->
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇮🇹</span><span>Italian</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇬🇷</span><span>Greek</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🫒</span><span>Mediterr.</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇪🇸</span><span>Spanish</span></button>
+        <!-- Middle East & Africa -->
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧆</span><span>Middle East</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌍</span><span>African</span></button>
+        <!-- Diet types -->
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐟</span><span>Seafood</span></button>
         <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌱</span><span>Veggie</span></button>
         <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>💪</span><span>High Protein</span></button>
         <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧁</span><span>Dessert</span></button>
         <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍳</span><span>Quick</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍕</span><span>Comfort</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌶️</span><span>Spicy</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐟</span><span>Seafood</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥩</span><span>Red Meat</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍜</span><span>Asian Style</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥗</span><span>Salad</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍲</span><span>One Pan</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥛</span><span>Dairy-Free</span></button>
       </div>
-      <div style="margin-top:10px">
-        <div class="snack-input-label">Difficulty?</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px">
-          <button class="snack-tag-btn active" id="diff-easy" onclick="selectDifficulty(this,'Easy')">😊 Easy</button>
-          <button class="snack-tag-btn" id="diff-med" onclick="selectDifficulty(this,'Medium')">👨‍🍳 Medium</button>
-          <button class="snack-tag-btn" id="diff-hard" onclick="selectDifficulty(this,'Advanced')">⭐ Advanced</button>
-        </div>
+
+      <div class="snack-input-label">⚙️ Difficulty?</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px">
+        <button class="snack-tag-btn active" id="diff-easy" onclick="selectDifficulty(this,'Easy')">😊 Easy</button>
+        <button class="snack-tag-btn" id="diff-med" onclick="selectDifficulty(this,'Medium')">👨‍🍳 Medium</button>
+        <button class="snack-tag-btn" id="diff-hard" onclick="selectDifficulty(this,'Advanced')">⭐ Advanced</button>
       </div>
-      <div style="margin-top:2px">
-        <div class="snack-input-label">Servings?</div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px">
-          <button class="snack-tag-btn active" id="srv-1" onclick="selectServings(this,'1')">1 person</button>
-          <button class="snack-tag-btn" id="srv-2" onclick="selectServings(this,'2')">2 people</button>
-          <button class="snack-tag-btn" id="srv-4" onclick="selectServings(this,'4')">4 people</button>
-          <button class="snack-tag-btn" id="srv-6" onclick="selectServings(this,'6')">6 people</button>
-        </div>
+
+      <div class="snack-input-label">👥 Servings?</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:4px">
+        <button class="snack-tag-btn active" id="srv-1" onclick="selectServings(this,'1')">1</button>
+        <button class="snack-tag-btn" id="srv-2" onclick="selectServings(this,'2')">2</button>
+        <button class="snack-tag-btn" id="srv-4" onclick="selectServings(this,'4')">4</button>
+        <button class="snack-tag-btn" id="srv-6" onclick="selectServings(this,'6')">6+</button>
       </div>
     </div>
 
-    <!-- Snack-specific craving tags -->
+    <!-- Snack craving tags -->
     <div id="chef-snack-opts" style="margin-bottom:12px">
-      <div class="snack-input-label">What are you craving?</div>
+      <div class="snack-input-label">😋 What are you craving?</div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="cravingTags">
+        <!-- Flavour -->
         <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧀</span><span>Savory</span></button>
         <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍫</span><span>Sweet</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧂</span><span>Salty</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌶️</span><span>Spicy</span></button>
+        <!-- Texture -->
         <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥜</span><span>Crunchy</span></button>
         <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥛</span><span>Creamy</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>⚡</span><span>Quick</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>💪</span><span>Protein</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🫐</span><span>Fruity</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍦</span><span>Frozen</span></button>
+        <!-- Type -->
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>💪</span><span>High Protein</span></button>
         <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧁</span><span>Dessert</span></button>
         <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥐</span><span>Pastry</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍦</span><span>No-Cook</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍰</span><span>Cake Style</span></button>
+        <!-- Speed -->
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>⚡</span><span>Under 5min</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍳</span><span>Cooked</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥗</span><span>No-Cook</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧊</span><span>Cold</span></button>
+        <!-- Diet -->
         <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐄</span><span>Carnivore</span></button>
         <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌱</span><span>Vegan</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌶️</span><span>Spicy</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🫐</span><span>Fruity</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥗</span><span>Fresh</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧂</span><span>Salty</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍳</span><span>Cooked</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥛</span><span>Dairy-Free</span></button>
+        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥚</span><span>Egg-Based</span></button>
       </div>
     </div>
 
     <!-- Carb limit (shared) -->
     <div style="margin-bottom:14px">
-      <div class="snack-input-label" id="chef-carb-label">Max carbs per snack?</div>
+      <div class="snack-input-label" id="chef-carb-label">Max carbs?</div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px">
         <button class="snack-tag-btn" id="carb-2" onclick="selectCarbLimit(this,'2g')">Under 2g</button>
         <button class="snack-tag-btn active" id="carb-5" onclick="selectCarbLimit(this,'5g')">Under 5g</button>
@@ -920,7 +966,7 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
       </div>
     </div>
 
-    <button class="btn btn-g" id="snackBtn" onclick="generateChef()" style="background:linear-gradient(135deg,var(--purple),#9c27b0);box-shadow:0 4px 16px rgba(199,125,255,0.25);margin-bottom:4px">🤖 Generate Ideas</button>
+    <button class="btn btn-g" id="snackBtn" onclick="generateChef()" style="background:linear-gradient(135deg,var(--purple),#9c27b0);box-shadow:0 4px 16px rgba(199,125,255,0.25);margin-bottom:4px;font-size:16px;padding:15px">🤖 Generate Ideas</button>
     </div><!-- end chef-generate-area -->
     <div id="snackResult"></div>
 
@@ -2588,8 +2634,11 @@ function setChefMode(mode, btn){
     document.getElementById('chef-carb-label').textContent=mode==='meal'?'Max carbs per meal?':'Max carbs per snack?';
     document.getElementById('snackBtn').textContent=mode==='meal'?'🤖 Generate Meal Ideas':'🤖 Generate Snack Ideas';
     document.getElementById('chef-ing-label').textContent=mode==='meal'?'What ingredients do you have?':'What do you have available?';
-    document.querySelectorAll('#cravingTags .chef-tag-active, #mealTypeTags .chef-tag-active').forEach(t=>t.classList.remove('chef-tag-active'));
+    const sl=document.getElementById('chef-search-label');
+    if(sl) sl.textContent=mode==='meal'?'🔍 Looking for a specific meal?':'🔍 Craving something specific?';
+    document.querySelectorAll('.chef-tag-active').forEach(t=>t.classList.remove('chef-tag-active'));
     document.getElementById('snackIngredients').value='';
+    const ss=document.getElementById('chefSpecificSearch');if(ss)ss.value='';
   } else {
     renderFavsPanel();
   }
@@ -2629,12 +2678,17 @@ function clearAllFavorites(){
 async function generateChef(){
   updateAIUsageBanner();
   const ingredients=document.getElementById('snackIngredients').value.trim();
-  // Only get tags from the relevant section to avoid cross-contamination
+  const specificSearch=document.getElementById('chefSpecificSearch')?.value.trim()||'';
   const isMeal=chefMode==='meal';
+  // Get meal time tags separately from cuisine tags
+  const mealTimeTags=[...document.querySelectorAll('.chef-tag-active')].filter(b=>{
+    const t=b.querySelectorAll('span')[1]?.textContent||'';
+    return ['Breakfast','Lunch','Dinner','Meal Prep'].includes(t);
+  }).map(b=>b.querySelectorAll('span')[1]?.textContent||'').join(', ');
   const tagSection=isMeal?'#mealTypeTags':'#cravingTags';
-  // Support both old snack-tag-btn.active and new chef-tag-active
-  const tags=[...document.querySelectorAll(tagSection+' .snack-tag-btn.active, '+tagSection+' .chef-tag-active')]
+  const tags=[...document.querySelectorAll(tagSection+' .chef-tag-active')]
     .map(b=>{ const spans=b.querySelectorAll('span'); return spans.length>1?spans[1].textContent.trim():b.textContent.trim(); })
+    .filter(t=>!['Breakfast','Lunch','Dinner','Meal Prep'].includes(t))
     .join(', ');
   const btn=document.getElementById('snackBtn'),result=document.getElementById('snackResult');
   btn.disabled=true;
@@ -2648,13 +2702,15 @@ async function generateChef(){
     let prompt;
     if(isMeal){
       prompt=`You are a professional keto chef. Suggest 4 creative keto-friendly meal ideas.
+${specificSearch?'The user specifically wants something like: "'+specificSearch+'" — make it keto-friendly. Prioritize this request.':''}
 ${ingredients?'Available ingredients: '+ingredients:'Use common keto ingredients.'}
-${tags?'Preferences: '+tags:''}
+${mealTimeTags?'Meal time: '+mealTimeTags:''}
+${tags?'Cuisine & style: '+tags:''}
 Difficulty: ${selectedDifficulty}
 Servings: ${selectedServings}
 Carb limit: ${selectedCarbLimit} net carbs per meal.
-${favNames?'IMPORTANT - Do NOT suggest any of these (already saved as favorites): '+favNames:''}
-Be creative and varied - suggest different types of dishes each time.
+${favNames?'Do NOT repeat: '+favNames:''}
+Be creative — different cuisines, varied cooking methods, no boring basics.
 
 For each meal respond in EXACTLY this format:
 MEAL: [name]
@@ -2664,11 +2720,12 @@ STEPS: [2-3 short cooking steps separated by | ]
 CARBS: [net carbs]g | FAT: [fat]g | PROTEIN: [protein]g | CALS: [calories]`;
     } else {
       prompt=`You are a keto diet expert. Suggest 5 creative keto-friendly snack ideas.
+${specificSearch?'The user specifically wants something like: "'+specificSearch+'" — make it keto, sugar-free, and delicious. Prioritize this request.':''}
 ${ingredients?'Available ingredients: '+ingredients:'Use common keto pantry items.'}
 ${tags?'Craving/Style: '+tags:''}
 Carb limit: ${selectedCarbLimit} net carbs per snack.
-${favNames?'IMPORTANT - Do NOT suggest any of these (already saved): '+favNames:''}
-Be creative - suggest different snacks each time, not the same classics.
+${favNames?'Do NOT repeat: '+favNames:''}
+Be creative and varied — explore different flavor profiles and textures.
 
 For each snack respond in EXACTLY this format:
 SNACK: [name]
