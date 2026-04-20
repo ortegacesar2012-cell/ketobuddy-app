@@ -738,9 +738,9 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
           <span style="font-size:12px;color:var(--blue);font-weight:700">View Tracker</span>
           <span style="font-size:10px;color:var(--muted)">See today's macros</span>
         </button>
-        <button onclick="switchSection('planner',document.querySelector('.nav-btn[onclick*=planner]'))" style="padding:14px 10px;background:rgba(0,230,118,0.07);border:1px solid rgba(0,230,118,0.2);border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px">
+        <button onclick="switchSection('snack',document.querySelector('.nav-btn[onclick*=snack]'));setTimeout(()=>setChefMode('plan',document.getElementById('chef-tab-plan')),100)" style="padding:14px 10px;background:rgba(0,230,118,0.07);border:1px solid rgba(0,230,118,0.2);border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px">
           <span style="font-size:26px">📅</span>
-          <span style="font-size:12px;color:var(--green);font-weight:700">Meal Planner</span>
+          <span style="font-size:12px;color:var(--green);font-weight:700">Day Planner</span>
           <span style="font-size:10px;color:var(--muted)">Plan your full day</span>
         </button>
         <button onclick="switchSection('snack',document.querySelector('.nav-btn[onclick*=snack]'))" style="padding:14px 10px;background:rgba(199,125,255,0.07);border:1px solid rgba(199,125,255,0.2);border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px">
@@ -821,8 +821,8 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
   </div>
 
   <!-- AI CHEF -->
-  <div id="sec-snack" class="section">
-    <div class="sec-head"><h2>AI Chef 🤖</h2><p>Get personalised keto meals & snacks instantly</p></div>
+  <div id="sec-snack" class="section" style="padding-bottom:30px">
+    <div class="sec-head"><h2>AI Chef 👨‍🍳</h2><p>Snacks · Meals · Full Day Plans — all AI powered</p></div>
     <div id="aiUsageBanner" style="background:rgba(199,125,255,0.08);border:1px solid rgba(199,125,255,0.2);border-radius:12px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
       <span style="font-size:13px;color:#c0d0e0" id="aiUsageText">🎁 10 free AI searches included</span>
       <button onclick="showUpgradeModal()" id="aiUpgradeBtn" style="display:none;padding:6px 12px;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer">Upgrade Now</button>
@@ -832,6 +832,7 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
     <div class="inner-tabs" style="margin-bottom:14px">
       <button class="inner-tab active" id="chef-tab-snack" onclick="setChefMode('snack',this)">🍿 Snacks</button>
       <button class="inner-tab" id="chef-tab-meal" onclick="setChefMode('meal',this)">🍽️ Meals</button>
+      <button class="inner-tab" id="chef-tab-plan" onclick="setChefMode('plan',this)">📅 Day Plan</button>
       <button class="inner-tab" id="chef-tab-favs" onclick="setChefMode('favs',this)">⭐ Saved</button>
     </div>
 
@@ -930,6 +931,101 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
         <button onclick="clearAllFavorites()" style="font-size:11px;color:#ff4d6d;background:none;border:none;cursor:pointer">Clear All</button>
       </div>
       <div id="favsPanelList"></div>
+    </div>
+
+    <!-- DAY PLAN PANEL -->
+    <div id="chef-plan-panel" style="display:none">
+      <!-- Daily goal bar -->
+      <div style="background:linear-gradient(135deg,rgba(0,230,118,0.08),rgba(76,201,240,0.05));border:1px solid rgba(0,230,118,0.15);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;gap:12px;align-items:center">
+        <div style="font-size:24px">🎯</div>
+        <div style="flex:1">
+          <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.8px">Your Daily Target</div>
+          <div style="font-size:13px;color:#c0d0e0;margin-top:3px" id="plannerGoalText">Loading...</div>
+        </div>
+      </div>
+
+      <!-- Ingredients -->
+      <div style="margin-bottom:14px">
+        <div class="snack-input-label">🛒 Ingredients you have?</div>
+        <div class="inp-icon">
+          <span class="ic">🥩</span>
+          <input class="inp" type="text" id="plannerIngredients" placeholder="e.g. chicken, eggs, avocado, cheese..."/>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Leave blank — AI picks for you</div>
+      </div>
+
+      <!-- Diet & cuisine style -->
+      <div style="margin-bottom:14px">
+        <div class="snack-input-label">🌍 Diet &amp; cuisine style?</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="plannerStyleTags">
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐄</span><span>Carnivore</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌱</span><span>Veggie</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐟</span><span>Seafood</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌶️</span><span>Spicy</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍳</span><span>Simple</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍜</span><span>Asian</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥗</span><span>Fresh</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍕</span><span>Comfort</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇲🇽</span><span>Mexican</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇮🇹</span><span>Italian</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥩</span><span>BBQ</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇬🇷</span><span>Greek</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥛</span><span>Dairy-Free</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🏋️</span><span>Bulk</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>⚡</span><span>Meal Prep</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧁</span><span>Dessert</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇯🇵</span><span>Japanese</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🫶</span><span>Clean Keto</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧘</span><span>Anti-Inflam</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🪺</span><span>Egg-Based</span></button>
+        </div>
+      </div>
+
+      <!-- Snack preference -->
+      <div style="margin-bottom:14px">
+        <div class="snack-input-label">🍿 Snack style?</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="plannerSnackTags">
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧀</span><span>Savory</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍫</span><span>Sweet</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>💪</span><span>Protein</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>⚡</span><span>Quick</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥜</span><span>Nutty</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍦</span><span>No-Cook</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐄</span><span>Carnivore</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧁</span><span>Dessert</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥗</span><span>Salad</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🫐</span><span>Fruity</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧂</span><span>Salty</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥚</span><span>Egg-Based</span></button>
+        </div>
+      </div>
+
+      <!-- Meal count -->
+      <div style="margin-bottom:14px">
+        <div class="snack-input-label">🍽️ How many meals?</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
+          <button class="snack-tag-btn" id="plan-meals-3" onclick="selectPlanMeals(this,3)">3 meals<br><span style="font-size:10px;color:var(--muted)">B · L · D</span></button>
+          <button class="snack-tag-btn active" id="plan-meals-5" onclick="selectPlanMeals(this,5)">3 + 2 snacks<br><span style="font-size:10px;color:var(--muted)">B · L · D + snacks</span></button>
+          <button class="snack-tag-btn" id="plan-meals-6" onclick="selectPlanMeals(this,6)">6 small meals<br><span style="font-size:10px;color:var(--muted)">Every 2-3 hrs</span></button>
+        </div>
+      </div>
+
+      <!-- Carb strictness -->
+      <div style="margin-bottom:20px">
+        <div class="snack-input-label">🥑 Carb limit?</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
+          <button class="snack-tag-btn" id="plan-strict" onclick="selectPlanCarbs(this,'strict')">🔒 Strict<br><span style="font-size:10px;color:var(--muted)">&lt;20g/day</span></button>
+          <button class="snack-tag-btn active" id="plan-moderate" onclick="selectPlanCarbs(this,'moderate')">⚖️ Standard<br><span style="font-size:10px;color:var(--muted)">&lt;50g/day</span></button>
+          <button class="snack-tag-btn" id="plan-flexible" onclick="selectPlanCarbs(this,'flexible')">🔓 Relaxed<br><span style="font-size:10px;color:var(--muted)">&lt;75g/day</span></button>
+        </div>
+      </div>
+
+      <button id="plannerBtn" onclick="generateDayPlan()" style="width:100%;padding:18px;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;cursor:pointer;margin-bottom:8px;box-shadow:0 6px 24px rgba(0,230,118,0.35)">
+        📅 Generate My Day Plan
+      </button>
+      <div style="text-align:center;font-size:11px;color:var(--muted);margin-bottom:16px">Builds Breakfast · Lunch · Dinner · Snacks to hit your goals</div>
+
+      <div id="plannerResult" style="padding-bottom:20px"></div>
     </div>
   </div>
 
@@ -1603,105 +1699,15 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
 <!-- BOTTOM NAV -->
 
   <!-- ===== AI MEAL PLANNER ===== -->
-  <div id="sec-planner" class="section">
-    <div class="sec-head">
-      <h2>AI Meal Planner 📅</h2>
-      <p>Build a full day of keto meals tailored to your goals</p>
-    </div>
 
-    <!-- Daily goal bar -->
-    <div style="background:linear-gradient(135deg,rgba(0,230,118,0.08),rgba(76,201,240,0.05));border:1px solid rgba(0,230,118,0.15);border-radius:14px;padding:12px 14px;margin-bottom:16px;display:flex;gap:12px;align-items:center">
-      <div style="font-size:26px">🎯</div>
-      <div style="flex:1">
-        <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.8px">Your Daily Target</div>
-        <div style="font-size:13px;color:#c0d0e0;margin-top:3px" id="plannerGoalText">~1,800 kcal · 25g carbs · 120g protein · 130g fat</div>
-      </div>
-    </div>
-
-    <!-- Ingredients -->
-    <div style="margin-bottom:14px">
-      <div class="snack-input-label">🛒 Ingredients you have available?</div>
-      <div class="inp-icon">
-        <span class="ic">🥩</span>
-        <input class="inp" type="text" id="plannerIngredients" placeholder="e.g. chicken, eggs, avocado, cheese, bacon..."/>
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:5px">Leave blank to let AI decide</div>
-    </div>
-
-    <!-- Cuisine / Diet style -->
-    <div style="margin-bottom:14px">
-      <div class="snack-input-label">🌍 Diet &amp; cuisine style?</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="plannerStyleTags">
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐄</span><span>Carnivore</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌱</span><span>Veggie</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐟</span><span>Seafood</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥑</span><span>Avocado</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌶️</span><span>Spicy</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍳</span><span>Simple</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍜</span><span>Asian</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥗</span><span>Fresh</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍕</span><span>Comfort</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>⚡</span><span>Meal Prep</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇲🇽</span><span>Mexican</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇮🇹</span><span>Italian</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥩</span><span>BBQ</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥛</span><span>Dairy-Free</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧁</span><span>Dessert</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🏋️</span><span>Bulk</span></button>
-      </div>
-    </div>
-
-    <!-- Snack style -->
-    <div style="margin-bottom:14px">
-      <div class="snack-input-label">🍿 Snack preference?</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="plannerSnackTags">
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧀</span><span>Savory</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍫</span><span>Sweet</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>💪</span><span>Protein</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>⚡</span><span>Quick</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥜</span><span>Nutty</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍦</span><span>No-Cook</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐄</span><span>Carnivore</span></button>
-        <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧁</span><span>Dessert</span></button>
-      </div>
-    </div>
-
-    <!-- Meal count -->
-    <div style="margin-bottom:14px">
-      <div class="snack-input-label">🍽️ How many meals?</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
-        <button class="snack-tag-btn" id="plan-meals-3" onclick="selectPlanMeals(this,3)">3 meals<br><span style="font-size:10px;color:var(--muted)">B · L · D</span></button>
-        <button class="snack-tag-btn active" id="plan-meals-5" onclick="selectPlanMeals(this,5)">3 + 2 snacks<br><span style="font-size:10px;color:var(--muted)">B · L · D + snacks</span></button>
-        <button class="snack-tag-btn" id="plan-meals-6" onclick="selectPlanMeals(this,6)">6 small meals<br><span style="font-size:10px;color:var(--muted)">Every 2-3 hrs</span></button>
-      </div>
-    </div>
-
-    <!-- Carb strictness -->
-    <div style="margin-bottom:20px">
-      <div class="snack-input-label">🥑 Carb limit?</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
-        <button class="snack-tag-btn" id="plan-strict" onclick="selectPlanCarbs(this,'strict')">🔒 Strict<br><span style="font-size:10px;color:var(--muted)">&lt;20g/day</span></button>
-        <button class="snack-tag-btn active" id="plan-moderate" onclick="selectPlanCarbs(this,'moderate')">⚖️ Standard<br><span style="font-size:10px;color:var(--muted)">&lt;50g/day</span></button>
-        <button class="snack-tag-btn" id="plan-flexible" onclick="selectPlanCarbs(this,'flexible')">🔓 Relaxed<br><span style="font-size:10px;color:var(--muted)">&lt;75g/day</span></button>
-      </div>
-    </div>
-
-    <!-- BIG GENERATE BUTTON -->
-    <button id="plannerBtn" onclick="generateDayPlan()" style="width:100%;padding:18px;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;cursor:pointer;margin-bottom:8px;box-shadow:0 6px 24px rgba(0,230,118,0.35);letter-spacing:0.3px">
-      📅 Generate My Day Plan
-    </button>
-    <div style="text-align:center;font-size:11px;color:var(--muted);margin-bottom:16px">Uses 1 AI search · Builds Breakfast · Lunch · Dinner · Snacks</div>
-
-    <div id="plannerResult"></div>
-  </div>
 
 <div class="bottom-nav">
   <button class="nav-btn active" onclick="switchSection('scanner',this)"><span class="ni">🔍</span>Scan</button>
-  <button class="nav-btn" onclick="switchSection('snack',this)"><span class="ni">🤖</span>Chef</button>
-  <button class="nav-btn" onclick="switchSection('planner',this)"><span class="ni">📅</span>Plan</button>
+  <button class="nav-btn" onclick="switchSection('snack',this)"><span class="ni">👨‍🍳</span>AI Chef</button>
   <button class="nav-btn" onclick="switchSection('tracker',this)"><span class="ni">📊</span>Track</button>
   <button class="nav-btn" onclick="switchSection('journal',this)"><span class="ni">📓</span>Journal</button>
   <button class="nav-btn" onclick="switchSection('fast',this)"><span class="ni">⏱️</span>Fast</button>
+  <button class="nav-btn" onclick="switchSection('shop',this)"><span class="ni">🛒</span>Shop</button>
 </div>
 
 <script>
@@ -1713,7 +1719,6 @@ function switchSection(id,btn){
   btn.classList.add('active');
   if(id==='snack') setTimeout(updateAIUsageBanner, 50);
   if(id==='tracker') setTimeout(renderSavedMealsInTracker, 50);
-  if(id==='planner') setTimeout(initPlannerGoalBar, 50);
 }
 function switchInner(showId,btn){
   // find parent tab group and deactivate all siblings
@@ -2568,13 +2573,16 @@ function updateAIUsageBanner(){
 
 function setChefMode(mode, btn){
   chefMode=mode;
-  // Show/hide panels
   const isFavs = mode==='favs';
+  const isPlan = mode==='plan';
+  const isNormal = !isFavs && !isPlan;
   document.getElementById('chef-meal-opts').style.display=mode==='meal'?'block':'none';
   document.getElementById('chef-snack-opts').style.display=mode==='snack'?'block':'none';
-  document.getElementById('chef-generate-area').style.display=isFavs?'none':'block';
+  document.getElementById('chef-generate-area').style.display=isNormal?'block':'none';
   document.getElementById('chef-favs-panel').style.display=isFavs?'block':'none';
+  document.getElementById('chef-plan-panel').style.display=isPlan?'block':'none';
   document.getElementById('snackResult').innerHTML='';
+  if(isPlan) initPlannerGoalBar();
 
   if(!isFavs){
     document.getElementById('chef-carb-label').textContent=mode==='meal'?'Max carbs per meal?':'Max carbs per snack?';
