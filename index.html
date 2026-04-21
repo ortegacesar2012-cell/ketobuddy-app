@@ -1450,6 +1450,9 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
         <!-- rendered by JS -->
       </div>
 
+      <!-- Meal breakdown pie chart -->
+      <div id="mealBreakdownChart" style="display:none;margin-bottom:12px"></div>
+
       <!-- Food log input -->
       <div style="position:relative;margin-bottom:10px">
         <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none">➕</span>
@@ -2190,6 +2193,13 @@ function buildFoodCard(f, isLive=false, brand=''){
     <div class="serving-editor">
       <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:9px">⚖️ Serving Size Calculator</div>
 
+      <!-- Recommended serving size -->
+      ${f.servingSize ? `<div style="background:rgba(0,230,118,0.06);border:1px solid rgba(0,230,118,0.2);border-radius:10px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:11px;color:var(--green);font-weight:700;text-transform:uppercase;letter-spacing:0.8px">📏 Recommended Serving</div>
+          <div style="font-size:13px;font-weight:600;margin-top:2px">${f.servingSize}${f.servingCal?' · '+f.servingCal+' kcal':''}</div>
+        </div>
+      </div>` : ''}
       <!-- Quick presets -->
       <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">
         <button class="serving-preset active" onclick="applyPreset('${id}',${base},100,1)">100g</button>
@@ -2271,13 +2281,66 @@ function addServingToLog(id,name,category,base){
     fat:+(base.fat*r).toFixed(1),
     protein:+(base.protein*r).toFixed(1),
     calories:Math.round(base.calories*r),
-    keto:(base.carbs*r/100)<=10,
+    keto:(base.carbs*r)<=10,
     category,
     _baseName:name,
     _base:{carbs:base.carbs,fat:base.fat,protein:base.protein,calories:base.calories},
     _grams:grams
   };
-  addToLog(food);
+  showMealCategoryPicker(food);
+}
+
+function showMealCategoryPicker(food){
+  // Auto-suggest based on time of day
+  const h=new Date().getHours();
+  let suggested='🌙 Dinner';
+  if(h>=5&&h<11) suggested='🌅 Breakfast';
+  else if(h>=11&&h<15) suggested='☀️ Lunch';
+  else if(h>=15&&h<18) suggested='🍿 Snack';
+
+  const modal=document.createElement('div');
+  modal.id='mealCatModal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:flex-end;justify-content:center;padding:16px';
+  modal.innerHTML=`
+    <div style="background:#0e1c2a;border-radius:20px 20px 16px 16px;padding:20px;width:100%;max-width:480px;border:1px solid rgba(255,255,255,0.08)">
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:4px">➕ Add to Tracker</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:16px">${food.name} · ${food.calories} kcal</div>
+      <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">Which meal?</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        ${[
+          {cat:'🌅 Breakfast',icon:'🌅',color:'rgba(255,154,60,0.15)',border:'rgba(255,154,60,0.35)',text:'var(--orange)'},
+          {cat:'☀️ Lunch',icon:'☀️',color:'rgba(76,201,240,0.1)',border:'rgba(76,201,240,0.35)',text:'var(--blue)'},
+          {cat:'🌙 Dinner',icon:'🌙',color:'rgba(199,125,255,0.1)',border:'rgba(199,125,255,0.35)',text:'var(--purple)'},
+          {cat:'🍿 Snack',icon:'🍿',color:'rgba(0,230,118,0.08)',border:'rgba(0,230,118,0.25)',text:'var(--green)'},
+        ].map(m=>`
+          <button onclick="confirmAddToLog(${JSON.stringify(food).replace(/"/g,"'")}, '${m.cat}')"
+            style="padding:14px;background:${m.color};border:2px solid ${m.cat===suggested?m.border:'rgba(255,255,255,0.06)'};border-radius:14px;cursor:pointer;display:flex;align-items:center;gap:10px;${m.cat===suggested?'box-shadow:0 0 12px '+m.border+';':''}">
+            <span style="font-size:24px">${m.icon}</span>
+            <div style="text-align:left">
+              <div style="font-size:14px;font-weight:700;color:${m.text}">${m.cat.split(' ').slice(1).join(' ')}</div>
+              ${m.cat===suggested?'<div style="font-size:10px;color:var(--muted)">Suggested ✓</div>':''}
+            </div>
+          </button>`).join('')}
+      </div>
+      <button onclick="document.getElementById('mealCatModal').remove()" style="width:100%;padding:12px;background:transparent;border:1px solid rgba(255,255,255,0.08);border-radius:12px;color:var(--muted);font-size:13px;cursor:pointer">Cancel</button>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function confirmAddToLog(food, mealCat){
+  document.getElementById('mealCatModal')?.remove();
+  // food came in as object with single-quoted keys from JSON.stringify replacement
+  // parse it safely
+  if(typeof food === 'string'){
+    try{ food=JSON.parse(food.replace(/'/g,'"')); }catch(e){}
+  }
+  addToLog(food, mealCat);
+  showToast('✅ Added to '+mealCat+'!');
+  // Switch to tracker
+  setTimeout(()=>{
+    const trackBtn=document.querySelector('.nav-btn[onclick*="tracker"]');
+    if(trackBtn) switchSection('tracker',trackBtn);
+  },400);
 }
 
 // ====== BARCODE SCANNER ======
@@ -3745,6 +3808,7 @@ function updateTrackerDisplay(){
   }
   renderMacroCards(t);
   renderMacroBars(t);
+  renderMealBreakdownChart();
 }
 
 function renderMacroCards(t){
@@ -3847,6 +3911,103 @@ function renderSavedMealsInTracker(){
     </div>`).join('');
 }
 
+
+function renderMealBreakdownChart(){
+  const el = document.getElementById('mealBreakdownChart');
+  if(!el || !foodLogEntries.length){ if(el) el.style.display='none'; return; }
+
+  const mealOrder = ['🌅 Breakfast','☀️ Lunch','🌙 Dinner','🍿 Snack','🍽️ Other'];
+  const colors = {'🌅 Breakfast':'var(--orange)','☀️ Lunch':'var(--blue)','🌙 Dinner':'var(--purple)','🍿 Snack':'var(--green)','🍽️ Other':'var(--muted)'};
+  const bgColors = {'🌅 Breakfast':'rgba(255,154,60,0.15)','☀️ Lunch':'rgba(76,201,240,0.1)','🌙 Dinner':'rgba(199,125,255,0.1)','🍿 Snack':'rgba(0,230,118,0.08)','🍽️ Other':'rgba(255,255,255,0.04)'};
+
+  // Build groups
+  const groups = {};
+  mealOrder.forEach(cat => groups[cat] = []);
+  foodLogEntries.forEach(e => {
+    const cat = e.mealCategory || '🍽️ Other';
+    if(!groups[cat]) groups[cat] = [];
+    groups[cat].push(e);
+  });
+
+  const activeMeals = mealOrder.filter(cat => groups[cat].length > 0);
+  if(!activeMeals.length){ el.style.display='none'; return; }
+
+  // Totals per meal
+  const mealTotals = {};
+  activeMeals.forEach(cat => {
+    mealTotals[cat] = groups[cat].reduce((a,e) => ({
+      cal: a.cal+(e.calories||0), carbs: a.carbs+(e.carbs||0),
+      fat: a.fat+(e.fat||0), protein: a.protein+(e.protein||0)
+    }), {cal:0,carbs:0,fat:0,protein:0});
+  });
+
+  const grandTotal = activeMeals.reduce((a,cat) => ({
+    cal: a.cal+mealTotals[cat].cal,
+    carbs: a.carbs+mealTotals[cat].carbs,
+    fat: a.fat+mealTotals[cat].fat,
+    protein: a.protein+mealTotals[cat].protein
+  }), {cal:0,carbs:0,fat:0,protein:0});
+
+  const gc = grandTotal.cal || 1;
+  // Build conic-gradient for overall calorie split
+  let deg = 0;
+  const segments = activeMeals.map(cat => {
+    const pct = (mealTotals[cat].cal / gc) * 360;
+    const seg = {cat, start:deg, end:deg+pct, color:colors[cat]};
+    deg += pct;
+    return seg;
+  });
+
+  const conicParts = segments.map(s => `${s.color} ${s.start.toFixed(1)}deg ${s.end.toFixed(1)}deg`).join(', ');
+
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div style="background:linear-gradient(145deg,#111d2b,#0d1822);border-radius:16px;padding:14px;border:1px solid rgba(255,255,255,0.06)">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">📊 Meal Macro Breakdown</div>
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <!-- Pie chart -->
+        <div style="flex-shrink:0;position:relative;width:80px;height:80px">
+          <div style="width:80px;height:80px;border-radius:50%;background:conic-gradient(${conicParts})"></div>
+          <div style="position:absolute;inset:14px;background:#0d1822;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div style="font-size:11px;font-weight:800;color:#fff">${Math.round(grandTotal.cal)}</div>
+            <div style="font-size:8px;color:var(--muted)">kcal</div>
+          </div>
+        </div>
+        <!-- Meal breakdown list -->
+        <div style="flex:1">
+          ${activeMeals.map(cat => {
+            const t = mealTotals[cat];
+            const calPct = Math.round((t.cal/gc)*100);
+            const tc = t.cal||1;
+            const carbDeg = Math.round((t.carbs*4/tc)*360);
+            const protDeg = Math.round((t.protein*4/tc)*360);
+            return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <!-- Mini pie per meal -->
+              <div style="width:28px;height:28px;border-radius:50%;flex-shrink:0;background:conic-gradient(#ff4d6d 0deg ${carbDeg}deg,#4cc9f0 ${carbDeg}deg ${carbDeg+protDeg}deg,#ffd166 ${carbDeg+protDeg}deg 360deg)"></div>
+              <div style="flex:1">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span style="font-size:12px;font-weight:700;color:${colors[cat]}">${cat}</span>
+                  <span style="font-size:11px;color:var(--muted)">${Math.round(t.cal)} kcal · ${calPct}%</span>
+                </div>
+                <div style="font-size:10px;color:var(--muted);margin-top:1px">
+                  <span style="color:#ff4d6d">${t.carbs.toFixed(1)}g C</span> ·
+                  <span style="color:#4cc9f0">${t.protein.toFixed(1)}g P</span> ·
+                  <span style="color:#ffd166">${t.fat.toFixed(1)}g F</span>
+                </div>
+              </div>
+            </div>`;
+          }).join('')}
+          <!-- Legend -->
+          <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:3px;font-size:10px;color:var(--muted)"><div style="width:8px;height:8px;background:#ff4d6d;border-radius:2px"></div>Carbs</div>
+            <div style="display:flex;align-items:center;gap:3px;font-size:10px;color:var(--muted)"><div style="width:8px;height:8px;background:#4cc9f0;border-radius:2px"></div>Protein</div>
+            <div style="display:flex;align-items:center;gap:3px;font-size:10px;color:var(--muted)"><div style="width:8px;height:8px;background:#ffd166;border-radius:2px"></div>Fat</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
 function renderFoodLog(){
   const el=document.getElementById('foodLog');
   if(!foodLogEntries.length){el.innerHTML='<div class="empty-st" style="padding:18px"><div class="ei" style="font-size:32px">🍽️</div><p>Search above to add meals to your log</p></div>';return;}
@@ -3902,7 +4063,7 @@ function showLogSugg(q){
   if(!matches.length){el.style.display='none';return;}
   el.style.display='block';
   el.innerHTML=matches.map(f=>`
-    <div class="log-si" onclick="addToLog({...${JSON.stringify(f)}});document.getElementById('logSearch').value='';document.getElementById('logSugg').style.display='none'">
+    <div class="log-si" onclick="showMealCategoryPicker({...${JSON.stringify(f)}});document.getElementById('logSearch').value='';document.getElementById('logSugg').style.display='none'">
       <span style="font-size:13px">${f.name}</span>
       <span style="font-size:11px;color:var(--muted)">${f.carbs}g C · ${f.fat}g F · ${f.protein}g P · ${f.calories}kcal</span>
     </div>`).join('');
