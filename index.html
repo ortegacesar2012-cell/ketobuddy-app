@@ -476,8 +476,8 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
 
       <!-- Unit toggle -->
       <div style="display:flex;background:rgba(255,255,255,0.04);border-radius:10px;padding:3px;margin-bottom:18px;gap:3px;border:1px solid rgba(255,255,255,0.06)">
-        <button id="unit-metric" onclick="setObUnits('metric')" style="flex:1;padding:8px;border:none;border-radius:7px;background:linear-gradient(135deg,#1a2d42,#162032);color:#fff;font-weight:700;font-size:13px;cursor:pointer">📏 Metric (cm/kg)</button>
-        <button id="unit-imperial" onclick="setObUnits('imperial')" style="flex:1;padding:8px;border:none;border-radius:7px;background:transparent;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer">🇺🇸 Imperial (ft/lbs)</button>
+        <button id="unit-imperial" onclick="setObUnits('imperial')" style="flex:1;padding:8px;border:none;border-radius:7px;background:linear-gradient(135deg,#1a2d42,#162032);color:#fff;font-weight:700;font-size:13px;cursor:pointer">🇺🇸 ft / lbs</button>
+        <button id="unit-metric" onclick="setObUnits('metric')" style="flex:1;padding:8px;border:none;border-radius:7px;background:transparent;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer">📏 cm / kg</button>
       </div>
 
       <div class="ob-label">Age</div>
@@ -952,6 +952,16 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
         <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌱</span><span>Vegan</span></button>
         <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥛</span><span>Dairy-Free</span></button>
         <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥚</span><span>Egg-Based</span></button>
+      </div>
+    </div>
+
+    <!-- Snack difficulty level -->
+    <div id="chef-snack-difficulty" style="margin-bottom:12px">
+      <div class="snack-input-label">⚙️ Difficulty?</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
+        <button class="snack-tag-btn active" id="snack-diff-easy" onclick="selectSnackDifficulty(this,'Easy')">😊 Easy</button>
+        <button class="snack-tag-btn" id="snack-diff-med" onclick="selectSnackDifficulty(this,'Medium')">👨‍🍳 Medium</button>
+        <button class="snack-tag-btn" id="snack-diff-hard" onclick="selectSnackDifficulty(this,'Advanced')">⭐ Advanced</button>
       </div>
     </div>
 
@@ -1440,15 +1450,22 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
         </div>
       </div>
 
-      <!-- Macro comparison cards -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px" id="macro-cards">
-        <!-- rendered by JS -->
+      <!-- Big macro chart tabs -->
+      <div style="margin-bottom:12px">
+        <div style="display:flex;gap:6px;margin-bottom:10px" id="macro-tab-btns">
+          <button onclick="setMacroTab('overview')" id="mtab-overview" style="flex:1;padding:8px 4px;border:none;border-radius:10px;background:linear-gradient(135deg,#1a2d42,#162032);color:#fff;font-size:11px;font-weight:700;cursor:pointer">📊 Overview</button>
+          <button onclick="setMacroTab('carbs')" id="mtab-carbs" style="flex:1;padding:8px 4px;border:none;border-radius:10px;background:rgba(255,255,255,0.04);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer">🥑 Carbs</button>
+          <button onclick="setMacroTab('protein')" id="mtab-protein" style="flex:1;padding:8px 4px;border:none;border-radius:10px;background:rgba(255,255,255,0.04);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer">💪 Protein</button>
+          <button onclick="setMacroTab('fat')" id="mtab-fat" style="flex:1;padding:8px 4px;border:none;border-radius:10px;background:rgba(255,255,255,0.04);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer">🔥 Fat</button>
+        </div>
+        <div id="macro-chart-display" style="background:linear-gradient(145deg,#111d2b,#0d1822);border-radius:16px;padding:16px;border:1px solid rgba(255,255,255,0.06);min-height:120px">
+          <!-- rendered by JS -->
+        </div>
       </div>
 
-      <!-- Macro progress bars -->
-      <div style="background:var(--card);border-radius:14px;padding:14px;margin-bottom:12px;border:1px solid var(--border)" id="macro-bars">
-        <!-- rendered by JS -->
-      </div>
+      <!-- Compact macro bars (hidden, kept for data) -->
+      <div id="macro-cards" style="display:none"></div>
+      <div id="macro-bars" style="display:none"></div>
 
       <!-- Meal breakdown pie chart -->
       <div id="mealBreakdownChart" style="display:none;margin-bottom:12px"></div>
@@ -1541,29 +1558,40 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
   <div id="editFoodModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:500;display:none;align-items:flex-end">
     <div style="background:var(--card2);border-radius:24px 24px 0 0;padding:24px 20px 40px;width:100%;max-width:500px;margin:0 auto">
       <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:4px">✏️ Edit Amount</div>
-      <div style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:16px" id="editFoodName">—</div>
+      <div style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:4px" id="editFoodName">—</div>
+      <div style="font-size:11px;color:var(--green);margin-bottom:12px" id="editServingHint"></div>
       <input type="hidden" id="editFoodId"/>
 
       <!-- Amount input -->
       <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">How much did you eat?</div>
       <div style="display:flex;gap:8px;margin-bottom:12px">
         <input class="inp" type="number" id="ef-grams" placeholder="100" style="flex:1;font-size:22px;font-weight:800;text-align:center;margin-bottom:0" oninput="previewEditMacros()"/>
-        <select id="ef-unit" onchange="previewEditMacros()" style="padding:12px 10px;background:var(--card);border:1.5px solid var(--border);border-radius:13px;color:var(--text);font-size:13px;outline:none;font-family:'DM Sans',sans-serif;cursor:pointer">
+        <select id="ef-unit" onchange="syncEditUnitButtons();previewEditMacros()" style="padding:12px 10px;background:var(--card);border:1.5px solid var(--border);border-radius:13px;color:var(--text);font-size:13px;outline:none;font-family:'DM Sans',sans-serif;cursor:pointer">
           <option value="1">g</option>
           <option value="28.35">oz</option>
           <option value="240">cup</option>
           <option value="15">tbsp</option>
           <option value="453.6">lb</option>
+          <option value="1">serving</option>
         </select>
       </div>
 
+      <!-- Unit toggle first -->
+      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+        <button onclick="setEditUnit('1','g')" id="eu-g" style="padding:7px 14px;background:linear-gradient(135deg,#1a2d42,#162032);border:1px solid rgba(0,230,118,0.4);border-radius:10px;color:var(--green);font-size:12px;font-weight:700;cursor:pointer">g</button>
+        <button onclick="setEditUnit('28.35','oz')" id="eu-oz" style="padding:7px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-size:12px;cursor:pointer">oz</button>
+        <button onclick="setEditUnit('240','cup')" id="eu-cup" style="padding:7px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-size:12px;cursor:pointer">cup</button>
+        <button onclick="setEditUnit('15','tbsp')" id="eu-tbsp" style="padding:7px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-size:12px;cursor:pointer">tbsp</button>
+        <button onclick="setEditUnit('453.6','lb')" id="eu-lb" style="padding:7px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-size:12px;cursor:pointer">lb</button>
+        <button onclick="setEditUnit('1','serving')" id="eu-srv" style="padding:7px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-size:12px;cursor:pointer">serving</button>
+      </div>
       <!-- Quick presets -->
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
-        <button onclick="setEditAmount(50)" style="padding:6px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">50g</button>
-        <button onclick="setEditAmount(100)" style="padding:6px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">100g</button>
-        <button onclick="setEditAmount(150)" style="padding:6px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">150g</button>
-        <button onclick="setEditAmount(200)" style="padding:6px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">200g</button>
-        <button onclick="setEditAmount(250)" style="padding:6px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">250g</button>
+      <div id="editQuickPresets" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+        <button onclick="setEditAmount(1)" style="padding:6px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer">1</button>
+        <button onclick="setEditAmount(2)" style="padding:6px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer">2</button>
+        <button onclick="setEditAmount(0.5)" style="padding:6px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer">½</button>
+        <button onclick="setEditAmount(3)" style="padding:6px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer">3</button>
+        <button onclick="setEditAmount(4)" style="padding:6px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer">4</button>
       </div>
 
       <!-- Live macro preview -->
@@ -2786,6 +2814,7 @@ CARBS: [net carbs]g | FAT: [fat]g | PROTEIN: [protein]g | CALS: [calories]`;
 ${specificSearch?'The user specifically wants something like: "'+specificSearch+'" — make it keto, sugar-free, and delicious. Prioritize this request.':''}
 ${ingredients?'Available ingredients: '+ingredients:'Use common keto pantry items.'}
 ${tags?'Craving/Style: '+tags:''}
+Difficulty level: ${selectedSnackDifficulty}
 Carb limit: ${selectedCarbLimit} net carbs per snack.
 ${favNames?'Do NOT repeat: '+favNames:''}
 Be creative and varied — explore different flavor profiles and textures.
@@ -2931,8 +2960,26 @@ function toggleSym(el){
 // Photo handling
 function handlePhoto(input){
   const file=input.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{ currentPhotoData=e.target.result; };
+  compressPhoto(file, 800, 0.7, compressed => {
+    currentPhotoData=compressed;
+  });
+}
+
+function compressPhoto(file, maxW, quality, callback){
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ratio = Math.min(maxW/img.width, maxW/img.height, 1);
+      canvas.width = Math.round(img.width*ratio);
+      canvas.height = Math.round(img.height*ratio);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      callback(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = e.target.result;
+  };
   reader.readAsDataURL(file);
 }
 
@@ -2940,12 +2987,10 @@ function handleMultiPhoto(input){
   const files = Array.from(input.files);
   if(!files.length) return;
   files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      currentPhotos.push(e.target.result);
+    compressPhoto(file, 800, 0.7, compressed => {
+      currentPhotos.push(compressed);
       renderMultiPhotoPreview();
-    };
-    reader.readAsDataURL(file);
+    });
   });
   input.value="";
 }
@@ -3528,6 +3573,10 @@ function obNext(from){
     if(!name){alert('Please enter your name!');return;}
     obData.name=name;
   }
+  if(from===1 && !window._obUnitsSet){
+    window._obUnitsSet=true;
+    setTimeout(()=>setObUnits('imperial'),50); // default USA
+  }
   if(from===2){
     const age=parseInt(document.getElementById('ob-age').value);
     const cm=parseFloat(document.getElementById('ob-heightcm').value);
@@ -3808,6 +3857,7 @@ function updateTrackerDisplay(){
   }
   renderMacroCards(t);
   renderMacroBars(t);
+  renderMacroChart();
   renderMealBreakdownChart();
 }
 
@@ -3911,6 +3961,96 @@ function renderSavedMealsInTracker(){
     </div>`).join('');
 }
 
+
+
+let currentMacroTab = 'overview';
+
+function setMacroTab(tab){
+  currentMacroTab = tab;
+  ['overview','carbs','protein','fat'].forEach(t => {
+    const btn = document.getElementById('mtab-'+t);
+    if(!btn) return;
+    const isActive = t === tab;
+    btn.style.background = isActive ? 'linear-gradient(135deg,#1a2d42,#162032)' : 'rgba(255,255,255,0.04)';
+    btn.style.color = isActive ? '#fff' : 'var(--muted)';
+  });
+  renderMacroChart();
+}
+
+function renderMacroChart(){
+  const el = document.getElementById('macro-chart-display');
+  if(!el) return;
+  const t = getTotals();
+  const g = macroGoals;
+  const tab = currentMacroTab;
+
+  if(tab === 'overview'){
+    const totalCal = t.cal || 1;
+    const carbDeg = Math.round((t.carbs*4/totalCal)*360);
+    const protDeg = Math.round((t.protein*4/totalCal)*360);
+    const fatDeg = 360 - carbDeg - protDeg;
+    const calPct = Math.min(Math.round((t.cal/g.cal)*100),100);
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="position:relative;width:100px;height:100px;flex-shrink:0">
+          <div style="width:100px;height:100px;border-radius:50%;background:conic-gradient(#ff4d6d 0deg ${carbDeg}deg,#4cc9f0 ${carbDeg}deg ${carbDeg+protDeg}deg,#ffd166 ${carbDeg+protDeg}deg 360deg)"></div>
+          <div style="position:absolute;inset:16px;background:#0d1822;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div style="font-size:14px;font-weight:800;color:#fff">${Math.round(t.cal)}</div>
+            <div style="font-size:9px;color:var(--muted)">kcal</div>
+          </div>
+        </div>
+        <div style="flex:1">
+          <div style="margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+              <span style="color:var(--orange);font-weight:700">🔥 Calories</span>
+              <span>${Math.round(t.cal)} / ${g.cal} kcal</span>
+            </div>
+            <div style="background:rgba(255,255,255,0.06);border-radius:4px;height:8px">
+              <div style="height:100%;border-radius:4px;background:${t.cal>g.cal?'var(--red)':'var(--orange)'};width:${calPct}%;transition:width 0.5s"></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <div style="font-size:12px"><span style="color:#ff4d6d">●</span> Carbs <strong>${t.carbs.toFixed(1)}g</strong></div>
+            <div style="font-size:12px"><span style="color:#4cc9f0">●</span> Protein <strong>${t.protein.toFixed(1)}g</strong></div>
+            <div style="font-size:12px"><span style="color:#ffd166">●</span> Fat <strong>${t.fat.toFixed(1)}g</strong></div>
+          </div>
+        </div>
+      </div>`;
+
+  } else {
+    const macroMap = {
+      carbs: {key:'carbs',label:'Carbs',color:'#ff4d6d',unit:'g',goal:g.carbs,tip:'Under '+g.carbs+'g keeps you in ketosis'},
+      protein: {key:'protein',label:'Protein',color:'#4cc9f0',unit:'g',goal:g.protein,tip:'Aim for '+g.protein+'g to preserve muscle'},
+      fat: {key:'fat',label:'Fat',color:'#ffd166',unit:'g',goal:g.fat,tip:g.fat+'g fat is your primary fuel source'},
+    };
+    const m = macroMap[tab];
+    const val = t[m.key] || 0;
+    const pct = Math.min(Math.round((val/m.goal)*100),100);
+    const over = val > m.goal;
+    const deg = Math.round((val/m.goal)*360);
+    const clamped = Math.min(deg, 360);
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="position:relative;width:100px;height:100px;flex-shrink:0">
+          <div style="width:100px;height:100px;border-radius:50%;background:conic-gradient(${over?'var(--red)':m.color} 0deg ${clamped}deg,rgba(255,255,255,0.06) ${clamped}deg 360deg)"></div>
+          <div style="position:absolute;inset:16px;background:#0d1822;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div style="font-size:16px;font-weight:800;color:${over?'var(--red)':m.color}">${pct}%</div>
+          </div>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:22px;font-weight:800;color:${over?'var(--red)':m.color}">${val.toFixed(1)}${m.unit}</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px">of ${m.goal}${m.unit} goal</div>
+          <div style="background:rgba(255,255,255,0.06);border-radius:6px;height:10px;margin-bottom:8px">
+            <div style="height:100%;border-radius:6px;background:${over?'var(--red)':m.color};width:${pct}%;transition:width 0.6s;box-shadow:0 0 8px ${over?'#ff4d6d':m.color}40"></div>
+          </div>
+          <div style="font-size:11px;color:var(--muted)">${m.tip}</div>
+          <div style="font-size:11px;color:${over?'var(--red)':'var(--green)'};margin-top:4px;font-weight:700">
+            ${over ? '⚠️ '+Math.round(val-m.goal)+m.unit+' over goal' : '✅ '+Math.round(m.goal-val)+m.unit+' remaining'}
+          </div>
+        </div>
+      </div>`;
+  }
+}
 
 function renderMealBreakdownChart(){
   const el = document.getElementById('mealBreakdownChart');
@@ -4091,12 +4231,55 @@ function openEditFood(logId){
   const entry=foodLogEntries.find(e=>e.logId===logId);
   if(!entry)return;
   document.getElementById('editFoodId').value=logId;
-  document.getElementById('editFoodName').textContent=entry._baseName||entry.name;
+  const displayName = entry._baseName||entry.name.replace(/\s*\(.*?\)$/,'');
+  document.getElementById('editFoodName').textContent=displayName;
+  // Show serving size if available
+  const srvEl = document.getElementById('editServingHint');
+  if(srvEl && entry.servingSize) srvEl.textContent='📏 Product serving: '+entry.servingSize;
+  else if(srvEl) srvEl.textContent='';
   document.getElementById('ef-grams').value=entry._grams||100;
-  document.getElementById('ef-unit').value='1'; // always start in grams
+  document.getElementById('ef-unit').value='1';
+  syncEditUnitButtons();
   document.getElementById('editFoodModal').style.display='flex';
   previewEditMacros();
 }
+function setEditUnit(unitVal, unitName){
+  document.getElementById('ef-unit').value = unitVal;
+  // Update presets based on unit
+  const presets = document.getElementById('editQuickPresets');
+  if(presets){
+    if(unitName === 'g'){
+      presets.innerHTML = [50,100,150,200,250,300].map(v=>
+        `<button onclick="setEditAmount(${v})" style="padding:6px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer">${v}g</button>`
+      ).join('');
+    } else if(unitName === 'oz'){
+      presets.innerHTML = [1,2,3,4,6,8].map(v=>
+        `<button onclick="setEditAmount(${v})" style="padding:6px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer">${v}oz</button>`
+      ).join('');
+    } else if(unitName === 'serving'){
+      presets.innerHTML = ['0.5','1','1.5','2','3'].map(v=>
+        `<button onclick="setEditAmount(${v})" style="padding:6px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer">${v} srv</button>`
+      ).join('');
+    } else {
+      presets.innerHTML = [0.25,0.5,0.75,1,1.5,2].map(v=>
+        `<button onclick="setEditAmount(${v})" style="padding:6px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer">${v} ${unitName}</button>`
+      ).join('');
+    }
+  }
+  // Highlight active unit button
+  ['g','oz','cup','tbsp','lb','srv'].forEach(u => {
+    const el = document.getElementById('eu-'+u);
+    if(el){ el.style.borderColor = u===unitName||('serving'===unitName&&u==='srv') ? 'rgba(0,230,118,0.4)' : 'var(--border)'; el.style.color = u===unitName||('serving'===unitName&&u==='srv') ? 'var(--green)' : 'var(--muted)'; el.style.background = u===unitName||('serving'===unitName&&u==='srv') ? 'linear-gradient(135deg,#1a2d42,#162032)' : 'var(--card)'; }
+  });
+  previewEditMacros();
+}
+
+function syncEditUnitButtons(){
+  const val = document.getElementById('ef-unit').value;
+  const map = {'1':'g','28.35':'oz','240':'cup','15':'tbsp','453.6':'lb'};
+  setEditUnit(val, map[val]||'g');
+}
+
 function setEditAmount(g){
   document.getElementById('ef-grams').value=g;
   document.getElementById('ef-unit').value='1';
@@ -5276,11 +5459,8 @@ function addFavToTracker(id){
 function deleteFavMeal(id){
   aiMealFavorites = aiMealFavorites.filter(f => f.id !== id);
   localStorage.setItem('kb_aiMealFavs', JSON.stringify(aiMealFavorites));
-  showSettings();
-  // Re-open settings
-  const old = document.getElementById('settingsModal');
-  if(old) old.remove();
-  showSettings();
+  renderFavsPanel(); // just refresh the panel, don't open settings
+  showToast('🗑 Removed from favorites');
 }
 
 
