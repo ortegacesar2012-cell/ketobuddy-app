@@ -1808,6 +1808,16 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
 <script>
 // ====== NAV ======
 function switchSection(id,btn){
+  // Close any open modals/overlays
+  ['mealCatModal','editFoodModal','customFoodModal','trackerSettingsModal'].forEach(mid => {
+    const el = document.getElementById(mid);
+    if(el) { el.style.display='none'; el.remove && mid==='mealCatModal' ? el.remove() : null; }
+  });
+  document.getElementById('mealCatModal')?.remove();
+  // Close log suggestions
+  const sugg = document.getElementById('logSugg');
+  if(sugg) sugg.style.display='none';
+  // Close any search results if switching away from scanner
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('sec-'+id).classList.add('active');
@@ -2240,10 +2250,16 @@ function buildFoodCard(f, isLive=false, brand=''){
       <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:9px">⚖️ Serving Size Calculator</div>
 
       <!-- Recommended serving size -->
-      ${f.servingSize ? `<div style="background:rgba(0,230,118,0.06);border:1px solid rgba(0,230,118,0.2);border-radius:10px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <div style="font-size:11px;color:var(--green);font-weight:700;text-transform:uppercase;letter-spacing:0.8px">📏 Recommended Serving</div>
-          <div style="font-size:13px;font-weight:600;margin-top:2px">${f.servingSize}${f.servingCal?' · '+f.servingCal+' kcal':''}</div>
+      ${f.servingSize ? `<div style="background:rgba(0,230,118,0.06);border:1px solid rgba(0,230,118,0.2);border-radius:12px;padding:10px 12px;margin-bottom:10px">
+        <div style="font-size:11px;color:var(--green);font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">📏 Product Serving Size</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <div>
+            <div style="font-size:14px;font-weight:700">${f.servingSize}</div>
+            ${f.servingCal?`<div style="font-size:11px;color:var(--muted)">${f.servingCal} kcal per serving</div>`:''}
+          </div>
+          <button onclick="useProductServing('${id}',${base},${f.servingCal||0})" style="padding:8px 14px;background:linear-gradient(135deg,rgba(0,230,118,0.15),rgba(0,200,83,0.1));border:1px solid rgba(0,230,118,0.35);border-radius:10px;color:var(--green);font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap">
+            Use This →
+          </button>
         </div>
       </div>` : ''}
       <!-- Quick presets -->
@@ -2318,6 +2334,19 @@ function applyPreset(id,base,amt,toG){
   document.getElementById(id).querySelectorAll('.serving-preset').forEach(b=>b.classList.remove('active'));
   event.target.classList.add('active');
 }
+function useProductServing(id, base, servingCal){
+  // Calculate grams for 1 serving based on servingCal vs per100g calories
+  if(base.calories > 0 && servingCal > 0){
+    const servingG = Math.round((servingCal / base.calories) * 100);
+    document.getElementById('sn_'+id).value = servingG;
+    document.getElementById('su_'+id).value = '1'; // grams
+    recalcServing(id, base);
+    showToast('📏 Set to 1 serving ('+servingG+'g)');
+  } else {
+    showToast('⚠️ Could not calculate serving size');
+  }
+}
+
 function addServingToLog(id,name,category,base){
   const grams=getTotalGrams(id);
   const r=grams/100;
@@ -2827,9 +2856,9 @@ async function generateChef(){
   const favNames = aiMealFavorites.slice(0,20).map(f=>f.name).join(', ');
 
   try{
+    const isKeto = currentDietMode !== 'regular';
     let prompt;
     if(isMeal){
-      const isKeto = currentDietMode !== 'regular';
       prompt=`You are a professional ${isKeto?'keto':'healthy eating'} chef. Suggest 4 creative ${isKeto?'keto-friendly (low carb, high fat)':'healthy and balanced'} meal ideas.
 ${specificSearch?'The user wants: "'+specificSearch+'" — make it '+( isKeto?'keto-friendly':'healthy and nutritious')+'. Prioritize this.':''}
 ${ingredients?'Available ingredients: '+ingredients:'Use common keto ingredients.'}
@@ -6092,4 +6121,3 @@ window.addEventListener('appinstalled', () => {
 
 </body>
 </html>
-
