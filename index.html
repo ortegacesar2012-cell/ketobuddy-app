@@ -2731,6 +2731,12 @@ function toggleChefTag(btn){
 }
 function selectServings(btn,val){selectedServings=val;document.querySelectorAll('[id^="srv-"]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
 function selectDifficulty(btn,val){selectedDifficulty=val;document.querySelectorAll('[id^="diff-"]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+let selectedSnackDifficulty='Easy';
+function selectSnackDifficulty(btn,val){
+  selectedSnackDifficulty=val;
+  ['snack-diff-easy','snack-diff-med','snack-diff-hard'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});
+  btn.classList.add('active');
+}
 function selectServings(el,val){document.querySelectorAll('[id^=srv-]').forEach(b=>b.classList.remove('active'));el.classList.add('active');selectedServings=val;}
 
 
