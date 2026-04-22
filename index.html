@@ -972,13 +972,23 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
     </div>
 
     <!-- Carb limit (shared) -->
-    <div style="margin-bottom:14px">
+    <div style="margin-bottom:12px">
       <div class="snack-input-label" id="chef-carb-label">Max carbs?</div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px">
         <button class="snack-tag-btn" id="carb-2" onclick="selectCarbLimit(this,'2g')">Under 2g</button>
         <button class="snack-tag-btn active" id="carb-5" onclick="selectCarbLimit(this,'5g')">Under 5g</button>
         <button class="snack-tag-btn" id="carb-10" onclick="selectCarbLimit(this,'10g')">Under 10g</button>
         <button class="snack-tag-btn" id="carb-any" onclick="selectCarbLimit(this,'any')">Any</button>
+      </div>
+    </div>
+    <!-- Low calorie toggle -->
+    <div style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;background:rgba(76,201,240,0.06);border:1px solid rgba(76,201,240,0.18);border-radius:12px;padding:10px 14px">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--blue)">🥗 Low Calorie Mode</div>
+        <div style="font-size:11px;color:var(--muted)">Under 400 kcal per meal / 150 kcal per snack</div>
+      </div>
+      <div onclick="toggleLowCal()" id="lowcal-toggle" style="width:44px;height:24px;border-radius:12px;background:rgba(255,255,255,0.1);cursor:pointer;position:relative;transition:background 0.25s;border:1px solid rgba(255,255,255,0.1)">
+        <div id="lowcal-knob" style="position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#5a7a9a;transition:left 0.25s,background 0.25s"></div>
       </div>
     </div>
 
@@ -1111,6 +1121,7 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
       <button class="inner-tab active" onclick="switchInner('j-newentry',this)">📝 Log</button>
       <button class="inner-tab" onclick="switchInner('j-calendar',this);renderCalendar()">📅 Calendar</button>
       <button class="inner-tab" onclick="switchInner('j-journey',this)">🗺️ Journey</button>
+      <button class="inner-tab" onclick="switchInner('j-photos',this);renderPhotoGallery()">📸 Photos</button>
     </div>
 
     <!-- NEW ENTRY FORM -->
@@ -1397,6 +1408,16 @@ body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:400px;hei
         </div>
       </div>
 
+    <!-- PHOTO GALLERY -->
+    <div id="j-photos" class="inner-sec">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">📸 Progress Photos</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px">All your progress photos organized by date on keto</div>
+      <div id="photoGalleryGrid"></div>
+      <div id="photoGalleryEmpty" style="text-align:center;padding:32px;display:none">
+        <div style="font-size:40px;margin-bottom:10px">📷</div>
+        <div style="color:var(--muted);font-size:14px">No photos yet.<br>Add photos in your journal entries!</div>
+      </div>
+    </div>
     </div>
   </div>
 
@@ -2725,6 +2746,15 @@ function saveCustomFoodToDatabase(){
 let selectedCarbLimit='5g', chefMode='snack', selectedServings='1', selectedDifficulty='Easy';
 
 function toggleSnackTag(el){el.classList.toggle('active');}
+let lowCalMode=false;
+function toggleLowCal(){
+  lowCalMode=!lowCalMode;
+  const toggle=document.getElementById('lowcal-toggle');
+  const knob=document.getElementById('lowcal-knob');
+  if(toggle) toggle.style.background=lowCalMode?'rgba(76,201,240,0.5)':'rgba(255,255,255,0.1)';
+  if(knob){ knob.style.left=lowCalMode?'22px':'2px'; knob.style.background=lowCalMode?'var(--blue)':'#5a7a9a'; }
+  showToast(lowCalMode?'🥗 Low calorie mode ON':'Low calorie mode off');
+}
 function selectCarbLimit(el,val){document.querySelectorAll('[id^=carb-]').forEach(b=>b.classList.remove('active'));el.classList.add('active');selectedCarbLimit=val;}
 function toggleChefTag(btn){
   btn.classList.toggle('chef-tag-active');
@@ -2867,12 +2897,13 @@ async function generateChef(){
     if(isMeal){
       prompt=`You are a professional ${isKeto?'keto':'healthy eating'} chef. Suggest 4 creative ${isKeto?'keto-friendly (low carb, high fat)':'healthy and balanced'} meal ideas.
 ${specificSearch?'The user wants: "'+specificSearch+'" — make it '+( isKeto?'keto-friendly':'healthy and nutritious')+'. Prioritize this.':''}
-${ingredients?'Available ingredients: '+ingredients:'Use common keto ingredients.'}
+${ingredients?'Available ingredients: '+ingredients:(isKeto?'Use common keto pantry items (eggs, avocado, meat, cheese, butter).':'Use common healthy pantry items.')}
 ${mealTimeTags?'Meal time: '+mealTimeTags:''}
 ${tags?'Cuisine & style: '+tags:''}
 Difficulty: ${selectedDifficulty}
 Servings: ${selectedServings}
 ${isKeto?'Carb limit: '+selectedCarbLimit+' net carbs. Keep strictly keto — no grains, no sugar.':'No carb restriction. Balanced healthy meal — lean proteins, veggies, moderate whole grains ok.'}
+${lowCalMode?'IMPORTANT: Low calorie mode — each meal MUST be under 400 kcal total. Use light portions.':''}
 ${favNames?'Do NOT repeat: '+favNames:''}
 Be creative — different cuisines, varied cooking methods, no boring basics.
 
@@ -2885,10 +2916,11 @@ CARBS: [net carbs]g | FAT: [fat]g | PROTEIN: [protein]g | CALS: [calories]`;
     } else {
       prompt=`You are a ${isKeto?'keto diet':'healthy eating'} expert. Suggest 5 creative ${isKeto?'keto-friendly (low carb)':'healthy'} snack ideas.
 ${specificSearch?'The user wants: "'+specificSearch+'" — make it '+(isKeto?'keto and sugar-free':'healthy and delicious')+'. Prioritize this.':''}
-${ingredients?'Available ingredients: '+ingredients:'Use common keto pantry items.'}
+${ingredients?'Available ingredients: '+ingredients:(isKeto?'Use common keto snack items.':'Use healthy whole-food snack ingredients.')}
 ${tags?'Craving/Style: '+tags:''}
 Difficulty level: ${selectedSnackDifficulty}
 ${isKeto?'Carb limit: '+selectedCarbLimit+' net carbs per snack. Keto only — no sugar, no grains.':'No strict carbs. Healthy snacks ok. Avoid processed junk.'}
+${lowCalMode?'IMPORTANT: Low calorie — each snack MUST be under 150 kcal.':''}
 ${favNames?'Do NOT repeat: '+favNames:''}
 Be creative and varied — explore different flavor profiles and textures.
 
@@ -3367,24 +3399,32 @@ function selectProtocol(el,fh,eh){
 
 function renderFastBenefits(sec){
   const el=document.getElementById('fastBenefits');
-  el.innerHTML=fastBenefitsData.map(b=>{
-    const unlocked=sec>=b.time*3600;
+  const newStates=fastBenefitsData.map(b=>sec>=b.time*3600);
+  // Only full re-render when unlock states change - preserves expanded items
+  if(el._lastStates&&el._lastStates.join()===newStates.join()){
+    fastBenefitsData.forEach((b,i)=>{
+      if(!newStates[i]){const bar=el.querySelector('#fbp'+i);if(bar)bar.style.width=Math.min((sec/(b.time*3600))*100,100)+'%';}
+    });
+    return;
+  }
+  el._lastStates=newStates;
+  el.innerHTML=fastBenefitsData.map((b,i)=>{
+    const unlocked=newStates[i];
     const pct=Math.min((sec/(b.time*3600))*100,100);
-    return `<div class="fast-benefit-item ${unlocked?'unlocked':''}" onclick="toggleBenefit(this)" style="cursor:pointer;padding:10px 0">
-      <div style="display:flex;align-items:flex-start;gap:10px">
-        <span style="font-size:20px;flex-shrink:0;margin-top:1px">${unlocked?b.icon:'🔒'}</span>
-        <div style="flex:1">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-            <span style="font-weight:700;font-size:13px;color:${unlocked?'var(--text)':'var(--muted)'}">${b.title}</span>
-            <span style="font-size:10px;font-weight:700;color:${unlocked?'var(--orange)':'var(--muted)'};flex-shrink:0;margin-left:6px">${b.time>=24?Math.floor(b.time/24)+'d'+(b.time%24?' '+b.time%24+'h':''):b.time+'h'}</span>
-          </div>
-          <div style="font-size:12px;color:${unlocked?'#c0d0e0':'var(--muted)'};line-height:1.5;margin-bottom:${unlocked?'6':'4'}px">${b.simple}</div>
-          ${unlocked?`<div class="benefit-detail" style="display:none;font-size:12px;color:#8ab0c8;line-height:1.6;background:rgba(255,154,60,0.05);border-left:2px solid var(--orange);padding:8px 10px;border-radius:0 8px 8px 0;margin-top:5px">${b.detail}</div>
-          <div class="benefit-toggle-hint" style="font-size:10px;color:var(--orange);margin-top:4px">Tap for full explanation ▼</div>`:''}
-          ${!unlocked?`<div style="background:rgba(255,255,255,0.04);border-radius:5px;height:4px;overflow:hidden;margin-top:5px"><div style="width:${pct}%;height:100%;background:rgba(255,154,60,0.4);border-radius:5px;transition:width 1s"></div></div>`:''}
-        </div>
-      </div>
-    </div>`;
+    return '<div class="fast-benefit-item '+(unlocked?'unlocked':'')+'" onclick="toggleBenefit(this)" style="cursor:pointer;padding:10px 0">'
+      +'<div style="display:flex;align-items:flex-start;gap:10px">'
+      +'<span style="font-size:20px;flex-shrink:0;margin-top:1px">'+(unlocked?b.icon:'🔒')+'</span>'
+      +'<div style="flex:1">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">'
+      +'<span style="font-weight:700;font-size:13px;color:'+(unlocked?'var(--text)':'var(--muted)')+'">'+b.title+'</span>'
+      +'<span style="font-size:10px;font-weight:700;color:'+(unlocked?'var(--orange)':'var(--muted)')+';flex-shrink:0;margin-left:6px">'+(b.time>=24?Math.floor(b.time/24)+'d'+(b.time%24?' '+b.time%24+'h':''):b.time+'h')+'</span>'
+      +'</div>'
+      +'<div style="font-size:12px;color:'+(unlocked?'#c0d0e0':'var(--muted)')+';line-height:1.5;margin-bottom:'+(unlocked?'6':'4')+'px">'+b.simple+'</div>'
+      +(unlocked
+        ?'<div class="benefit-detail" style="display:none;font-size:13px;color:#8ab0c8;line-height:1.75;background:rgba(255,154,60,0.06);border-left:3px solid var(--orange);padding:12px 14px;border-radius:0 10px 10px 0;margin-top:6px">'+b.detail+'</div>'
+         +'<div class="benefit-toggle-hint" style="font-size:11px;color:var(--orange);margin-top:6px;font-weight:600">👆 Tap to read ▼</div>'
+        :'<div style="background:rgba(255,255,255,0.04);border-radius:5px;height:4px;overflow:hidden;margin-top:5px"><div id="fbp'+i+'" style="width:'+pct+'%;height:100%;background:rgba(255,154,60,0.4);border-radius:5px;transition:width 1s"></div></div>')
+      +'</div></div></div>';
   }).join('');
 }
 
@@ -3499,7 +3539,12 @@ function updateFastTimer(){
   document.getElementById('fastPct').textContent=Math.round(pct)+'%';
   if(remaining>0){
     const rd=Math.floor(remaining/86400),rh=Math.floor((remaining%86400)/3600),rm=Math.floor((remaining%3600)/60);
-    document.getElementById('fastLabel').textContent=(rd>0?rd+'d ':'')+rh+'h '+rm+'m remaining';
+    const endTime=new Date(fastStart+fastDuration*1000);
+    const endHr=endTime.getHours(),endMin=endTime.getMinutes();
+    const ampm=endHr>=12?'pm':'am';
+    const h12=endHr%12||12;
+    const endStr=h12+':'+(endMin<10?'0':'')+endMin+' '+ampm;
+    document.getElementById('fastLabel').textContent='⏰ Fast ends at '+endStr+' · '+(rd>0?rd+'d ':'')+rh+'h '+rm+'m left';
   } else {
     document.getElementById('fastLabel').textContent='✅ Fast goal reached!';
   }
@@ -4269,17 +4314,52 @@ function renderFoodLog(){
   }).join('');
 }
 
+let _logSearchTimer=null;
 function showLogSugg(q){
   const el=document.getElementById('logSugg');
   if(!q.trim()){el.style.display='none';return;}
-  const matches=foods.filter(f=>f.name.toLowerCase().includes(q.toLowerCase())).slice(0,6);
-  if(!matches.length){el.style.display='none';return;}
+  // Show local matches instantly
+  const local=foods.filter(f=>f.name.toLowerCase().includes(q.toLowerCase())).slice(0,4);
   el.style.display='block';
-  el.innerHTML=matches.map(f=>`
-    <div class="log-si" onclick="showMealCategoryPicker({...${JSON.stringify(f)}});document.getElementById('logSearch').value='';document.getElementById('logSugg').style.display='none'">
+  el.innerHTML=(local.length?local.map(f=>`
+    <div class="log-si" onclick="showMealCategoryPicker(${JSON.stringify(f)});document.getElementById('logSearch').value='';document.getElementById('logSugg').style.display='none'">
       <span style="font-size:13px">${f.name}</span>
       <span style="font-size:11px;color:var(--muted)">${f.carbs}g C · ${f.fat}g F · ${f.protein}g P · ${f.calories}kcal</span>
-    </div>`).join('');
+    </div>`).join(''):'')
+    +'<div id="logAiResults" style="border-top:'+(local.length?'1px solid var(--border)':'none')+';margin-top:'+(local.length?'4':'0')+'px;padding-top:'+(local.length?'4':'0')+'px">'
+    +'<div style="font-size:11px;color:var(--muted);padding:6px 8px">🤖 Searching AI database...</div></div>';
+  // Debounce AI search
+  clearTimeout(_logSearchTimer);
+  _logSearchTimer=setTimeout(()=>searchLogAI(q),600);
+}
+
+async function searchLogAI(q){
+  const aiEl=document.getElementById('logAiResults');
+  if(!aiEl)return;
+  try{
+    const res=await fetch('https://elegant-bunny-caf8da.netlify.app/ai',{
+      method:'POST',
+      headers:{'Content-Type':'application/json',...(kbUser?.token?{'Authorization':'Bearer '+kbUser.token}:{})},
+      body:JSON.stringify({prompt:`Give nutrition facts for "${q}" in JSON only. No extra text. Format: [{"name":"...","calories":0,"carbs":0,"fat":0,"protein":0,"servingSize":"...","servingCal":0}] — give 3 results (100g base unless it's a packaged item with a serving size). Just the JSON array.`,max_tokens:400})
+    });
+    const data=await res.json();
+    const text=(data.content||[]).map(c=>c.text||'').join('');
+    const clean=text.replace(/```json|```/g,'').trim();
+    const items=JSON.parse(clean);
+    if(!aiEl||!document.getElementById('logSugg'))return;
+    aiEl.innerHTML=items.map(item=>`
+      <div class="log-si" onclick='showMealCategoryPicker(${JSON.stringify({name:item.name,calories:item.calories,carbs:item.carbs,fat:item.fat,protein:item.protein,keto:item.carbs<=10,category:"AI Search",servingSize:item.servingSize,servingCal:item.servingCal,_base:{calories:item.calories,carbs:item.carbs,fat:item.fat,protein:item.protein}})});document.getElementById("logSearch").value="";document.getElementById("logSugg").style.display="none"'>
+        <span style="font-size:13px">${item.name}</span>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--muted)">${item.carbs}g C · ${item.fat}g F · ${item.protein}g P · ${item.calories}kcal</span>
+          ${item.servingSize?`<span style="font-size:10px;background:rgba(0,230,118,0.1);color:var(--green);padding:1px 6px;border-radius:6px">📏 ${item.servingSize}</span>`:''}
+          <span style="font-size:10px;color:var(--purple);font-weight:700">🤖 AI</span>
+        </div>
+      </div>`).join('');
+  }catch(e){
+    const aiEl2=document.getElementById('logAiResults');
+    if(aiEl2) aiEl2.innerHTML='';
+  }
 }
 
 // ====== WATER ======
@@ -4322,11 +4402,15 @@ function openEditFood(logId){
     document.getElementById('ef-grams').value = entry._grams || 1;
     document.getElementById('ef-unit').value = '1';
   }
+  window._editUnitG = '1';
+  window._editUnitName = 'g';
   syncEditUnitButtons();
   document.getElementById('editFoodModal').style.display='flex';
   previewEditMacros();
 }
 function setEditUnit(unitVal, unitName){
+  window._editUnitG = unitVal;
+  window._editUnitName = unitName;
   document.getElementById('ef-unit').value = unitVal;
   // Update presets based on unit
   const presets = document.getElementById('editQuickPresets');
@@ -4390,8 +4474,8 @@ function previewEditMacros(){
   const entry=foodLogEntries.find(e=>e.logId===logId);
   if(!entry)return;
   const base=entry._base||{carbs:entry.carbs,fat:entry.fat,protein:entry.protein,calories:entry.calories};
-  const g=parseFloat(document.getElementById('ef-grams').value)||100;
-  const unitG=parseFloat(document.getElementById('ef-unit').value)||1;
+  const g=parseFloat(document.getElementById('ef-grams').value)||1;
+  const unitG=parseFloat(window._editUnitG||document.getElementById('ef-unit').value)||1;
   const totalG=g*unitG;
   const r=totalG/100;
   document.getElementById('ep-cal').textContent=Math.round(base.calories*r);
@@ -4404,12 +4488,13 @@ function saveEditedFood(){
   const entry=foodLogEntries.find(e=>e.logId===logId);
   if(!entry)return;
   const base=entry._base||{carbs:entry.carbs,fat:entry.fat,protein:entry.protein,calories:entry.calories};
-  const g=parseFloat(document.getElementById('ef-grams').value)||100;
-  const unitG=parseFloat(document.getElementById('ef-unit').value)||1;
-  const totalG=g*unitG;
+  const amt=parseFloat(document.getElementById('ef-grams').value)||1;
+  const unitG=parseFloat(window._editUnitG||document.getElementById('ef-unit').value)||1;
+  const unitName=window._editUnitName||'g';
+  const totalG=amt*unitG;
   const r=totalG/100;
-  const unitLabel=document.getElementById('ef-unit').options[document.getElementById('ef-unit').selectedIndex].text;
-  entry.name=`${entry._baseName||entry.name.replace(/\s*\(.*?\)$/,'')} (${g}${unitLabel})`;
+  const displayAmt=unitName==='g'?totalG+'g':amt+' '+unitName;
+  entry.name=`${entry._baseName||entry.name.replace(/\s*\(.*?\)$/,'')} (${displayAmt})`;
   entry.calories=Math.round(base.calories*r);
   entry.carbs=+(base.carbs*r).toFixed(1);
   entry.fat=+(base.fat*r).toFixed(1);
@@ -4417,7 +4502,7 @@ function saveEditedFood(){
   entry._grams=totalG;
   document.getElementById('editFoodModal').style.display='none';
   renderFoodLog();updateTrackerDisplay();saveAll();
-  showToast('✅ Updated to '+totalG+'g!');
+  showToast('✅ Updated — '+displayAmt+'!');
 }
 
 // ====== FAST HISTORY & ACHIEVEMENTS ======
@@ -4559,6 +4644,50 @@ function ketoCheckIn(isKeto){
 
 // ====== CALENDAR ======
 let calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
+
+
+function renderPhotoGallery(){
+  const grid = document.getElementById('photoGalleryGrid');
+  const empty = document.getElementById('photoGalleryEmpty');
+  if(!grid) return;
+
+  // Collect all photos from journal entries
+  const photos = [];
+  journalEntries.forEach(entry => {
+    const mainPhoto = entry.photo;
+    const multiPhotos = entry.photos || [];
+    const dateLabel = entry.date || 'Unknown date';
+    const dayNum = entry.dayNum || '';
+    const label = dayNum ? 'Day '+dayNum+' — '+dateLabel : dateLabel;
+    if(mainPhoto) photos.push({src:mainPhoto, label, date:entry.date||'', ts:entry.timestamp||0});
+    multiPhotos.forEach(p => photos.push({src:p, label, date:entry.date||'', ts:entry.timestamp||0}));
+  });
+
+  // Sort newest first
+  photos.sort((a,b) => b.ts - a.ts);
+
+  if(!photos.length){ grid.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+
+  grid.innerHTML = photos.map(p=>`
+    <div style="break-inside:avoid;margin-bottom:8px;border-radius:12px;overflow:hidden;position:relative;cursor:pointer" onclick="viewFullPhoto('${p.src}','${p.label}')">
+      <img src="${p.src}" alt="${p.label}" style="width:100%;display:block;border-radius:12px"/>
+      <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.7));padding:8px 8px 6px;border-radius:0 0 12px 12px">
+        <div style="font-size:10px;color:#fff;font-weight:600">${p.label}</div>
+      </div>
+    </div>`).join('');
+}
+
+function viewFullPhoto(src, label){
+  const modal = document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px';
+  modal.onclick=()=>modal.remove();
+  modal.innerHTML=`
+    <div style="font-size:13px;color:#fff;margin-bottom:12px;font-weight:600">${label}</div>
+    <img src="${src}" style="max-width:100%;max-height:80vh;border-radius:12px;object-fit:contain"/>
+    <div style="color:var(--muted);font-size:12px;margin-top:12px">Tap anywhere to close</div>`;
+  document.body.appendChild(modal);
+}
 
 function renderCalendar(){
   const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -4720,17 +4849,55 @@ function calToggleAddFood(){
   if(panel.style.display==='block') document.getElementById('calFoodSearch').focus();
 }
 
+let _calSearchTimer=null;
 function calSearchFood(query){
   const res = document.getElementById('calFoodResults');
   if(!query.trim()){ res.innerHTML=''; return; }
-  const matches = foods.filter(f=>f.name.toLowerCase().includes(query.toLowerCase())).slice(0,8);
-  if(!matches.length){ res.innerHTML='<div style="font-size:12px;color:var(--muted);padding:6px">No results</div>'; return; }
-  res.innerHTML = matches.map((f,i)=>`
-    <div onclick="calAddFoodItem(${foods.indexOf(f)})"
+  const local = foods.filter(f=>f.name.toLowerCase().includes(query.toLowerCase())).slice(0,4);
+  res.innerHTML=(local.length?local.map(f=>`
+    <div onclick="calAddFoodDirect(${JSON.stringify(f).replace(/"/g,"'")})"
       style="padding:9px 12px;background:var(--card);border-radius:8px;margin-bottom:4px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;align-items:center">
       <span>${f.name}</span>
-      <span style="color:var(--muted);font-size:12px">${f.calories} kcal/100g</span>
-    </div>`).join('');
+      <span style="color:var(--muted);font-size:12px">${f.calories} kcal</span>
+    </div>`).join(''):'')
+    +'<div id="calAiResults"><div style="font-size:11px;color:var(--muted);padding:6px 0">🤖 Searching AI...</div></div>';
+  clearTimeout(_calSearchTimer);
+  _calSearchTimer=setTimeout(()=>calSearchFoodAI(query),600);
+}
+
+async function calSearchFoodAI(q){
+  const aiEl=document.getElementById('calAiResults');
+  if(!aiEl)return;
+  try{
+    const res=await fetch('https://elegant-bunny-caf8da.netlify.app/ai',{
+      method:'POST',
+      headers:{'Content-Type':'application/json',...(kbUser?.token?{'Authorization':'Bearer '+kbUser.token}:{})},
+      body:JSON.stringify({prompt:`Nutrition facts for "${q}". JSON only: [{"name":"...","calories":0,"carbs":0,"fat":0,"protein":0,"servingSize":"100g"}] — 3 results, 100g base. Just JSON.`,max_tokens:300})
+    });
+    const data=await res.json();
+    const text=(data.content||[]).map(c=>c.text||'').join('');
+    const items=JSON.parse(text.replace(/```json|```/g,'').trim());
+    if(!document.getElementById('calAiResults'))return;
+    document.getElementById('calAiResults').innerHTML=items.map(item=>`
+      <div onclick='calAddFoodDirect(${JSON.stringify(item).replace(/'/g,"\'")})'
+        style="padding:9px 12px;background:rgba(199,125,255,0.07);border:1px solid rgba(199,125,255,0.15);border-radius:8px;margin-bottom:4px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;align-items:center">
+        <div><span>${item.name}</span>${item.servingSize?`<div style="font-size:10px;color:var(--green)">${item.servingSize}</div>`:''}</div>
+        <span style="color:var(--muted);font-size:12px">${item.calories} kcal · <span style="color:var(--purple)">AI</span></span>
+      </div>`).join('');
+  }catch(e){ const el=document.getElementById('calAiResults');if(el)el.innerHTML=''; }
+}
+
+function calAddFoodDirect(f){
+  if(typeof f==='string') try{f=JSON.parse(f.replace(/'/g,'"'));}catch(e){}
+  const dateStr=window._calEditDate;
+  const existing=calGetFoods(dateStr);
+  existing.unshift({name:f.name+' (100g)',calories:Math.round(f.calories||0),carbs:+(f.carbs||0).toFixed(1),fat:+(f.fat||0).toFixed(1),protein:+(f.protein||0).toFixed(1)});
+  calSaveFoods(dateStr,existing);
+  calRenderFoodLog();
+  document.getElementById('calFoodSearch').value='';
+  document.getElementById('calFoodResults').innerHTML='';
+  document.getElementById('calAddFoodPanel').style.display='none';
+  showToast('✅ '+f.name+' added!');
 }
 
 function calAddFoodItem(foodIdx){
@@ -6003,127 +6170,4 @@ function updateAuthUI(){
       style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:13px;color:#fff;font-size:14px;margin-bottom:10px;outline:none;font-family:'DM Sans',sans-serif"/>
     <input id="authPassword" type="password" placeholder="Password"
       style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:13px;color:#fff;font-size:14px;margin-bottom:16px;outline:none;font-family:'DM Sans',sans-serif"/>
-    <div id="authError" style="display:none;background:rgba(255,77,109,0.15);border:1px solid rgba(255,77,109,0.3);border-radius:10px;padding:10px 14px;font-size:13px;color:#ff4d6d;margin-bottom:14px"></div>
-    <label style="display:flex;align-items:center;gap:8px;margin-bottom:14px;cursor:pointer">
-      <input type="checkbox" id="keepMeLoggedIn" checked style="width:16px;height:16px;accent-color:#00e676"/>
-      <span style="font-size:13px;color:#8ab0c8">Keep me logged in</span>
-    </label>
-    <button onclick="submitAuth()" id="authSubmitBtn"
-      style="width:100%;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:12px;padding:14px;font-weight:800;font-size:15px;cursor:pointer;margin-bottom:10px;font-family:'DM Sans',sans-serif">
-      Sign In
-    </button>
-    <button onclick="closeAuthModal()"
-      style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;color:#5a7a9a;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">
-      Maybe later
-    </button>
-    <div style="text-align:center;margin-top:14px;font-size:11px;color:#5a7a9a">Free account · No credit card needed</div>
-  </div>
-</div>
-
-<!-- ====== UPGRADE MODAL ====== -->
-<div id="upgradeModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;align-items:center;justify-content:center;padding:20px;overflow-y:auto">
-  <div style="background:#0d1520;border-radius:24px;padding:28px 22px;width:100%;max-width:400px;border:1px solid rgba(0,230,118,0.2)">
-
-    <div style="text-align:center;margin-bottom:24px">
-      <div style="font-size:40px;margin-bottom:8px">⚡</div>
-      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#00e676">KetoBuddy Pro</div>
-      <div style="font-size:13px;color:#5a7a9a;margin-top:4px">$1.99/month · Cancel anytime</div>
-    </div>
-
-    <div style="background:rgba(0,230,118,0.05);border:1px solid rgba(0,230,118,0.15);border-radius:16px;padding:18px;margin-bottom:22px">
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <div style="display:flex;align-items:center;gap:12px;font-size:14px;color:#c0d0e0"><span style="font-size:20px">🤖</span><div><strong style="color:#fff">Unlimited AI searches</strong><div style="font-size:12px;color:#5a7a9a;margin-top:1px">Chef meals, food search, photo scan</div></div></div>
-        <div style="display:flex;align-items:center;gap:12px;font-size:14px;color:#c0d0e0"><span style="font-size:20px">📄</span><div><strong style="color:#fff">Export data as PDF</strong><div style="font-size:12px;color:#5a7a9a;margin-top:1px">Your full keto progress report</div></div></div>
-        <div style="display:flex;align-items:center;gap:12px;font-size:14px;color:#c0d0e0"><span style="font-size:20px">⭐</span><div><strong style="color:#fff">All future features first</strong><div style="font-size:12px;color:#5a7a9a;margin-top:1px">Pro users get everything new first</div></div></div>
-        <div style="display:flex;align-items:center;gap:12px;font-size:14px;color:#c0d0e0"><span style="font-size:20px">💪</span><div><strong style="color:#fff">Help people get healthy</strong><div style="font-size:12px;color:#5a7a9a;margin-top:1px">Your support keeps this app free for others</div></div></div>
-      </div>
-    </div>
-
-    <div style="text-align:center;margin-bottom:18px">
-      <span style="font-family:'Syne',sans-serif;font-size:42px;font-weight:800;color:#00e676">$1.99</span>
-      <span style="color:#5a7a9a;font-size:15px">/month</span>
-    </div>
-
-    <button onclick="startCheckout()" id="checkoutBtn"
-      style="width:100%;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:14px;padding:16px;font-weight:800;font-size:17px;cursor:pointer;margin-bottom:10px;font-family:'Syne',sans-serif">
-      🚀 Get Pro — $1.99/mo
-    </button>
-    <button onclick="closeUpgradeModal()"
-      style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:13px;color:#5a7a9a;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">
-      Keep free plan (10 searches total)
-    </button>
-  </div>
-</div>
-
-<script>
-if('serviceWorker' in navigator){
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .then(reg => console.log('SW registered'))
-      .catch(err => console.log('SW failed:', err));
-  });
-}
-
-// PWA install prompt
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  // Show install banner after 3 seconds if not already installed
-  setTimeout(showInstallBanner, 3000);
-});
-
-function showInstallBanner(){
-  if(!deferredPrompt) return;
-  if(localStorage.getItem('kb_pwa_dismissed')) return;
-  const banner = document.createElement('div');
-  banner.id = 'pwa-banner';
-  banner.style.cssText = `
-    position:fixed;bottom:80px;left:12px;right:12px;
-    background:linear-gradient(135deg,#0f1923,#162032);
-    border:1px solid rgba(0,230,118,0.35);
-    border-radius:18px;padding:14px 16px;
-    display:flex;align-items:center;gap:12px;
-    z-index:9000;box-shadow:0 8px 32px rgba(0,0,0,0.5);
-    animation:slideUp 0.4s ease;
-  `;
-  banner.innerHTML = `
-    <div style="font-size:32px">🥑</div>
-    <div style="flex:1">
-      <div style="font-weight:700;font-size:14px;color:#fff">Add to Home Screen</div>
-      <div style="font-size:12px;color:#5a7a9a;margin-top:2px">Install KetoBuddy for quick access</div>
-    </div>
-    <button onclick="installPWA()" style="background:#00e676;color:#000;border:none;border-radius:10px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">Install</button>
-    <button onclick="dismissInstall()" style="background:none;border:none;color:#5a7a9a;font-size:20px;cursor:pointer;padding:0 4px">✕</button>
-  `;
-  document.body.appendChild(banner);
-}
-
-async function installPWA(){
-  if(!deferredPrompt) return;
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  deferredPrompt = null;
-  document.getElementById('pwa-banner')?.remove();
-  if(outcome === 'accepted') showToast('🎉 KetoBuddy installed!');
-}
-
-function dismissInstall(){
-  document.getElementById('pwa-banner')?.remove();
-  localStorage.setItem('kb_pwa_dismissed','true');
-}
-
-window.addEventListener('appinstalled', () => {
-  document.getElementById('pwa-banner')?.remove();
-  showToast('🎉 KetoBuddy installed successfully!');
-});
-</script>
-<style>
-@keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
-}
-</style>
-
-</body>
-</html>
+    <div id="authError" style="display:none;background:rgba(255,77,109,0.15);bord
