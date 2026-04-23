@@ -6155,8 +6155,8 @@ function updateAuthUI(){
 </script>
 
 <!-- ====== AUTH MODAL ====== -->
-<div id="authModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px">
-  <div style="background:#0f1923;border-radius:24px;padding:28px 24px;width:100%;max-width:400px;border:1px solid rgba(255,255,255,0.1)">
+<div id="authModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:flex-end;justify-content:center;padding:0">
+  <div style="background:#0f1923;border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;max-width:480px;border:1px solid rgba(255,255,255,0.1);max-height:92vh;overflow-y:auto">
     <div style="text-align:center;margin-bottom:20px">
       <div style="font-size:40px;margin-bottom:8px">🥑</div>
       <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#00e676">KetoBuddy</div>
@@ -6166,8 +6166,9 @@ function updateAuthUI(){
       <button onclick="switchAuthTab('login')" id="tabLogin" style="flex:1;padding:9px;border:none;border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;background:#162032;color:#fff;transition:all 0.2s">Sign In</button>
       <button onclick="switchAuthTab('signup')" id="tabSignup" style="flex:1;padding:9px;border:none;border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;background:transparent;color:#5a7a9a;transition:all 0.2s">Create Account</button>
     </div>
-    <input id="authEmail" type="email" placeholder="Email address"
-      style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:13px;color:#fff;font-size:14px;margin-bottom:10px;outline:none;font-family:'DM Sans',sans-serif"/>
-    <input id="authPassword" type="password" placeholder="Password"
-      style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:13px;color:#fff;font-size:14px;margin-bottom:16px;outline:none;font-family:'DM Sans',sans-serif"/>
-    <div id="authError" style="display:none;background:rgba(255,77,109,0.15);bord
+    <input id="authEmail" type="email" placeholder="Email address" autocomplete="email"
+      onkeydown="if(event.key==='Enter')document.getElementById('authPassword').focus()"
+      style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px;color:#fff;font-size:16px;margin-bottom:10px;outline:none;font-family:'DM Sans',sans-serif"/>
+    <input id="authPassword" type="password" placeholder="Password" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter')submitAuth()"
+      style="width:100%;box-sizing:border-box;backgr
