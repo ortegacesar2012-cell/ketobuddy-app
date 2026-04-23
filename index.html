@@ -5462,7 +5462,7 @@ let _authTab = 'login';
 
 function showAuthModal(){
   const m = document.getElementById('authModal');
-  m.style.display = 'flex';
+  m.style.display = 'block';
   document.getElementById('authError').style.display = 'none';
   document.getElementById('authEmail').value = '';
   document.getElementById('authPassword').value = '';
@@ -6155,9 +6155,9 @@ function updateAuthUI(){
 </script>
 
 <!-- ====== AUTH MODAL ====== -->
-<div id="authModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;overflow-y:auto">
-  <div style="min-height:100%;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box">
-    <div style="background:#0f1923;border-radius:20px;padding:28px 22px;width:100%;max-width:400px;border:1px solid rgba(255,255,255,0.1)">
+<div id="authModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.88);z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch">
+  <div style="padding:40px 20px 60px;max-width:400px;margin:0 auto">
+    <div style="background:#0f1923;border-radius:20px;padding:28px 20px;border:1px solid rgba(255,255,255,0.1)">
       <div style="text-align:center;margin-bottom:20px">
         <div style="font-size:36px;margin-bottom:6px">🥑</div>
         <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#00e676">KetoBuddy</div>
@@ -6167,7 +6167,11 @@ function updateAuthUI(){
         <button onclick="switchAuthTab('login')" id="tabLogin" style="flex:1;padding:9px;border:none;border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;background:#162032;color:#fff">Sign In</button>
         <button onclick="switchAuthTab('signup')" id="tabSignup" style="flex:1;padding:9px;border:none;border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;background:transparent;color:#5a7a9a">Create Account</button>
       </div>
-      <input id="authEmail" type="email" placeholder="Email address" inputmode="email"
-        style="display:block;width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.12);border-radius:12px;padding:13px 14px;color:#fff;font-size:15px;margin-bottom:10px;outline:none;font-family:'DM Sans',sans-serif"/>
-      <input id="authPassword" type="password" placeholder="Password"
-        style="display:block;width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.12);border-radius:12px;padding:13px 14px;color:#fff;font
+      <div style="margin-bottom:10px">
+        <div style="font-size:12px;color:#5a7a9a;margin-bottom:6px">Email</div>
+        <input id="authEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com"
+          style="display:block;width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.15);border-radius:12px;padding:14px;color:#fff;font-size:16px;outline:none;font-family:'DM Sans',sans-serif"/>
+      </div>
+      <div style="margin-bottom:20px">
+        <div style="font-size:12px;color:#5a7a9a;margin-bottom:6px">Password</div>
+        <input id="authPass
