@@ -3639,7 +3639,7 @@ function obProgress(n){
 }
 
 function liveUpdateMacroPreview(){
-  // Instant calorie estimate as user types on screen 2
+  try{
   const preview = document.getElementById('ob-live-preview');
   if(!preview) return;
   const age=parseInt(document.getElementById('ob-age')?.value)||0;
@@ -3664,6 +3664,7 @@ function liveUpdateMacroPreview(){
     +'<span style="background:rgba(76,201,240,0.08);border:1px solid rgba(76,201,240,0.2);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--blue)">💪 '+protein+'g protein</span>'
     +'<span style="background:rgba(255,209,102,0.08);border:1px solid rgba(255,209,102,0.2);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--yellow)">🧈 '+Math.max(fat,30)+'g fat</span>'
     +'</div>';
+  }catch(e){ console.warn('livePreview err:',e); }
 }
 
 function setObUnits(mode){
@@ -3686,6 +3687,7 @@ function obPickGoal(el,key,label,offset){obData.goal=key;obData.goalLabel=label;
 function obPickKeto(el,level){obData.ketoLevel=level;document.querySelectorAll('#obs-5 .ob-choice').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');}
 
 function obNext(from){
+  try{
   if(from===1){
     const name=document.getElementById('ob-name').value.trim();
     if(!name){alert('Please enter your name!');return;}
@@ -3693,7 +3695,7 @@ function obNext(from){
   }
   if(from===1 && !window._obUnitsSet){
     window._obUnitsSet=true;
-    setTimeout(()=>setObUnits('imperial'),50); // default USA
+    setTimeout(()=>{ try{setObUnits('imperial');}catch(e){} },50);
   }
   if(from===2){
     const age=parseInt(document.getElementById('ob-age').value);
@@ -3713,7 +3715,9 @@ function obNext(from){
   const next=from+1;
   document.getElementById('obs-'+from).classList.remove('active');
   document.getElementById('obs-'+next).classList.add('active');
-  ob_currentScreen=next;obProgress(next);
+  ob_currentScreen=next;
+  try{obProgress(next);}catch(e){console.error('obProgress error:',e);}
+  }catch(e){console.error('obNext error:',e);alert('Error: '+e.message);}
 }
 function obBack(from){
   const prev=from-1;
@@ -6166,6 +6170,4 @@ function updateAuthUI(){
       }).then(r=>r.json()).then(d=>{
         if(d.valid){
           kbUser.plan = d.plan;
-          localStorage.setItem('kb_user', JSON.stringify({userId:d.userId,email:d.email,plan:d.plan}));
-          updateAuthUI();
-          updateAIUsageBanner(); // refresh banner now that plan is confirmed
+          localStorage.setItem('kb_user', JSON.stringify({userId
