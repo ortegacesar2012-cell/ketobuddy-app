@@ -6155,20 +6155,21 @@ function updateAuthUI(){
 </script>
 
 <!-- ====== AUTH MODAL ====== -->
-<div id="authModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);z-index:10000;align-items:center;justify-content:center">
-  <div style="width:88%;max-width:360px;background:#0f1923;border-radius:18px;padding:18px;border:1px solid rgba(255,255,255,0.1);max-height:90vh;overflow-y:auto;box-sizing:border-box">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-      <span style="font-size:24px">🥑</span>
-      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#00e676">KetoBuddy</div>
+<div id="authModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);z-index:10000;align-items:flex-start;justify-content:center;padding-top:15vh">
+  <div style="width:88%;max-width:360px;background:#0f1923;border-radius:18px;padding:18px;border:1px solid rgba(255,255,255,0.1);box-sizing:border-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:22px">🥑</span>
+        <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#00e676">KetoBuddy</span>
+      </div>
+      <button onclick="closeAuthModal()" style="background:none;border:none;color:#5a7a9a;font-size:20px;cursor:pointer;line-height:1">✕</button>
     </div>
-    <div id="authModalSubtitle" style="display:none"></div>
     <div id="authTabs" style="display:flex;gap:3px;background:rgba(255,255,255,0.05);border-radius:9px;padding:3px;margin-bottom:10px">
       <button onclick="switchAuthTab('login')" id="tabLogin" style="flex:1;padding:7px;border:none;border-radius:7px;font-weight:700;font-size:12px;cursor:pointer;background:#162032;color:#fff">Sign In</button>
       <button onclick="switchAuthTab('signup')" id="tabSignup" style="flex:1;padding:7px;border:none;border-radius:7px;font-weight:700;font-size:12px;cursor:pointer;background:transparent;color:#5a7a9a">Create Account</button>
     </div>
+    <div id="authModalSubtitle" style="display:none"></div>
+    <div id="authError" style="display:none;background:rgba(255,77,109,0.15);border:1px solid rgba(255,77,109,0.3);border-radius:8px;padding:7px 10px;font-size:12px;color:#ff4d6d;margin-bottom:8px"></div>
     <input id="authEmail" type="email" autocomplete="email" placeholder="Email address"
-      style="display:block;width:100%;box-sizing:border-box;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.15);border-radius:9px;padding:10px 12px;color:#fff;font-size:15px;margin-bottom:7px;outline:none"/>
-    <input id="authPassword" type="password" autocomplete="current-password" placeholder="Password"
-      onkeydown="if(event.key==='Enter')submitAuth()"
-      style="display:block;width:100%;box-sizing:border-box;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.15);border-radius:9px;padding:10px 12px;color:#fff;font-size:15px;margin-bottom:10px;outline:none"/>
-    <div id="authError" style="display:none;background:rg
+      style="display:block;width:100%;box-sizing:border-box;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.15);border-radius:9px;padding:11px 12px;color:#fff;font-size:15px;margin-bottom:8px;outline:none"/>
+   
