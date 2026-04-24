@@ -5517,7 +5517,7 @@ async function submitAuth(){
 
     // Login success
     kbUser = { userId: data.userId, email: data.email, plan: data.plan, token: data.token };
-    const keepLogged = document.getElementById('keepMeLoggedIn')?.checked !== false;
+    const keepLogged = true;
     localStorage.setItem('kb_rememberMe', keepLogged ? 'true' : 'false');
     if(keepLogged){
       localStorage.setItem('kb_token', data.token);
@@ -6156,19 +6156,19 @@ function updateAuthUI(){
 
 <!-- ====== AUTH MODAL ====== -->
 <div id="authModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);z-index:10000;align-items:center;justify-content:center">
-  <div style="width:88%;max-width:360px;background:#0f1923;border-radius:18px;padding:20px 18px;border:1px solid rgba(255,255,255,0.1)">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-      <span style="font-size:28px">🥑</span>
-      <div>
-        <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#00e676;line-height:1">KetoBuddy</div>
-        <div id="authModalSubtitle" style="font-size:11px;color:#5a7a9a;margin-top:2px">Sign in to sync your data</div>
-      </div>
+  <div style="width:88%;max-width:360px;background:#0f1923;border-radius:18px;padding:18px;border:1px solid rgba(255,255,255,0.1);max-height:90vh;overflow-y:auto;box-sizing:border-box">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span style="font-size:24px">🥑</span>
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#00e676">KetoBuddy</div>
     </div>
-    <div id="authTabs" style="display:flex;gap:3px;background:rgba(255,255,255,0.05);border-radius:10px;padding:3px;margin-bottom:12px">
-      <button onclick="switchAuthTab('login')" id="tabLogin" style="flex:1;padding:7px;border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;background:#162032;color:#fff">Sign In</button>
-      <button onclick="switchAuthTab('signup')" id="tabSignup" style="flex:1;padding:7px;border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;background:transparent;color:#5a7a9a">Create Account</button>
+    <div id="authModalSubtitle" style="display:none"></div>
+    <div id="authTabs" style="display:flex;gap:3px;background:rgba(255,255,255,0.05);border-radius:9px;padding:3px;margin-bottom:10px">
+      <button onclick="switchAuthTab('login')" id="tabLogin" style="flex:1;padding:7px;border:none;border-radius:7px;font-weight:700;font-size:12px;cursor:pointer;background:#162032;color:#fff">Sign In</button>
+      <button onclick="switchAuthTab('signup')" id="tabSignup" style="flex:1;padding:7px;border:none;border-radius:7px;font-weight:700;font-size:12px;cursor:pointer;background:transparent;color:#5a7a9a">Create Account</button>
     </div>
     <input id="authEmail" type="email" autocomplete="email" placeholder="Email address"
-      style="display:block;width:100%;box-sizing:border-box;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;padding:11px 12px;color:#fff;font-size:15px;margin-bottom:8px;outline:none"/>
+      style="display:block;width:100%;box-sizing:border-box;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.15);border-radius:9px;padding:10px 12px;color:#fff;font-size:15px;margin-bottom:7px;outline:none"/>
     <input id="authPassword" type="password" autocomplete="current-password" placeholder="Password"
-      style="display:block;width:100%;box-sizing:border-box;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;padding:11px 12px;color:#fff;font-size:15px;margin-bottom:10px;outline:none"/>
+      onkeydown="if(event.key==='Enter')submitAuth()"
+      style="display:block;width:100%;box-sizing:border-box;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.15);border-radius:9px;padding:10px 12px;color:#fff;font-size:15px;margin-bottom:10px;outline:none"/>
+    <div id="authError" style="display:none;background:rg
