@@ -5461,13 +5461,53 @@ customFoods.forEach(f=>foods.unshift(f));
 let _authTab = 'login';
 
 function showAuthModal(){
-  const m = document.getElementById('authModal');
-  m.style.display = 'flex';
-  document.getElementById('authError').style.display = 'none';
-  document.getElementById('authEmail').value = '';
-  document.getElementById('authPassword').value = '';
+  // Remove any existing modal
+  const old = document.getElementById('authModal');
+  if(old) old.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'authModal';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.9);z-index:99999;overflow-y:auto';
+
+  overlay.innerHTML = `
+    <div style="width:90%;max-width:340px;margin:60px auto 40px;background:#0f1923;border-radius:16px;padding:20px;border:1px solid rgba(255,255,255,0.12)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:22px">🥑</span>
+          <span style="font-size:16px;font-weight:800;color:#00e676">KetoBuddy</span>
+        </div>
+        <button onclick="closeAuthModal()" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer;padding:4px">✕</button>
+      </div>
+      <div style="display:flex;background:rgba(255,255,255,0.05);border-radius:8px;padding:3px;margin-bottom:14px">
+        <button onclick="switchAuthTab('login')" id="tabLogin" style="flex:1;padding:8px;border:none;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;background:#1a2d42;color:#fff">Sign In</button>
+        <button onclick="switchAuthTab('signup')" id="tabSignup" style="flex:1;padding:8px;border:none;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;background:transparent;color:#666">Create Account</button>
+      </div>
+      <div id="authModalSubtitle" style="display:none"></div>
+      <div id="authError" style="display:none;background:rgba(255,77,109,0.15);border:1px solid rgba(255,77,109,0.3);border-radius:8px;padding:8px;font-size:13px;color:#ff4d6d;margin-bottom:10px"></div>
+      <p style="color:#888;font-size:12px;margin:0 0 4px">Email</p>
+      <input id="authEmail" type="email" autocomplete="email" placeholder="your@email.com"
+        style="display:block;width:100%;box-sizing:border-box;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:12px;color:#fff;font-size:16px;margin-bottom:10px;outline:none"/>
+      <p style="color:#888;font-size:12px;margin:0 0 4px">Password</p>
+      <input id="authPassword" type="password" autocomplete="current-password" placeholder="Password"
+        onkeydown="if(event.key==='Enter')submitAuth()"
+        style="display:block;width:100%;box-sizing:border-box;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:12px;color:#fff;font-size:16px;margin-bottom:16px;outline:none"/>
+      <button id="authSubmitBtn" onclick="submitAuth()"
+        style="display:block;width:100%;background:#00e676;color:#000;border:none;border-radius:10px;padding:15px;font-weight:900;font-size:16px;cursor:pointer;margin-bottom:10px">
+        Sign In
+      </button>
+      <button onclick="closeAuthModal()"
+        style="display:block;width:100%;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:11px;color:#888;font-size:13px;cursor:pointer">
+        Maybe later
+      </button>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  setTimeout(()=>{ const e=document.getElementById('authEmail'); if(e)e.focus(); },100);
 }
-function closeAuthModal(){ document.getElementById('authModal').style.display = 'none'; }
+function closeAuthModal(){
+  const m=document.getElementById('authModal');
+  if(m){ m.style.display='none'; }
+}
 
 // showUpgradeModal and closeUpgradeModal defined in startCheckout block
 
@@ -6129,47 +6169,3 @@ function updateAuthUI(){
           localStorage.setItem('kb_user', JSON.stringify({userId:d.userId,email:d.email,plan:d.plan}));
           updateAuthUI();
           updateAIUsageBanner(); // refresh banner now that plan is confirmed
-        } else {
-          kbUser=null; localStorage.removeItem('kb_token'); localStorage.removeItem('kb_user');
-          updateAuthUI();
-          updateAIUsageBanner();
-        }
-      }).catch(()=>{ updateAIUsageBanner(); });
-    }catch(e){}
-  }
-  // Check for payment success
-  const params = new URLSearchParams(window.location.search);
-  if(params.get('payment')==='success'){
-    showToast('🎉 Welcome to KetoBuddy! Your plan is now active!');
-    // Re-verify to get updated plan
-    setTimeout(()=>{
-      if(getAuthToken()) fetch(BACKEND_URL+'/auth',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+getAuthToken()},body:JSON.stringify({action:'verify'})})
-        .then(r=>r.json()).then(d=>{ if(d.valid){kbUser.plan=d.plan;localStorage.setItem('kb_user',JSON.stringify({userId:d.userId,email:d.email,plan:d.plan}));updateAuthUI();}});
-    }, 2000);
-    window.history.replaceState({}, '', '/');
-  }
-  setTimeout(updateAuthUI, 100);
-  setTimeout(renderRecentSearches, 200);
-})();
-
-</script>
-
-<!-- ====== AUTH MODAL ====== -->
-<div id="authModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);z-index:10000;align-items:flex-start;justify-content:center;padding-top:15vh">
-  <div style="width:88%;max-width:360px;background:#0f1923;border-radius:18px;padding:18px;border:1px solid rgba(255,255,255,0.1);box-sizing:border-box">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:22px">🥑</span>
-        <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#00e676">KetoBuddy</span>
-      </div>
-      <button onclick="closeAuthModal()" style="background:none;border:none;color:#5a7a9a;font-size:20px;cursor:pointer;line-height:1">✕</button>
-    </div>
-    <div id="authTabs" style="display:flex;gap:3px;background:rgba(255,255,255,0.05);border-radius:9px;padding:3px;margin-bottom:10px">
-      <button onclick="switchAuthTab('login')" id="tabLogin" style="flex:1;padding:7px;border:none;border-radius:7px;font-weight:700;font-size:12px;cursor:pointer;background:#162032;color:#fff">Sign In</button>
-      <button onclick="switchAuthTab('signup')" id="tabSignup" style="flex:1;padding:7px;border:none;border-radius:7px;font-weight:700;font-size:12px;cursor:pointer;background:transparent;color:#5a7a9a">Create Account</button>
-    </div>
-    <div id="authModalSubtitle" style="display:none"></div>
-    <div id="authError" style="display:none;background:rgba(255,77,109,0.15);border:1px solid rgba(255,77,109,0.3);border-radius:8px;padding:7px 10px;font-size:12px;color:#ff4d6d;margin-bottom:8px"></div>
-    <input id="authEmail" type="email" autocomplete="email" placeholder="Email address"
-      style="display:block;width:100%;box-sizing:border-box;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.15);border-radius:9px;padding:11px 12px;color:#fff;font-size:15px;margin-bottom:8px;outline:none"/>
-   
