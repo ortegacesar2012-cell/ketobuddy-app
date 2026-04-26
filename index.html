@@ -3687,28 +3687,35 @@ function obPickGoal(el,key,label,offset){obData.goal=key;obData.goalLabel=label;
 function obPickKeto(el,level){obData.ketoLevel=level;document.querySelectorAll('#obs-5 .ob-choice').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');}
 
 function obNext(from){
-  try{
   if(from===1){
-    const name=document.getElementById('ob-name').value.trim();
+    const name=(document.getElementById('ob-name').value||'').trim();
     if(!name){alert('Please enter your name!');return;}
     obData.name=name;
-  }
-  if(from===1 && !window._obUnitsSet){
-    window._obUnitsSet=true;
-    setTimeout(()=>{ try{setObUnits('imperial');}catch(e){} },50);
+    // Advance to screen 2
+    document.getElementById('obs-1').classList.remove('active');
+    document.getElementById('obs-2').classList.add('active');
+    ob_currentScreen=2;
+    document.getElementById('onboarding').scrollTop=0;
+    // Set imperial default after screen loads
+    setTimeout(function(){
+      try{setObUnits('imperial');}catch(e){}
+      try{obProgress(2);}catch(e){}
+    },100);
+    return;
   }
   if(from===2){
-    const age=parseInt(document.getElementById('ob-age').value);
-    const cm=parseFloat(document.getElementById('ob-heightcm').value);
-    const ft=parseFloat(document.getElementById('ob-heightft').value);
+    const age=parseInt(document.getElementById('ob-age').value)||0;
+    const cm=parseFloat(document.getElementById('ob-heightcm').value)||0;
+    const ft=parseFloat(document.getElementById('ob-heightft').value)||0;
     const inch=parseFloat(document.getElementById('ob-heightin').value)||0;
-    const wkg=parseFloat(document.getElementById('ob-weight').value);
-    const wunit=document.getElementById('ob-wunit').value;
+    const wkg=parseFloat(document.getElementById('ob-weight').value)||0;
+    const wunit=(document.getElementById('ob-wunit').value)||'lbs';
     if(!age||age<13||age>100){alert('Please enter a valid age (13–100).');return;}
     const heightCm=cm||(ft?(ft*30.48+inch*2.54):0);
-    if(!heightCm||heightCm<100){alert('Please enter your height.');return;}
-    if(!wkg||wkg<30){alert('Please enter your weight.');return;}
-    obData.age=age;obData.heightCm=heightCm;
+    if(heightCm<100){alert('Please enter your height.');return;}
+    if(wkg<30){alert('Please enter your weight.');return;}
+    obData.age=age;
+    obData.heightCm=heightCm;
     obData.weightKg=wunit==='lbs'?+(wkg/2.20462).toFixed(1):wkg;
   }
   if(from===5){obCalculateAndShow();return;}
@@ -3716,8 +3723,8 @@ function obNext(from){
   document.getElementById('obs-'+from).classList.remove('active');
   document.getElementById('obs-'+next).classList.add('active');
   ob_currentScreen=next;
-  try{obProgress(next);}catch(e){console.error('obProgress error:',e);}
-  }catch(e){console.error('obNext error:',e);alert('Error: '+e.message);}
+  document.getElementById('onboarding').scrollTop=0;
+  setTimeout(function(){try{obProgress(next);}catch(e){}},50);
 }
 function obBack(from){
   const prev=from-1;
@@ -6163,11 +6170,4 @@ function updateAuthUI(){
 (function restoreSession(){
   const token = localStorage.getItem('kb_token') || sessionStorage.getItem('kb_token');
   const user = localStorage.getItem('kb_user') || sessionStorage.getItem('kb_user');
-  if(token && user){
-    try{
-      const u = JSON.parse(user);
-      kbUser = {...u, token};
-      // Verify token is still valid in background
-      fetch(BACKEND_URL+'/auth', {
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization'
+  if(token && user
