@@ -5509,8 +5509,13 @@ function showAuthModal(){
   setTimeout(()=>{ const e=document.getElementById('authEmail'); if(e)e.focus(); },100);
 }
 function closeAuthModal(){
-  const m=document.getElementById('authModal');
-  if(m){ m.style.display='none'; }
+  // Remove entirely so it can't block taps
+  document.querySelectorAll('#authModal').forEach(el=>el.remove());
+  // Re-add the empty placeholder so getElementById works next time
+  const ph=document.createElement('div');
+  ph.id='authModal';
+  ph.style.display='none';
+  document.body.appendChild(ph);
 }
 
 // showUpgradeModal and closeUpgradeModal defined in startCheckout block
@@ -6165,9 +6170,4 @@ function updateAuthUI(){
       // Verify token is still valid in background
       fetch(BACKEND_URL+'/auth', {
         method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-        body:JSON.stringify({action:'verify'})
-      }).then(r=>r.json()).then(d=>{
-        if(d.valid){
-          kbUser.plan = d.plan;
-          localStorage.setItem('kb_user', JSON.stringify({userId
+        headers:{'Content-Type':'application/json','Authorization'
