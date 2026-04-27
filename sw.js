@@ -1,3 +1,4 @@
+
 // KetoBuddy SW v99 - cache buster
 const CACHE_NAME = 'ketobuddy-v99';
 
