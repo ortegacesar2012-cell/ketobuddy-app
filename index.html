@@ -474,7 +474,16 @@ if(window.caches){
         <div class="ob-choice sel" id="sex-m" onclick="obPickSex('male')"><div class="oc-icon">👨</div><div class="oc-label">Male</div></div>
         <div class="ob-choice" id="sex-f" onclick="obPickSex('female')"><div class="oc-icon">👩</div><div class="oc-label">Female</div></div>
       </div>
-      <button class="ob-next" onclick="obNext(1)">Continue →</button>
+      <button class="ob-next" onclick="(function(){
+        var n=(document.getElementById('ob-name').value||'').trim();
+        if(!n){alert('Please enter your name');return;}
+        window.obData=window.obData||{};
+        window.obData.name=n;
+        document.getElementById('obs-1').classList.remove('active');
+        document.getElementById('obs-2').classList.add('active');
+        document.getElementById('onboarding').scrollTop=0;
+        if(typeof obNext==='function') obNext(1);
+      })()">Continue →</button>
     </div>
 
     <!-- SCREEN 2: Age, Height, Weight -->
@@ -6164,9 +6173,4 @@ function updateAuthUI(){
         const menu = document.createElement('div');
         menu.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:flex-end;justify-content:center';
         const upgradeBtn = !isPro ? '<button id="menuUpgradeBtn" style="width:100%;padding:14px;background:#00e676;color:#000;font-weight:700;border:none;border-radius:10px;font-size:15px;margin-bottom:10px;cursor:pointer">🚀 Upgrade to Pro — $1.99/mo</button>' : '<button id="menuManageBtn" style="width:100%;padding:14px;background:#00e676;color:#000;font-weight:700;border:none;border-radius:10px;font-size:15px;margin-bottom:10px;cursor:pointer">⚡ Manage Subscription</button>';
-        menu.innerHTML = '<div style="background:#1a2332;border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:20px">'+upgradeBtn+'<button id="menuSignOutBtn" style="width:100%;padding:14px;background:rgba(255,255,255,0.07);color:#ff4444;font-weight:700;border:none;border-radius:10px;font-size:15px;margin-bottom:10px;cursor:pointer">Sign Out</button><button id="menuCancelBtn" style="width:100%;padding:14px;background:rgba(255,255,255,0.05);color:#aaa;font-weight:700;border:none;border-radius:10px;font-size:15px;cursor:pointer">Cancel</button></div>';
-        document.body.appendChild(menu);
-        const close = () => menu.remove();
-        menu.querySelector('#menuSignOutBtn').addEventListener('click', () => { close(); signOut(); });
-        menu.querySelector('#menuCancelBtn').addEventListener('click', close);
-        const ab = menu.querySelector('#menuUpgradeBtn') || menu.querySelector('#menuManageB
+        menu.innerHTML = '<div style="background:#1a2332;border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:20px">'+upgradeBtn+'<button id="menuSignOutBtn" style="width:100%;padding:14px;background:rgba(255,255,255,0.07);color:#ff4444;font-weight:700;border:none;border-radius:10px;font-size:15px;margin-bottom:10px;cursor:pointer">Sign Out</button><button id="menuCancelBtn" style="width:100%;padding:14px;background:rgba(255,255,255,0.05);color:#aaa;font-we
