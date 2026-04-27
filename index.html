@@ -494,8 +494,26 @@ if(window.caches){
 
       <!-- Unit toggle -->
       <div style="display:flex;background:rgba(255,255,255,0.04);border-radius:10px;padding:3px;margin-bottom:18px;gap:3px;border:1px solid rgba(255,255,255,0.06)">
-        <button id="unit-imperial" onclick="setObUnits('imperial')" style="flex:1;padding:8px;border:none;border-radius:7px;background:linear-gradient(135deg,#1a2d42,#162032);color:#fff;font-weight:700;font-size:13px;cursor:pointer">🇺🇸 ft / lbs</button>
-        <button id="unit-metric" onclick="setObUnits('metric')" style="flex:1;padding:8px;border:none;border-radius:7px;background:transparent;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer">📏 cm / kg</button>
+        <button id="unit-imperial" onclick="(function(){
+          document.getElementById('height-imperial').style.display='block';
+          document.getElementById('height-metric').style.display='none';
+          document.getElementById('ob-wunit-display').textContent='lbs';
+          document.getElementById('ob-wunit').value='lbs';
+          document.getElementById('unit-imperial').style.background='linear-gradient(135deg,#1a2d42,#162032)';
+          document.getElementById('unit-imperial').style.color='#fff';
+          document.getElementById('unit-metric').style.background='transparent';
+          document.getElementById('unit-metric').style.color='var(--muted)';
+        })()" style="flex:1;padding:8px;border:none;border-radius:7px;background:linear-gradient(135deg,#1a2d42,#162032);color:#fff;font-weight:700;font-size:13px;cursor:pointer">🇺🇸 ft / lbs</button>
+        <button id="unit-metric" onclick="(function(){
+          document.getElementById('height-imperial').style.display='none';
+          document.getElementById('height-metric').style.display='block';
+          document.getElementById('ob-wunit-display').textContent='kg';
+          document.getElementById('ob-wunit').value='kg';
+          document.getElementById('unit-metric').style.background='linear-gradient(135deg,#1a2d42,#162032)';
+          document.getElementById('unit-metric').style.color='#fff';
+          document.getElementById('unit-imperial').style.background='transparent';
+          document.getElementById('unit-imperial').style.color='var(--muted)';
+        })()" style="flex:1;padding:8px;border:none;border-radius:7px;background:transparent;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer">📏 cm / kg</button>
       </div>
 
       <div class="ob-label">Age</div>
@@ -529,7 +547,26 @@ if(window.caches){
       <!-- Live macro preview -->
       <div id="ob-live-preview" style="display:none;background:rgba(255,154,60,0.06);border:1px solid rgba(255,154,60,0.2);border-radius:12px;padding:12px;margin-bottom:14px"></div>
 
-      <button class="ob-next" onclick="obNext(2)">Continue →</button>
+      <button class="ob-next" onclick="(function(){
+        var age=parseInt(document.getElementById('ob-age').value)||0;
+        var isImperial=document.getElementById('height-imperial').style.display!=='none';
+        var cm=parseFloat(document.getElementById('ob-heightcm').value)||0;
+        var ft=parseFloat(document.getElementById('ob-heightft').value)||0;
+        var inch=parseFloat(document.getElementById('ob-heightin').value)||0;
+        var w=parseFloat(document.getElementById('ob-weight').value)||0;
+        var wunit=document.getElementById('ob-wunit').value||'lbs';
+        if(!age||age<13||age>120){alert('Please enter your age');return;}
+        var h=isImperial?(ft*30.48+inch*2.54):cm;
+        if(h<100){alert('Please enter your height');return;}
+        if(w<30){alert('Please enter your weight');return;}
+        window.obData=window.obData||{};
+        window.obData.age=age;
+        window.obData.heightCm=h;
+        window.obData.weightKg=wunit==='lbs'?+(w/2.20462).toFixed(1):w;
+        document.getElementById('obs-2').classList.remove('active');
+        document.getElementById('obs-3').classList.add('active');
+        document.getElementById('onboarding').scrollTop=0;
+      })()">Continue →</button>
     </div>
 
     <!-- SCREEN 3: Activity level -->
@@ -544,7 +581,11 @@ if(window.caches){
         <div class="ob-goal-choice" onclick="obPickActivity(this,'active',1.725)"><div class="og-icon">🏃</div><div><div class="og-title">Very Active</div><div class="og-sub">Hard exercise 6–7 days/week</div></div></div>
         <div class="ob-goal-choice" onclick="obPickActivity(this,'athlete',1.9)"><div class="og-icon">🏆</div><div><div class="og-title">Athlete / Physical Job</div><div class="og-sub">Twice daily training or very physical work</div></div></div>
       </div>
-      <button class="ob-next" onclick="obNext(3)" style="margin-top:12px">Continue →</button>
+      <button class="ob-next" onclick="(function(){
+        document.getElementById('obs-3').classList.remove('active');
+        document.getElementById('obs-4').classList.add('active');
+        document.getElementById('onboarding').scrollTop=0;
+      })()" style="margin-top:12px">Continue →</button>
     </div>
 
     <!-- SCREEN 4: Goal -->
@@ -559,7 +600,11 @@ if(window.caches){
         <div class="ob-goal-choice" onclick="obPickGoal(this,'muscle','Build Muscle',+250)"><div class="og-icon">💪</div><div><div class="og-title">Build Muscle</div><div class="og-sub">250 cal surplus · lean gains</div></div></div>
         <div class="ob-goal-choice" onclick="obPickGoal(this,'muscle_fast','Bulk Up Fast',+500)"><div class="og-icon">🏋️</div><div><div class="og-title">Bulk Up Fast</div><div class="og-sub">500 cal surplus · aggressive muscle gain</div></div></div>
       </div>
-      <button class="ob-next" onclick="obNext(4)" style="margin-top:12px">Continue →</button>
+      <button class="ob-next" onclick="(function(){
+        document.getElementById('obs-4').classList.remove('active');
+        document.getElementById('obs-5').classList.add('active');
+        document.getElementById('onboarding').scrollTop=0;
+      })()" style="margin-top:12px">Continue →</button>
     </div>
 
     <!-- SCREEN 5: Keto experience -->
@@ -573,7 +618,12 @@ if(window.caches){
         <div class="ob-choice" onclick="obPickKeto(this,'adapted')"><div class="oc-icon">🌳</div><div class="oc-label">Keto Adapted</div><div class="oc-sub">Been on keto 4+ weeks</div></div>
         <div class="ob-choice" onclick="obPickKeto(this,'expert')"><div class="oc-icon">⭐</div><div class="oc-label">Keto Expert</div><div class="oc-sub">Months of experience</div></div>
       </div>
-      <button class="ob-next" onclick="obNext(5)">Calculate My Plan →</button>
+      <button class="ob-next" onclick="(function(){
+        if(typeof obCalculateAndShow==='function'){obCalculateAndShow();return;}
+        document.getElementById('obs-5').classList.remove('active');
+        document.getElementById('obs-6').classList.add('active');
+        document.getElementById('onboarding').scrollTop=0;
+      })()">Calculate My Plan →</button>
     </div>
 
     <!-- SCREEN 6: Results -->
@@ -6103,74 +6153,4 @@ function logPlanMeal(idx){
   showToast('📊 '+m.name+' → '+cat+'!');
 }
 
-function addAllPlanToTracker(){
-  const meals = window._currentDayPlan;
-  if(!meals||!meals.length) return;
-  meals.forEach(m=>{
-    const cat = getMealCategory(m.mealType);
-    addToLog({
-      name: m.name,
-      calories: m.calories,
-      carbs: m.carbs,
-      fat: m.fat,
-      protein: m.protein,
-      category: 'AI Planner',
-      keto: m.carbs <= 15
-    }, cat);
-  });
-  showToast('✅ All '+meals.length+' meals logged!');
-  setTimeout(()=>switchSection('tracker', document.querySelector('.nav-btn[onclick*="tracker"]')), 600);
-}
-
-function savePlanMealFav(idx){
-  const meals = window._currentDayPlan;
-  if(!meals||!meals[idx]) return;
-  const m = meals[idx];
-  aiMealFavorites.unshift({
-    id: Date.now(),
-    name: m.name,
-    desc: m.desc,
-    macro: m.macros,
-    savedAt: new Date().toLocaleDateString()
-  });
-  if(aiMealFavorites.length>50) aiMealFavorites=aiMealFavorites.slice(0,50);
-  localStorage.setItem('kb_aiMealFavs', JSON.stringify(aiMealFavorites));
-  showToast('⭐ '+m.name+' saved!');
-}
-
-function addPlanToShop(idx){
-  const meals = window._currentDayPlan;
-  if(!meals||!meals[idx]) return;
-  const m = meals[idx];
-  if(m.ingredients.length) addMealToShop(m.ingredients, m.name);
-}
-
-function signOut(){
-  kbUser = null;
-  localStorage.removeItem('kb_token');
-  localStorage.removeItem('kb_user');
-  updateAuthUI();
-  showToast('👋 Signed out');
-}
-
-function updateAuthUI(){
-  const isPro = kbUser?.plan === 'pro';
-  const isLoggedIn = !!kbUser;
-  // Update streak badge area to show plan
-  const badge = document.getElementById('streakBadge');
-  if(badge && isLoggedIn){
-    // Add a small pro indicator if pro
-    if(isPro && !badge.textContent.includes('⚡')){
-      // handled via header button
-    }
-  }
-  // Update header auth button
-  const authBtn = document.getElementById('headerAuthBtn');
-  if(authBtn){
-    if(isLoggedIn){
-      authBtn.textContent = isPro ? '⚡ Pro' : '👤 '+kbUser.email.split('@')[0];
-      authBtn.onclick = () => {
-        const menu = document.createElement('div');
-        menu.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:flex-end;justify-content:center';
-        const upgradeBtn = !isPro ? '<button id="menuUpgradeBtn" style="width:100%;padding:14px;background:#00e676;color:#000;font-weight:700;border:none;border-radius:10px;font-size:15px;margin-bottom:10px;cursor:pointer">🚀 Upgrade to Pro — $1.99/mo</button>' : '<button id="menuManageBtn" style="width:100%;padding:14px;background:#00e676;color:#000;font-weight:700;border:none;border-radius:10px;font-size:15px;margin-bottom:10px;cursor:pointer">⚡ Manage Subscription</button>';
-        menu.innerHTML = '<div style="background:#1a2332;border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:20px">'+upgradeBtn+'<button id="menuSignOutBtn" style="width:100%;padding:14px;background:rgba(255,255,255,0.07);color:#ff4444;font-weight:700;border:none;border-radius:10px;font-size:15px;margin-bottom:10px;cursor:pointer">Sign Out</button><button id="menuCancelBtn" style="width:100%;padding:14px;background:rgba(255,255,255,0.05);color:#aaa;font-we
+function addAl
