@@ -5395,7 +5395,13 @@ loadAll();
 renderWater();
 
 // Check if onboarding already done
-if(localStorage.getItem('kb_onboardDone')==='true'){
+// Skip onboarding if done OR if we have saved macro goals (backward compat)
+const _hasProfile = localStorage.getItem('kb_onboardDone')==='true' 
+  || localStorage.getItem('kb_macroGoals') !== null
+  || localStorage.getItem('kb_obData') !== null;
+if(_hasProfile){
+  // Make sure onboardDone is set for future
+  localStorage.setItem('kb_onboardDone','true');
   document.getElementById('onboarding').classList.add('hidden');
   document.getElementById('mainApp').style.display='block';
   // Restore daily food log — reset if it's a new day
@@ -6163,11 +6169,4 @@ function updateAuthUI(){
         const close = () => menu.remove();
         menu.querySelector('#menuSignOutBtn').addEventListener('click', () => { close(); signOut(); });
         menu.querySelector('#menuCancelBtn').addEventListener('click', close);
-        const ab = menu.querySelector('#menuUpgradeBtn') || menu.querySelector('#menuManageBtn');
-        if(ab) ab.addEventListener('click', () => { close(); isPro ? manageSubscription() : showUpgradeModal(); });
-      };
-      authBtn.style.color = isPro ? '#00e676' : '#5a7a9a';
-    } else {
-      authBtn.textContent = '🔑 Sign In';
-      authBtn.onclick = showAuthModal;
-      authBtn.style.c
+        const ab = menu.querySelector('#menuUpgradeBtn') || menu.querySelector('#menuManageB
