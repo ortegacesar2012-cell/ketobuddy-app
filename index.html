@@ -619,10 +619,26 @@ if(window.caches){
         <div class="ob-choice" onclick="obPickKeto(this,'expert')"><div class="oc-icon">⭐</div><div class="oc-label">Keto Expert</div><div class="oc-sub">Months of experience</div></div>
       </div>
       <button class="ob-next" onclick="(function(){
+        var d=window.obData||{};
+        var wKg=d.weightKg||70; var hCm=d.heightCm||170; var age=d.age||30;
+        var sex=d.sex||'male'; var af=d.activityFactor||1.2; var go=d.goalOffset||-250;
+        var kl=d.ketoLevel||'some';
+        var bmr=sex==='male'?(10*wKg+6.25*hCm-5*age+5):(10*wKg+6.25*hCm-5*age-161);
+        var tdee=Math.round(bmr*af);
+        var cal=tdee+go;
+        var carbs={new:30,some:25,adapted:20,expert:20}[kl]||25;
+        var prot=Math.round(wKg*1.8);
+        var fat=Math.max(Math.round((cal-carbs*4-prot*4)/9),40);
+        window.macroGoals={cal:cal,carbs:carbs,fat:fat,protein:prot};
+        localStorage.setItem('kb_macroGoals',JSON.stringify(window.macroGoals));
+        localStorage.setItem('kb_obData',JSON.stringify(d));
+        localStorage.setItem('kb_onboardDone','true');
         if(typeof obCalculateAndShow==='function'){obCalculateAndShow();return;}
         document.getElementById('obs-5').classList.remove('active');
         document.getElementById('obs-6').classList.add('active');
         document.getElementById('onboarding').scrollTop=0;
+        var nd=document.getElementById('ob-name-display'); if(nd) nd.textContent=d.name||'';
+        var cd=document.getElementById('ob-cal-display'); if(cd) cd.textContent=cal;
       })()">Calculate My Plan →</button>
     </div>
 
@@ -668,7 +684,19 @@ if(window.caches){
         <div style="font-size:13px;color:#c0d0e0;line-height:1.7" id="ob-explain"></div>
       </div>
 
-      <button class="ob-next" onclick="obFinish()" style="background:linear-gradient(135deg,#00e676,#00c853);color:#000;font-size:17px">
+      <button class="ob-next" onclick="(function(){
+        var mg=window.macroGoals||{cal:1800,carbs:25,fat:130,protein:120};
+        localStorage.setItem('kb_macroGoals',JSON.stringify(mg));
+        localStorage.setItem('kb_onboardDone','true');
+        localStorage.setItem('kb_obData',JSON.stringify(window.obData||{}));
+        if(typeof obFinish==='function'){try{obFinish();return;}catch(e){}}
+        document.getElementById('onboarding').classList.add('hidden');
+        document.getElementById('mainApp').style.display='block';
+        try{if(typeof renderFAQ==='function')renderFAQ();}catch(e){}
+        try{if(typeof applyMacroGoals==='function')applyMacroGoals();}catch(e){}
+        try{if(typeof updateTrackerDisplay==='function')updateTrackerDisplay();}catch(e){}
+        location.reload();
+      })()" style="background:linear-gradient(135deg,#00e676,#00c853);color:#000;font-size:17px">
         Start My Keto Journey 🚀
       </button>
       <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px">You can update these anytime in Settings</div>
@@ -6105,52 +6133,4 @@ CARBS: [net carbs]g | FAT: [fat]g | PROTEIN: [protein]g | CALS: [calories]`
           </div>`:''}
           <div style="display:flex;gap:8px">
             <button onclick="logPlanMeal(${i})" style="flex:1;padding:9px;background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.25);border-radius:10px;color:var(--green);font-size:12px;font-weight:700;cursor:pointer">📊 Log to Tracker</button>
-            <button onclick="savePlanMealFav(${i})" style="padding:9px 12px;background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.25);border-radius:10px;color:#ffc107;font-size:12px;font-weight:700;cursor:pointer">⭐</button>
-            <button onclick="addPlanToShop(${i})" style="padding:9px 12px;background:rgba(76,201,240,0.1);border:1px solid rgba(76,201,240,0.25);border-radius:10px;color:var(--blue);font-size:12px;font-weight:700;cursor:pointer">🛒</button>
-          </div>
-        </div>`).join('')}
-    `;
-
-    // Store plan data for actions
-    window._currentDayPlan = meals;
-
-  } catch(e){
-    result.innerHTML=`<div class="card"><p style="color:var(--red);font-size:13px">⚠️ ${e.message||'Could not generate plan. Try again.'}</p></div>`;
-  }
-
-  btn.disabled=false;
-  btn.textContent='📅 Generate My Day Plan';
-}
-
-function getMealCategory(mealType){
-  if(!mealType) return '🍽️ Other';
-  const t = mealType.toLowerCase();
-  if(t.includes('breakfast') || t.includes('morning')) return '🌅 Breakfast';
-  if(t.includes('lunch') || t.includes('midday')) return '☀️ Lunch';
-  if(t.includes('dinner') || t.includes('supper') || t.includes('evening')) return '🌙 Dinner';
-  if(t.includes('snack') || t.includes('small') || t.includes('bite')) return '🍿 Snack';
-  // Check by meal number for 6-meal plans
-  if(t.includes('meal 1') || t.includes('meal 2')) return '🌅 Breakfast';
-  if(t.includes('meal 3') || t.includes('meal 4')) return '☀️ Lunch';
-  if(t.includes('meal 5') || t.includes('meal 6')) return '🌙 Dinner';
-  return '🍽️ Other';
-}
-
-function logPlanMeal(idx){
-  const meals = window._currentDayPlan;
-  if(!meals||!meals[idx]) return;
-  const m = meals[idx];
-  const cat = getMealCategory(m.mealType);
-  addToLog({
-    name: m.name,
-    calories: m.calories,
-    carbs: m.carbs,
-    fat: m.fat,
-    protein: m.protein,
-    category: 'AI Planner',
-    keto: m.carbs <= 15
-  }, cat);
-  showToast('📊 '+m.name+' → '+cat+'!');
-}
-
-function addAl
+            <button onclick="savePlanMealFav(${i})" style="padding:9px 12px;background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.25);border-radius:10px;color:#ffc107;font-size:12px;font-weight:700;cu
