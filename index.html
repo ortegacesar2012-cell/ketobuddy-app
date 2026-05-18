@@ -633,56 +633,91 @@ if(window.caches){
         localStorage.setItem('kb_macroGoals',JSON.stringify(window.macroGoals));
         localStorage.setItem('kb_obData',JSON.stringify(d));
         localStorage.setItem('kb_onboardDone','true');
-        if(typeof obCalculateAndShow==='function'){obCalculateAndShow();return;}
+        // Fill screen 6 inline - no external JS needed
+        window._obPlanType='standard';
+        window._obBaseCal=cal; window._obBaseCarbs=carbs; window._obBaseProt=prot; window._obBaseFat=fat;
+        function _fillPlan(type){
+          var c=window._obBaseCal||cal;
+          var splits={
+            standard:{carbs:Math.round(c*0.05/4), prot:Math.round(c*0.25/4), fat:Math.round(c*0.70/9)},
+            highprot:{carbs:Math.round(c*0.05/4), prot:Math.round(c*0.35/4), fat:Math.round(c*0.60/9)},
+            lowcarb:{carbs:Math.round(c*0.01/4), prot:Math.round(c*0.24/4), fat:Math.round(c*0.75/9)},
+            moderate:{carbs:Math.round(c*0.15/4), prot:Math.round(c*0.30/4), fat:Math.round(c*0.55/9)},
+          };
+          var sp=splits[type]||splits.standard;
+          window.macroGoals={cal:c,carbs:sp.carbs,fat:sp.fat,protein:sp.prot};
+          localStorage.setItem('kb_macroGoals',JSON.stringify(window.macroGoals));
+          var res=document.getElementById('ob-plan-results');
+          if(res) res.innerHTML=
+            '<div style="background:linear-gradient(135deg,rgba(255,154,60,0.1),rgba(255,154,60,0.05));border:1px solid rgba(255,154,60,0.25);border-radius:14px;padding:16px;text-align:center;margin-bottom:12px">'
+            +'<div style="font-size:11px;color:#ff9a3c;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">🔥 Your Daily Calorie Target</div>'
+            +'<div style="font-size:52px;font-weight:800;color:#ff9a3c;line-height:1">'+c+'</div>'
+            +'<div style="font-size:13px;color:var(--muted);margin-top:4px">calories per day</div>'
+            +'</div>';
+          var grid=document.getElementById('ob-macro-grid');
+          if(grid) grid.innerHTML=
+            '<div style="background:rgba(255,77,109,0.08);border:1px solid rgba(255,77,109,0.2);border-radius:12px;padding:14px;text-align:center">'
+            +'<div style="font-size:22px;font-weight:800;color:#ff4d6d">'+sp.carbs+'g</div>'
+            +'<div style="font-size:11px;color:var(--muted);margin-top:2px">🥑 Net Carbs</div>'
+            +'<div style="font-size:10px;color:var(--muted);margin-top:2px">Keep under this!</div></div>'
+            +'<div style="background:rgba(76,201,240,0.08);border:1px solid rgba(76,201,240,0.2);border-radius:12px;padding:14px;text-align:center">'
+            +'<div style="font-size:22px;font-weight:800;color:#4cc9f0">'+sp.prot+'g</div>'
+            +'<div style="font-size:11px;color:var(--muted);margin-top:2px">💪 Protein</div>'
+            +'<div style="font-size:10px;color:var(--muted);margin-top:2px">Preserve muscle</div></div>'
+            +'<div style="background:rgba(255,209,102,0.08);border:1px solid rgba(255,209,102,0.2);border-radius:12px;padding:14px;text-align:center">'
+            +'<div style="font-size:22px;font-weight:800;color:#ffd166">'+sp.fat+'g</div>'
+            +'<div style="font-size:11px;color:var(--muted);margin-top:2px">🔥 Fat</div>'
+            +'<div style="font-size:10px;color:var(--muted);margin-top:2px">Your main fuel</div></div>';
+        }
+        window.obSelectPlan=function(el,type){
+          window._obPlanType=type;
+          document.querySelectorAll('#ob-plan-picker .ob-goal-choice').forEach(e=>e.classList.remove('sel'));
+          el.classList.add('sel');
+          _fillPlan(type);
+        };
+        _fillPlan('standard');
         document.getElementById('obs-5').classList.remove('active');
         document.getElementById('obs-6').classList.add('active');
         document.getElementById('onboarding').scrollTop=0;
-        var nd=document.getElementById('ob-name-display'); if(nd) nd.textContent=d.name||'';
-        var cd=document.getElementById('ob-cal-display'); if(cd) cd.textContent=cal;
+        var ns=document.getElementById('ob-name-display-sub');
+        if(ns) ns.textContent='Hi '+d.name+'! Here is your personalised plan 🎉';
+        if(typeof obCalculateAndShow==='function'){try{obCalculateAndShow();}catch(e){}}
       })()">Calculate My Plan →</button>
     </div>
 
     <!-- SCREEN 6: Results -->
     <div class="ob-screen" id="obs-6">
-      <button class="ob-back" onclick="obBack(6)">← Back</button>
-      <div class="ob-title">Your Personalised Keto Plan, <span id="ob-name-display"></span>! 🎉</div>
-      <div class="ob-sub">Based on your body & goals — here are your daily targets</div>
+      <div class="ob-title">Your Plan is Ready! 🎉</div>
+      <div class="ob-sub" id="ob-name-display-sub">Based on your body & goals</div>
 
-      <!-- Keto Score Badge -->
-      <div style="text-align:center;margin-bottom:14px">
-        <div class="keto-score-badge keto-score-good" id="ob-keto-badge">💪 Your Keto Plan</div>
-      </div>
+      <!-- Live results filled by Calculate button -->
+      <div id="ob-plan-results" style="margin-bottom:16px"></div>
 
-      <!-- Calorie Goal -->
-      <div class="ob-result-card" style="border-color:rgba(255,154,60,0.3);margin-bottom:14px;text-align:center">
-        <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">🔥 Daily Energy Target</div>
-        <div style="font-family:'Syne',sans-serif;font-size:56px;font-weight:800;color:var(--orange);line-height:1" id="ob-cal-display">—</div>
-        <div style="font-size:13px;color:var(--muted);margin-top:4px" id="ob-cal-sub">calories per day</div>
-        <div style="margin-top:12px;font-size:12px;line-height:1.7;color:#c0d0e0;text-align:left" id="ob-tdee-breakdown"></div>
-      </div>
-
-      <!-- Macro Pie Chart + Legend -->
-      <div class="ob-result-card" style="margin-bottom:14px">
-        <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">📊 Macro Breakdown</div>
-        <div class="ob-pie-wrap">
-          <div class="ob-pie" id="ob-pie-chart">
-            <div class="ob-pie-center">
-              <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#fff" id="ob-pie-cal">—</div>
-              <div style="font-size:9px;color:var(--muted)">kcal</div>
-            </div>
+      <!-- Macro plan selector -->
+      <div class="ob-result-card" style="margin-bottom:16px">
+        <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">⚙️ Choose Your Macro Split</div>
+        <div style="display:flex;flex-direction:column;gap:8px" id="ob-plan-picker">
+          <div class="ob-goal-choice sel" id="plan-standard" onclick="obSelectPlan(this,'standard')">
+            <div class="og-icon">🥑</div>
+            <div><div class="og-title">Standard Keto</div><div class="og-sub">70% fat · 25% protein · 5% carbs — classic</div></div>
           </div>
-          <div class="ob-pie-legend" id="ob-pie-legend"></div>
+          <div class="ob-goal-choice" id="plan-highprot" onclick="obSelectPlan(this,'highprot')">
+            <div class="og-icon">💪</div>
+            <div><div class="og-title">High Protein Keto</div><div class="og-sub">60% fat · 35% protein · 5% carbs — muscle focus</div></div>
+          </div>
+          <div class="ob-goal-choice" id="plan-lowcarb" onclick="obSelectPlan(this,'lowcarb')">
+            <div class="og-icon">🔬</div>
+            <div><div class="og-title">Strict / Zero Carb</div><div class="og-sub">75% fat · 24% protein · 1% carbs — deep ketosis</div></div>
+          </div>
+          <div class="ob-goal-choice" id="plan-moderate" onclick="obSelectPlan(this,'moderate')">
+            <div class="og-icon">⚖️</div>
+            <div><div class="og-title">Moderate Low Carb</div><div class="og-sub">55% fat · 30% protein · 15% carbs — flexible</div></div>
+          </div>
         </div>
       </div>
 
-      <!-- Macro Cards -->
-      <div class="ob-macro-grid" id="ob-macro-grid"></div>
-
-      <!-- Goal Explanation -->
-      <div class="ob-result-card" style="margin-bottom:16px">
-        <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">💡 What this means for you</div>
-        <div style="font-size:13px;color:#c0d0e0;line-height:1.7" id="ob-explain"></div>
-      </div>
+      <!-- Macro Cards filled inline -->
+      <div id="ob-macro-grid" class="ob-macro-grid"></div>
 
       <button class="ob-next" onclick="(function(){
         var mg=window.macroGoals||{cal:1800,carbs:25,fat:130,protein:120};
@@ -1180,45 +1215,4 @@ if(window.caches){
           <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍦</span><span>No-Cook</span></button>
           <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐄</span><span>Carnivore</span></button>
           <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧁</span><span>Dessert</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥗</span><span>Salad</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🫐</span><span>Fruity</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧂</span><span>Salty</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥚</span><span>Egg-Based</span></button>
-        </div>
-      </div>
-
-      <!-- Meal count -->
-      <div style="margin-bottom:14px">
-        <div class="snack-input-label">🍽️ How many meals?</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
-          <button class="snack-tag-btn" id="plan-meals-3" onclick="selectPlanMeals(this,3)">3 meals<br><span style="font-size:10px;color:var(--muted)">B · L · D</span></button>
-          <button class="snack-tag-btn active" id="plan-meals-5" onclick="selectPlanMeals(this,5)">3 + 2 snacks<br><span style="font-size:10px;color:var(--muted)">B · L · D + snacks</span></button>
-          <button class="snack-tag-btn" id="plan-meals-6" onclick="selectPlanMeals(this,6)">6 small meals<br><span style="font-size:10px;color:var(--muted)">Every 2-3 hrs</span></button>
-        </div>
-      </div>
-
-      <!-- Carb strictness -->
-      <div style="margin-bottom:20px">
-        <div class="snack-input-label">🥑 Carb limit?</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
-          <button class="snack-tag-btn" id="plan-strict" onclick="selectPlanCarbs(this,'strict')">🔒 Strict<br><span style="font-size:10px;color:var(--muted)">&lt;20g/day</span></button>
-          <button class="snack-tag-btn active" id="plan-moderate" onclick="selectPlanCarbs(this,'moderate')">⚖️ Standard<br><span style="font-size:10px;color:var(--muted)">&lt;50g/day</span></button>
-          <button class="snack-tag-btn" id="plan-flexible" onclick="selectPlanCarbs(this,'flexible')">🔓 Relaxed<br><span style="font-size:10px;color:var(--muted)">&lt;75g/day</span></button>
-        </div>
-      </div>
-
-      <button id="plannerBtn" onclick="generateDayPlan()" style="width:100%;padding:18px;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;cursor:pointer;margin-bottom:8px;box-shadow:0 6px 24px rgba(0,230,118,0.35)">
-        📅 Generate My Day Plan
-      </button>
-      <div style="text-align:center;font-size:11px;color:var(--muted);margin-bottom:16px">Builds Breakfast · Lunch · Dinner · Snacks to hit your goals</div>
-
-      <div id="plannerResult" style="padding-bottom:20px"></div>
-    </div>
-  </div>
-
-  <!-- MOOD JOURNAL -->
-  <!-- UNIFIED JOURNAL -->
-  <div id="sec-journal" class="section">
-    <div class="sec-head"><h2>My Progress Journal</h2><p>Log mood, weight, photos & notes — all in one place</p></div>
-    <div class="inner-tabs">
-      <button class="inner-tab active" onclick="switchInner('j-newent
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)
