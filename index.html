@@ -482,6 +482,9 @@ if(window.caches){
         document.getElementById('obs-1').classList.remove('active');
         document.getElementById('obs-2').classList.add('active');
         document.getElementById('onboarding').scrollTop=0;
+        var _dots=document.querySelectorAll('.ob-dot');_dots.forEach(function(d,j){d.classList.toggle('done',j<1);d.classList.toggle('active',j===1);});
+        var _st=document.getElementById('ob-step-text');if(_st)_st.textContent='Step 2 of 5';
+        var _sp=document.getElementById('ob-step-pct');if(_sp)_sp.textContent=Math.round((1/5)*100)+'%';
         if(typeof obNext==='function') obNext(1);
       })()">Continue →</button>
     </div>
@@ -566,6 +569,9 @@ if(window.caches){
         document.getElementById('obs-2').classList.remove('active');
         document.getElementById('obs-3').classList.add('active');
         document.getElementById('onboarding').scrollTop=0;
+        var _dots=document.querySelectorAll('.ob-dot');_dots.forEach(function(d,j){d.classList.toggle('done',j<2);d.classList.toggle('active',j===2);});
+        var _st=document.getElementById('ob-step-text');if(_st)_st.textContent='Step 3 of 5';
+        var _sp=document.getElementById('ob-step-pct');if(_sp)_sp.textContent=Math.round((2/5)*100)+'%';
       })()">Continue →</button>
     </div>
 
@@ -585,6 +591,9 @@ if(window.caches){
         document.getElementById('obs-3').classList.remove('active');
         document.getElementById('obs-4').classList.add('active');
         document.getElementById('onboarding').scrollTop=0;
+        var _dots=document.querySelectorAll('.ob-dot');_dots.forEach(function(d,j){d.classList.toggle('done',j<3);d.classList.toggle('active',j===3);});
+        var _st=document.getElementById('ob-step-text');if(_st)_st.textContent='Step 4 of 5';
+        var _sp=document.getElementById('ob-step-pct');if(_sp)_sp.textContent=Math.round((3/5)*100)+'%';
       })()" style="margin-top:12px">Continue →</button>
     </div>
 
@@ -604,6 +613,9 @@ if(window.caches){
         document.getElementById('obs-4').classList.remove('active');
         document.getElementById('obs-5').classList.add('active');
         document.getElementById('onboarding').scrollTop=0;
+        var _dots=document.querySelectorAll('.ob-dot');_dots.forEach(function(d,j){d.classList.toggle('done',j<4);d.classList.toggle('active',j===4);});
+        var _st=document.getElementById('ob-step-text');if(_st)_st.textContent='Step 5 of 5';
+        var _sp=document.getElementById('ob-step-pct');if(_sp)_sp.textContent=Math.round((4/5)*100)+'%';
       })()" style="margin-top:12px">Continue →</button>
     </div>
 
@@ -618,45 +630,7 @@ if(window.caches){
         <div class="ob-choice" onclick="(function(el){window.obData=window.obData||{};window.obData.ketoLevel='adapted';document.querySelectorAll('#obs-5 .ob-choice').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');})((this))"><div class="oc-icon">🌳</div><div class="oc-label">Keto Adapted</div><div class="oc-sub">Been on keto 4+ weeks</div></div>
         <div class="ob-choice" onclick="(function(el){window.obData=window.obData||{};window.obData.ketoLevel='expert';document.querySelectorAll('#obs-5 .ob-choice').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');})((this))"><div class="oc-icon">⭐</div><div class="oc-label">Keto Expert</div><div class="oc-sub">Months of experience</div></div>
       </div>
-      <button class="ob-next" onclick="(function(){
-        var d=window.obData||{};
-        var wKg=d.weightKg||70; var hCm=d.heightCm||170; var age=d.age||30;
-        var sex=d.sex||'male'; var af=d.activityFactor||1.2; var go=d.goalOffset||-250;
-        var kl=d.ketoLevel||'some';
-        var bmr=sex==='male'?(10*wKg+6.25*hCm-5*age+5):(10*wKg+6.25*hCm-5*age-161);
-        var tdee=Math.round(bmr*af);
-        var cal=tdee+go;
-        var carbs={new:30,some:25,adapted:20,expert:20}[kl]||25;
-        var prot=Math.round(wKg*1.8);
-        var fat=Math.max(Math.round((cal-carbs*4-prot*4)/9),40);
-        window.macroGoals={cal:cal,carbs:carbs,fat:fat,protein:prot};
-        localStorage.setItem('kb_macroGoals',JSON.stringify(window.macroGoals));
-        localStorage.setItem('kb_obData',JSON.stringify(d));
-        localStorage.setItem('kb_onboardDone','true');
-        // Fill screen 6 inline - no external JS needed
-        window._obPlanType='standard';
-        window._obBaseCal=cal; window._obBaseCarbs=carbs; window._obBaseProt=prot; window._obBaseFat=fat;
-        function _fillPlan(type){
-          var c=window._obBaseCal||cal;
-          var splits={
-            standard:{carbs:Math.round(c*0.05/4), prot:Math.round(c*0.25/4), fat:Math.round(c*0.70/9)},
-            highprot:{carbs:Math.round(c*0.05/4), prot:Math.round(c*0.35/4), fat:Math.round(c*0.60/9)},
-            lowcarb:{carbs:Math.round(c*0.01/4), prot:Math.round(c*0.24/4), fat:Math.round(c*0.75/9)},
-            moderate:{carbs:Math.round(c*0.15/4), prot:Math.round(c*0.30/4), fat:Math.round(c*0.55/9)},
-          };
-          var sp=splits[type]||splits.standard;
-          window.macroGoals={cal:c,carbs:sp.carbs,fat:sp.fat,protein:sp.prot};
-          localStorage.setItem('kb_macroGoals',JSON.stringify(window.macroGoals));
-          obFillPlanUI(c, sp.carbs, sp.prot, sp.fat);
-        }
-        obFillPlanUI(window._obBaseCal, window.macroGoals.carbs, window.macroGoals.protein, window.macroGoals.fat);
-        document.getElementById('obs-5').classList.remove('active');
-        document.getElementById('obs-6').classList.add('active');
-        document.getElementById('onboarding').scrollTop=0;
-        var ns=document.getElementById('ob-name-display-sub');
-        if(ns) ns.textContent='Hi '+d.name+'! Here is your personalised plan 🎉';
-        if(typeof obCalculateAndShow==='function'){try{obCalculateAndShow();}catch(e){}}
-      })()">Calculate My Plan →</button>
+      <button class="ob-next" onclick="obCalcInline(this)">Calculate My Plan →</button>
     </div>
 
     <!-- SCREEN 6: Results -->
@@ -1216,4 +1190,21 @@ if(window.caches){
         </div>
       </div>
 
-      <button id="plannerBtn" onclick="generateDayPlan()" style="width:100%;padding:18px;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:16px;font-family:'Syne',sans-serif;fo
+      <button id="plannerBtn" onclick="generateDayPlan()" style="width:100%;padding:18px;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;cursor:pointer;margin-bottom:8px;box-shadow:0 6px 24px rgba(0,230,118,0.35)">
+        📅 Generate My Day Plan
+      </button>
+      <div style="text-align:center;font-size:11px;color:var(--muted);margin-bottom:16px">Builds Breakfast · Lunch · Dinner · Snacks to hit your goals</div>
+
+      <div id="plannerResult" style="padding-bottom:20px"></div>
+    </div>
+  </div>
+
+  <!-- MOOD JOURNAL -->
+  <!-- UNIFIED JOURNAL -->
+  <div id="sec-journal" class="section">
+    <div class="sec-head"><h2>My Progress Journal</h2><p>Log mood, weight, photos & notes — all in one place</p></div>
+    <div class="inner-tabs">
+      <button class="inner-tab active" onclick="switchInner('j-newentry',this)">📝 Log</button>
+      <button class="inner-tab" onclick="switchInner('j-calendar',this);renderCalendar()">📅 Calendar</button>
+      <button class="inner-tab" onclick="switchInner('j-journey',this)">🗺️ Journey</button>
+      <button cl
