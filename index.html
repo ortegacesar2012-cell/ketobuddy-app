@@ -675,19 +675,71 @@ if(window.caches){
       <div class="ob-result-card" style="margin-bottom:16px">
         <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">⚙️ Choose Your Macro Split</div>
         <div style="display:flex;flex-direction:column;gap:8px" id="ob-plan-picker">
-          <div class="ob-goal-choice sel" id="plan-standard" onclick="obSelectPlan(this,'standard')">
+          <div class="ob-goal-choice sel" id="plan-standard" onclick="(function(el){
+  var c=window._obBaseCal||1800;
+  var carbs=Math.round(c*0.05/4),prot=Math.round(c*0.25/4),fat=Math.round(c*0.7/9);
+  window.macroGoals={cal:c,carbs:carbs,fat:fat,protein:prot};
+  localStorage.setItem('kb_macroGoals',JSON.stringify(window.macroGoals));
+  document.querySelectorAll('#ob-plan-picker .ob-goal-choice').forEach(function(e){e.classList.remove('sel');});
+  el.classList.add('sel');
+  if(typeof obFillPlanUI==='function'){obFillPlanUI(c,carbs,prot,fat);return;}
+  var g=document.getElementById('ob-macro-grid');
+  if(g){g.children[0]&&(g.children[0].querySelector('div').textContent=carbs+'g');
+         g.children[1]&&(g.children[1].querySelector('div').textContent=prot+'g');
+         g.children[2]&&(g.children[2].querySelector('div').textContent=fat+'g');}
+})(this)"
+>
             <div class="og-icon">🥑</div>
             <div><div class="og-title">Standard Keto</div><div class="og-sub">70% fat · 25% protein · 5% carbs — classic</div></div>
           </div>
-          <div class="ob-goal-choice" id="plan-highprot" onclick="obSelectPlan(this,'highprot')">
+          <div class="ob-goal-choice" id="plan-highprot" onclick="(function(el){
+  var c=window._obBaseCal||1800;
+  var carbs=Math.round(c*0.05/4),prot=Math.round(c*0.35/4),fat=Math.round(c*0.6/9);
+  window.macroGoals={cal:c,carbs:carbs,fat:fat,protein:prot};
+  localStorage.setItem('kb_macroGoals',JSON.stringify(window.macroGoals));
+  document.querySelectorAll('#ob-plan-picker .ob-goal-choice').forEach(function(e){e.classList.remove('sel');});
+  el.classList.add('sel');
+  if(typeof obFillPlanUI==='function'){obFillPlanUI(c,carbs,prot,fat);return;}
+  var g=document.getElementById('ob-macro-grid');
+  if(g){g.children[0]&&(g.children[0].querySelector('div').textContent=carbs+'g');
+         g.children[1]&&(g.children[1].querySelector('div').textContent=prot+'g');
+         g.children[2]&&(g.children[2].querySelector('div').textContent=fat+'g');}
+})(this)"
+>
             <div class="og-icon">💪</div>
             <div><div class="og-title">High Protein Keto</div><div class="og-sub">60% fat · 35% protein · 5% carbs — muscle focus</div></div>
           </div>
-          <div class="ob-goal-choice" id="plan-lowcarb" onclick="obSelectPlan(this,'lowcarb')">
+          <div class="ob-goal-choice" id="plan-lowcarb" onclick="(function(el){
+  var c=window._obBaseCal||1800;
+  var carbs=Math.round(c*0.01/4),prot=Math.round(c*0.24/4),fat=Math.round(c*0.75/9);
+  window.macroGoals={cal:c,carbs:carbs,fat:fat,protein:prot};
+  localStorage.setItem('kb_macroGoals',JSON.stringify(window.macroGoals));
+  document.querySelectorAll('#ob-plan-picker .ob-goal-choice').forEach(function(e){e.classList.remove('sel');});
+  el.classList.add('sel');
+  if(typeof obFillPlanUI==='function'){obFillPlanUI(c,carbs,prot,fat);return;}
+  var g=document.getElementById('ob-macro-grid');
+  if(g){g.children[0]&&(g.children[0].querySelector('div').textContent=carbs+'g');
+         g.children[1]&&(g.children[1].querySelector('div').textContent=prot+'g');
+         g.children[2]&&(g.children[2].querySelector('div').textContent=fat+'g');}
+})(this)"
+>
             <div class="og-icon">🔬</div>
             <div><div class="og-title">Strict / Zero Carb</div><div class="og-sub">75% fat · 24% protein · 1% carbs — deep ketosis</div></div>
           </div>
-          <div class="ob-goal-choice" id="plan-moderate" onclick="obSelectPlan(this,'moderate')">
+          <div class="ob-goal-choice" id="plan-moderate" onclick="(function(el){
+  var c=window._obBaseCal||1800;
+  var carbs=Math.round(c*0.15/4),prot=Math.round(c*0.3/4),fat=Math.round(c*0.55/9);
+  window.macroGoals={cal:c,carbs:carbs,fat:fat,protein:prot};
+  localStorage.setItem('kb_macroGoals',JSON.stringify(window.macroGoals));
+  document.querySelectorAll('#ob-plan-picker .ob-goal-choice').forEach(function(e){e.classList.remove('sel');});
+  el.classList.add('sel');
+  if(typeof obFillPlanUI==='function'){obFillPlanUI(c,carbs,prot,fat);return;}
+  var g=document.getElementById('ob-macro-grid');
+  if(g){g.children[0]&&(g.children[0].querySelector('div').textContent=carbs+'g');
+         g.children[1]&&(g.children[1].querySelector('div').textContent=prot+'g');
+         g.children[2]&&(g.children[2].querySelector('div').textContent=fat+'g');}
+})(this)"
+>
             <div class="og-icon">⚖️</div>
             <div><div class="og-title">Moderate Low Carb</div><div class="og-sub">55% fat · 30% protein · 15% carbs — flexible</div></div>
           </div>
@@ -697,7 +749,20 @@ if(window.caches){
       <!-- Macro Cards filled inline -->
       <div id="ob-macro-grid" class="ob-macro-grid"></div>
 
-      <button class="ob-next" onclick="obLaunchApp()" style="background:linear-gradient(135deg,#00e676,#00c853);color:#000;font-size:17px">
+      <button class="ob-next" onclick="(function(){
+        var mg=window.macroGoals||{cal:1800,carbs:25,fat:130,protein:120};
+        localStorage.setItem('kb_macroGoals',JSON.stringify(mg));
+        localStorage.setItem('kb_onboardDone','true');
+        localStorage.setItem('kb_obData',JSON.stringify(window.obData||{}));
+        if(typeof obFinish==='function'){try{obFinish();return;}catch(e){}}
+        document.getElementById('onboarding').classList.add('hidden');
+        document.getElementById('mainApp').style.display='block';
+        ['applyMacroGoals','updateTrackerDisplay','renderFAQ','renderShopList','renderRecipes'].forEach(function(fn){
+          try{if(typeof window[fn]==='function')window[fn]();}catch(e){}
+        });
+        try{if(typeof renderFastBenefits==='function')renderFastBenefits(0);}catch(e){}
+        try{showToast('Welcome '+(window.obData&&window.obData.name?window.obData.name:'')+' 🎉 Your plan is ready!');}catch(e){}
+      })()" style="background:linear-gradient(135deg,#00e676,#00c853);color:#000;font-size:17px">
         Start My Keto Journey 🚀
       </button>
       <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px">You can update these anytime in Settings</div>
@@ -1147,52 +1212,4 @@ if(window.caches){
           <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧆</span><span>Middle East</span></button>
           <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌍</span><span>African</span></button>
           <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐟</span><span>Seafood</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌱</span><span>Veggie</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>💪</span><span>High Protein</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍳</span><span>Simple</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥗</span><span>Fresh</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌶️</span><span>Spicy</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🏋️</span><span>Bulk</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>⚡</span><span>Meal Prep</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧁</span><span>Dessert</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥛</span><span>Dairy-Free</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🫶</span><span>Clean</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧘</span><span>Anti-Inflam</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍕</span><span>Comfort</span></button>
-        </div>
-      </div>
-
-      <!-- Snack preference -->
-      <div style="margin-bottom:14px">
-        <div class="snack-input-label">🍿 Snack style?</div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="plannerSnackTags">
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧀</span><span>Savory</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍫</span><span>Sweet</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>💪</span><span>Protein</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>⚡</span><span>Quick</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥜</span><span>Nutty</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍦</span><span>No-Cook</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐄</span><span>Carnivore</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧁</span><span>Dessert</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥗</span><span>Salad</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🫐</span><span>Fruity</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧂</span><span>Salty</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥚</span><span>Egg-Based</span></button>
-        </div>
-      </div>
-
-      <!-- Meal count -->
-      <div style="margin-bottom:14px">
-        <div class="snack-input-label">🍽️ How many meals?</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
-          <button class="snack-tag-btn" id="plan-meals-3" onclick="selectPlanMeals(this,3)">3 meals<br><span style="font-size:10px;color:var(--muted)">B · L · D</span></button>
-          <button class="snack-tag-btn active" id="plan-meals-5" onclick="selectPlanMeals(this,5)">3 + 2 snacks<br><span style="font-size:10px;color:var(--muted)">B · L · D + snacks</span></button>
-          <button class="snack-tag-btn" id="plan-meals-6" onclick="selectPlanMeals(this,6)">6 small meals<br><span style="font-size:10px;color:var(--muted)">Every 2-3 hrs</span></button>
-        </div>
-      </div>
-
-      <!-- Carb strictness -->
-      <div style="margin-bottom:20px">
-        <div class="snack-input-label">🥑 Carb limit?</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
-  
+          <button class="chef-tag-btn" onclick
