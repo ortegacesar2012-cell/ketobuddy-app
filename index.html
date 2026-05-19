@@ -667,26 +667,7 @@ if(window.caches){
       <!-- Macro Cards filled inline -->
       <div id="ob-macro-grid" class="ob-macro-grid"></div>
 
-      <button class="ob-next" onclick="(function(){
-        var mg=window.macroGoals||{cal:1800,carbs:25,fat:130,protein:120};
-        localStorage.setItem('kb_macroGoals',JSON.stringify(mg));
-        localStorage.setItem('kb_onboardDone','true');
-        localStorage.setItem('kb_obData',JSON.stringify(window.obData||{}));
-        var mg=window.macroGoals||{cal:1800,carbs:25,fat:130,protein:120};
-        localStorage.setItem('kb_macroGoals',JSON.stringify(mg));
-        localStorage.setItem('kb_onboardDone','true');
-        localStorage.setItem('kb_obData',JSON.stringify(window.obData||{}));
-        if(typeof obFinish==='function'){try{obFinish();return;}catch(e){console.warn(e);}}
-        // Direct app launch fallback
-        document.getElementById('onboarding').classList.add('hidden');
-        var ma=document.getElementById('mainApp');
-        if(ma){ma.style.display='block';}
-        try{applyMacroGoals();}catch(e){}
-        try{updateTrackerDisplay();}catch(e){}
-        try{renderFAQ();}catch(e){}
-        try{renderShopList();}catch(e){}
-        try{renderFastBenefits(0);}catch(e){}
-      })()" style="background:linear-gradient(135deg,#00e676,#00c853);color:#000;font-size:17px">
+      <button class="ob-next" onclick="obLaunchApp()" style="background:linear-gradient(135deg,#00e676,#00c853);color:#000;font-size:17px">
         Start My Keto Journey 🚀
       </button>
       <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px">You can update these anytime in Settings</div>
@@ -1207,4 +1188,20 @@ if(window.caches){
       <button class="inner-tab active" onclick="switchInner('j-newentry',this)">📝 Log</button>
       <button class="inner-tab" onclick="switchInner('j-calendar',this);renderCalendar()">📅 Calendar</button>
       <button class="inner-tab" onclick="switchInner('j-journey',this)">🗺️ Journey</button>
-      <button cl
+      <button class="inner-tab" onclick="switchInner('j-photos',this);renderPhotoGallery()">📸 Photos</button>
+    </div>
+
+    <!-- NEW ENTRY FORM -->
+    <div id="j-newentry" class="inner-sec active">
+
+      <!-- Date -->
+      <div class="mood-date" id="moodDate"></div>
+
+      <!-- MOOD -->
+      <div class="card" style="margin-bottom:10px">
+        <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">😊 How are you feeling?</div>
+        <div class="mood-grid">
+          <div class="mood-btn" onclick="selectMood(this,'😄','Amazing')"><div class="mb-icon">😄</div><div class="mb-label">Amazing</div></div>
+          <div class="mood-btn selected" onclick="selectMood(this,'😊','Good')"><div class="mb-icon">😊</div><div class="mb-label">Good</div></div>
+          <div class="mood-btn" onclick="selectMood(this,'😐','Okay')"><div class="mb-icon">😐</div><div class="mb-label">Okay</div></div>
+          <div class="mood-btn" onclick="selectMood(this,'😔','Low')"><div class="mb-icon">😔</div><div 
