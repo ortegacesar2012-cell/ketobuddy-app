@@ -1744,7 +1744,7 @@ if(window.caches){
       <!-- Manual inputs -->
       <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">📐 Fine Tune Macros</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
-        <div><div style="font-size:11px;color:var(--orange);margin-bottom:5px;font-weight:700">🔥 Calories</div><input class="ob-inp" type="number" id="sg-cal" oninput="document.getElementById('cal-slider').value=this.value;document.getElementById('cal-slider-display').textContent=this.value" style="margin-bottom:0"/></div>
+        <div><div style="font-size:11px;color:var(--orange);margin-bottom:5px;font-weight:700">🔥 Calories</div><input class="ob-inp" type="number" id="sg-cal" oninput="recalcMacrosFromCal(this.value);document.getElementById('cal-slider').value=this.value;document.getElementById('cal-slider-display').textContent=this.value" style="margin-bottom:0"/></div>
         <div><div style="font-size:11px;color:var(--red);margin-bottom:5px;font-weight:700">🍞 Net Carbs (g)</div><input class="ob-inp" type="number" id="sg-carbs" style="margin-bottom:0"/></div>
         <div><div style="font-size:11px;color:var(--yellow);margin-bottom:5px;font-weight:700">🥑 Fat (g)</div><input class="ob-inp" type="number" id="sg-fat" style="margin-bottom:0"/></div>
         <div><div style="font-size:11px;color:var(--blue);margin-bottom:5px;font-weight:700">🍗 Protein (g)</div><input class="ob-inp" type="number" id="sg-protein" style="margin-bottom:0"/></div>
@@ -4198,6 +4198,70 @@ function applyPresetGoal(type){
   document.getElementById('cal-slider-display').textContent=cal+' kcal';
 }
 
+
+
+function saveProfileSettings(){
+  var name = document.getElementById('set-name').value.trim();
+  var age = parseInt(document.getElementById('set-age').value)||0;
+  var weightLbs = parseFloat(document.getElementById('set-weight').value)||0;
+  var heightStr = document.getElementById('set-height').value.trim();
+  var af = parseFloat(document.getElementById('set-activity').value)||1.2;
+  var goal = document.getElementById('set-goal').value||'lose_slow';
+
+  if(!name){alert('Please enter your name');return;}
+  if(!age||age<13){alert('Please enter a valid age');return;}
+
+  // Parse height from ft'in" format
+  var heightCm = 0;
+  var hMatch = heightStr.match(/(\d+)'(\d+)/);
+  if(hMatch) heightCm = parseInt(hMatch[1])*30.48 + parseInt(hMatch[2])*2.54;
+  else if(parseFloat(heightStr) > 100) heightCm = parseFloat(heightStr); // cm input
+  if(!heightCm) heightCm = obData.heightCm||170;
+
+  var weightKg = weightLbs/2.20462;
+  var goalOffsets = {lose_fast:-500, lose_slow:-250, maintain:0, muscle:250};
+  var goalOffset = goalOffsets[goal]||-250;
+
+  // Update obData
+  obData.name = name;
+  obData.age = age;
+  obData.weightKg = +weightKg.toFixed(1);
+  obData.heightCm = +heightCm.toFixed(1);
+  obData.activityFactor = af;
+  obData.goal = goal;
+  obData.goalOffset = goalOffset;
+
+  // Recalculate macros
+  var sex = obData.sex||'male';
+  var bmr = sex==='male' ? (10*weightKg+6.25*heightCm-5*age+5) : (10*weightKg+6.25*heightCm-5*age-161);
+  var cal = Math.round(bmr*af) + goalOffset;
+  var carbs = macroGoals.carbs||25;
+  var prot = Math.round(weightKg*1.8);
+  var fat = Math.max(Math.round((cal-carbs*4-prot*4)/9),40);
+
+  macroGoals = {cal:cal, carbs:carbs, fat:fat, protein:prot};
+  localStorage.setItem('kb_macroGoals', JSON.stringify(macroGoals));
+  localStorage.setItem('kb_obData', JSON.stringify(obData));
+
+  try{applyMacroGoals();}catch(e){}
+  try{updateTrackerDisplay();}catch(e){}
+  saveAll();
+
+  document.getElementById('settingsModal').remove();
+  showToast('✅ Profile updated! New goal: '+cal+' kcal/day');
+}
+
+function recalcMacrosFromCal(cal){
+  cal = parseInt(cal)||0;
+  if(cal < 500) return;
+  // Keep carbs fixed (keto), recalc protein and fat proportionally
+  var carbs = parseInt(document.getElementById('sg-carbs').value)||25;
+  var prot = Math.round(cal * 0.25 / 4);
+  var fat = Math.max(Math.round((cal - carbs*4 - prot*4) / 9), 30);
+  document.getElementById('sg-protein').value = prot;
+  document.getElementById('sg-fat').value = fat;
+}
+
 function showTrackerSettings(){
   // Show recommended
   const tdee=obData.tdee||macroGoals.cal;
@@ -5989,6 +6053,49 @@ function showSettings(){
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
       <button onclick="document.getElementById('settingsModal').remove()" style="background:rgba(255,255,255,0.07);border:none;border-radius:10px;padding:8px 12px;color:#fff;font-size:16px;cursor:pointer">←</button>
       <h2 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin:0">Settings</h2>
+    </div>
+
+    <!-- Profile Section -->
+    <div style="background:#1a2332;border-radius:16px;padding:16px;margin-bottom:16px">
+      <div style="font-size:11px;color:#5a7a9a;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">👤 My Profile</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div>
+          <div style="font-size:11px;color:#5a7a9a;margin-bottom:4px">Name</div>
+          <input id="set-name" type="text" value="${obData.name||''}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:9px;padding:9px 10px;color:#fff;font-size:14px;outline:none"/>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#5a7a9a;margin-bottom:4px">Age</div>
+          <input id="set-age" type="number" value="${obData.age||''}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:9px;padding:9px 10px;color:#fff;font-size:14px;outline:none"/>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#5a7a9a;margin-bottom:4px">Weight (lbs)</div>
+          <input id="set-weight" type="number" value="${Math.round((obData.weightKg||0)*2.20462)||''}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:9px;padding:9px 10px;color:#fff;font-size:14px;outline:none"/>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#5a7a9a;margin-bottom:4px">Height</div>
+          <input id="set-height" type="text" value="${obData.heightCm?Math.floor(obData.heightCm/30.48)+'\''+Math.round((obData.heightCm%30.48)/2.54)+'"':''}" placeholder="e.g. 5'10&quot;" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:9px;padding:9px 10px;color:#fff;font-size:14px;outline:none"/>
+        </div>
+      </div>
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;color:#5a7a9a;margin-bottom:6px">Activity Level</div>
+        <select id="set-activity" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:9px;padding:9px 10px;color:#fff;font-size:13px;outline:none">
+          <option value="1.2" ${(obData.activityFactor||1.2)==1.2?'selected':''}>Sedentary (desk job)</option>
+          <option value="1.375" ${(obData.activityFactor||1.2)==1.375?'selected':''}>Light (1-3x/week)</option>
+          <option value="1.55" ${(obData.activityFactor||1.2)==1.55?'selected':''}>Moderate (3-5x/week)</option>
+          <option value="1.725" ${(obData.activityFactor||1.2)==1.725?'selected':''}>Active (6-7x/week)</option>
+          <option value="1.9" ${(obData.activityFactor||1.2)==1.9?'selected':''}>Athlete (2x/day)</option>
+        </select>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;color:#5a7a9a;margin-bottom:6px">Goal</div>
+        <select id="set-goal" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:9px;padding:9px 10px;color:#fff;font-size:13px;outline:none">
+          <option value="lose_fast" ${(obData.goal||'lose_slow')==='lose_fast'?'selected':''}>Lose Weight Fast (-500 cal)</option>
+          <option value="lose_slow" ${(obData.goal||'lose_slow')==='lose_slow'?'selected':''}>Lose Gradually (-250 cal)</option>
+          <option value="maintain" ${(obData.goal||'lose_slow')==='maintain'?'selected':''}>Maintain Weight</option>
+          <option value="muscle" ${(obData.goal||'lose_slow')==='muscle'?'selected':''}>Build Muscle (+250 cal)</option>
+        </select>
+      </div>
+      <button onclick="saveProfileSettings()" style="width:100%;padding:12px;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:11px;font-weight:800;font-size:14px;cursor:pointer">💾 Save Profile & Recalculate</button>
     </div>
 
     <!-- Account Section -->
