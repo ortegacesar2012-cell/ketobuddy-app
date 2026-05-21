@@ -3356,6 +3356,7 @@ function saveUnifiedEntry(){
   }
 
   journalEntries.unshift(entry);
+  saveAll(); // persist photos to localStorage immediately
 
   // Reset form
   document.getElementById('journalTitle').value='';
@@ -6285,7 +6286,7 @@ STEPS: [2-4 steps separated by |]
 CARBS: [net carbs]g | FAT: [fat]g | PROTEIN: [protein]g | CALS: [calories]`
     const text = await callAI(prompt, 2500);
     // Parse each meal block
-    const blocks = text.split(/(?=MEAL:)/g).filter(b=>b.trim());
+    const blocks = text.split(/(?=MEAL:)/g).filter(b=>b.trim().startsWith('MEAL:'));
     const meals = blocks.map(block=>{
       const lines = block.split('\n').filter(l=>l.trim());
       const mealType = lines.find(l=>l.startsWith('MEAL:'))?.replace('MEAL:','').trim() || 'Meal';
