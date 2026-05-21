@@ -989,10 +989,6 @@ if(window.caches){
   <div id="sec-snack" class="section" style="padding-bottom:30px">
     <div class="sec-head"><h2>AI Chef 👨‍🍳</h2><p>Snacks · Meals · Full Day Plans — all AI powered</p></div>
 
-    <div style="display:flex;background:rgba(255,255,255,0.04);border-radius:12px;padding:3px;margin-bottom:12px;border:1px solid rgba(255,255,255,0.06)">
-      <button id="diet-keto" onclick="setDietMode('keto')" style="flex:1;padding:9px 4px;border:none;border-radius:9px;background:linear-gradient(135deg,#1a2d42,#162032);color:#00e676;font-size:12px;font-weight:800;cursor:pointer">🥑 Keto Mode</button>
-      <button id="diet-regular" onclick="setDietMode('regular')" style="flex:1;padding:9px 4px;border:none;border-radius:9px;background:transparent;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer">🍎 Regular Diet</button>
-    </div>
 
     <div id="aiUsageBanner" style="background:rgba(199,125,255,0.08);border:1px solid rgba(199,125,255,0.2);border-radius:12px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
       <span style="font-size:13px;color:#c0d0e0" id="aiUsageText">🎁 10 free AI searches included</span>
@@ -4385,13 +4381,12 @@ function renderMacroBars(t){
 
 function addToLog(food, category){
   // Auto-detect category by time of day if not specified
-  if(!category){
+  if(!category || category === '🍽️ Other'){
     const h=new Date().getHours();
     if(h>=5&&h<11) category='🌅 Breakfast';
     else if(h>=11&&h<15) category='☀️ Lunch';
     else if(h>=15&&h<18) category='🍿 Snack';
-    else if(h>=18&&h<23) category='🌙 Dinner';
-    else category='🍽️ Other';
+    else category='🌙 Dinner';
   }
   const entry={...food,logId:Date.now(),mealCategory:category};
   foodLogEntries.unshift(entry);
