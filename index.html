@@ -1290,6 +1290,7 @@ if(window.caches){
   <div id="sec-journal" class="section">
     <div class="sec-head"><h2>My Progress Journal</h2><p>Log mood, weight, photos & notes — all in one place</p></div>
     <div class="inner-tabs">
+      <button class="inner-tab" onclick="switchInner('j-today',this);renderTodaySummary()">⚡ Today</button>
       <button class="inner-tab active" onclick="switchInner('j-newentry',this)">📝 Log</button>
       <button class="inner-tab" onclick="switchInner('j-calendar',this);renderCalendar()">📅 Calendar</button>
       <button class="inner-tab" onclick="switchInner('j-journey',this)">🗺️ Journey</button>
@@ -1297,6 +1298,10 @@ if(window.caches){
     </div>
 
     <!-- NEW ENTRY FORM -->
+    <div id="j-today" class="inner-sec">
+      <div id="today-summary-content"></div>
+    </div>
+
     <div id="j-newentry" class="inner-sec active">
 
       <!-- Date -->
@@ -5303,6 +5308,125 @@ function ketoCheckIn(isKeto){
 let calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
 
 
+
+function renderTodaySummary(){
+  const el = document.getElementById('today-summary-content');
+  if(!el) return;
+
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  const t = getTotals();
+  const g = macroGoals || {cal:1800,carbs:25,protein:120,fat:130};
+  const streak = parseInt(localStorage.getItem('kb_ketoStreak')||'0');
+
+  // Weight today from journal
+  const todayKey = today.toISOString().split('T')[0];
+  const todayEntry = journalEntries.find(e => e.date === todayKey);
+  const weight = todayEntry?.weight || null;
+
+  // Macro percentages
+  const calPct = Math.min(Math.round((t.cal/g.cal)*100),100);
+  const carbPct = Math.min(Math.round((t.carbs/g.carbs)*100),100);
+  const protPct = Math.min(Math.round((t.protein/g.protein)*100),100);
+  const fatPct = Math.min(Math.round((t.fat/g.fat)*100),100);
+
+  // Meal groups
+  const mealOrder = ['🌅 Breakfast','☀️ Lunch','🌙 Dinner','🍿 Snack'];
+  const groups = {};
+  foodLogEntries.forEach(e => {
+    const cat = e.mealCategory || '🍽️ Other';
+    if(!groups[cat]) groups[cat] = {items:[],cal:0,carbs:0,protein:0,fat:0};
+    groups[cat].items.push(e);
+    groups[cat].cal += e.calories||0;
+    groups[cat].carbs += e.carbs||0;
+    groups[cat].protein += e.protein||0;
+    groups[cat].fat += e.fat||0;
+  });
+
+  const carbDeg = Math.round((t.carbs*4/(t.cal||1))*360);
+  const protDeg = Math.round((t.protein*4/(t.cal||1))*360);
+
+  el.innerHTML = `
+    <!-- Header -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:2px">${dateStr}</div>
+      <div style="font-size:22px;font-weight:800;background:linear-gradient(135deg,#fff,rgba(0,255,135,0.8));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Your Day at a Glance</div>
+    </div>
+
+    <!-- Streak + weight row -->
+    <div style="display:flex;gap:10px;margin-bottom:14px">
+      ${streak>0?`<div style="flex:1;background:rgba(255,203,71,0.1);border:1px solid rgba(255,203,71,0.25);border-radius:14px;padding:12px;text-align:center">
+        <div style="font-size:24px">🔥</div>
+        <div style="font-size:20px;font-weight:800;color:#ffcb47">${streak}</div>
+        <div style="font-size:11px;color:var(--muted)">day streak</div>
+      </div>`:''}
+      ${weight?`<div style="flex:1;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.2);border-radius:14px;padding:12px;text-align:center">
+        <div style="font-size:24px">⚖️</div>
+        <div style="font-size:20px;font-weight:800;color:#38bdf8">${weight} lbs</div>
+        <div style="font-size:11px;color:var(--muted)">today's weight</div>
+      </div>`:''}
+      <div style="flex:1;background:rgba(0,255,135,0.08);border:1px solid rgba(0,255,135,0.2);border-radius:14px;padding:12px;text-align:center">
+        <div style="font-size:24px">🔥</div>
+        <div style="font-size:20px;font-weight:800;color:var(--green)">${Math.round(t.cal)}</div>
+        <div style="font-size:11px;color:var(--muted)">kcal today</div>
+      </div>
+    </div>
+
+    <!-- Macro pie + bars -->
+    <div style="background:linear-gradient(145deg,#0f1d2e,#0a1520);border-radius:18px;padding:16px;margin-bottom:14px;border:1px solid rgba(255,255,255,0.07)">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">📊 Macros</div>
+      <div style="display:flex;gap:14px;align-items:center">
+        <div style="position:relative;width:80px;height:80px;flex-shrink:0">
+          <div style="width:80px;height:80px;border-radius:50%;background:conic-gradient(#ff3d68 0deg ${carbDeg}deg,#38bdf8 ${carbDeg}deg ${carbDeg+protDeg}deg,#ffcb47 ${carbDeg+protDeg}deg 360deg)"></div>
+          <div style="position:absolute;inset:12px;background:#0a1520;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div style="font-size:12px;font-weight:800;color:#fff">${calPct}%</div>
+            <div style="font-size:8px;color:var(--muted)">goal</div>
+          </div>
+        </div>
+        <div style="flex:1">
+          ${[
+            {label:'🥑 Carbs',val:t.carbs,goal:g.carbs,pct:carbPct,color:'#ff3d68'},
+            {label:'💪 Protein',val:t.protein,goal:g.protein,pct:protPct,color:'#38bdf8'},
+            {label:'🔥 Fat',val:t.fat,goal:g.fat,pct:fatPct,color:'#ffcb47'},
+          ].map(m=>`<div style="margin-bottom:7px">
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px">
+              <span style="color:${m.color};font-weight:700">${m.label}</span>
+              <span style="color:var(--muted)">${m.val.toFixed(0)}g / ${m.goal}g</span>
+            </div>
+            <div style="background:rgba(255,255,255,0.05);border-radius:4px;height:6px">
+              <div style="height:100%;border-radius:4px;background:${m.color};width:${m.pct}%;box-shadow:0 0 6px ${m.color}50"></div>
+            </div>
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Meals eaten today -->
+    ${foodLogEntries.length > 0 ? `
+    <div style="background:linear-gradient(145deg,#0f1d2e,#0a1520);border-radius:18px;padding:16px;margin-bottom:14px;border:1px solid rgba(255,255,255,0.07)">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">🍽️ What You Ate</div>
+      ${mealOrder.filter(cat=>groups[cat]).map(cat=>`
+        <div style="margin-bottom:10px">
+          <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px">${cat}</div>
+          ${groups[cat].items.map(e=>`
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px">
+              <span>${e.name}</span>
+              <span style="color:var(--orange);font-weight:600">${e.calories||0} kcal</span>
+            </div>`).join('')}
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;text-align:right">${Math.round(groups[cat].cal)} kcal · ${groups[cat].carbs.toFixed(0)}g C · ${groups[cat].protein.toFixed(0)}g P · ${groups[cat].fat.toFixed(0)}g F</div>
+        </div>`).join('')}
+    </div>` : '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">No meals logged today yet 🍽️</div>'}
+
+    <!-- Share button -->
+    <button onclick="shareMyMacros()" style="width:100%;padding:16px;background:linear-gradient(135deg,rgba(0,255,135,0.15),rgba(56,189,248,0.1));border:1.5px solid rgba(0,255,135,0.35);border-radius:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:8px">
+      <span style="font-size:26px">📤</span>
+      <div style="text-align:left">
+        <div style="font-size:15px;font-weight:800;color:var(--green)">Share Today's Card</div>
+        <div style="font-size:11px;color:var(--muted)">Post your macros to Instagram or TikTok</div>
+      </div>
+    </button>`;
+}
+
 function renderPhotoGallery(){
   const grid = document.getElementById('photoGalleryGrid');
   const empty = document.getElementById('photoGalleryEmpty');
@@ -6531,7 +6655,25 @@ MEAL: [Breakfast|Lunch|Dinner|Snack]
 NAME: [name]
 CALS: [n] | CARBS: [n]g | PROTEIN: [n]g | FAT: [n]g`;
 
-    const text = await callAI(prompt, Math.min(days * 500 + 1000, 4000));
+    // For long plans, split into chunks of 3 days max per call
+    let fullText = '';
+    const chunkSize = 3;
+    for(let chunk = 0; chunk < days; chunk += chunkSize){
+      const chunkDays = Math.min(chunkSize, days - chunk);
+      const chunkStart = chunk + 1;
+      const chunkEnd = chunk + chunkDays;
+      const chunkDaysList = Array.from({length:chunkDays},(_,i)=>dayNames[chunk+i+1]||'Day '+(chunk+i+1)).join(', ');
+      const chunkPrompt = `Keto meal plan for days ${chunkStart}-${chunkEnd} (${chunkDaysList}). Goals: ${goals.cal} cal, ${dailyCarbs}g carbs, ${goals.protein}g protein. ${ingredients?'Ingredients: '+ingredients:''} ${styleTags?'Style: '+styleTags:''}
+Different meals each day. For every meal:
+DAY: [${chunkStart}-${chunkEnd}]
+MEAL: [Breakfast|Lunch|Dinner|Snack]
+NAME: [name]
+CALS: [n] | CARBS: [n]g | PROTEIN: [n]g | FAT: [n]g`;
+      result.innerHTML = '<div style="text-align:center;padding:20px"><div class="pulse" style="font-size:28px">📅</div><p style="color:var(--muted);margin-top:10px">Days '+chunkStart+'-'+chunkEnd+' of '+days+'...</p></div>';
+      const chunkText = await callAI(chunkPrompt, 1500);
+      fullText += ' ' + chunkText;
+    }
+    const text = fullText;
 
     // Parse by day blocks
     const dayBlocks = {};
