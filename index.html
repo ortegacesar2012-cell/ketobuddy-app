@@ -1679,6 +1679,17 @@ if(window.caches){
       <!-- Meal breakdown pie chart -->
       <div id="mealBreakdownChart" style="display:none;margin-bottom:12px"></div>
 
+      <!-- Share card button - visible below food log -->
+      <div id="shareCardBanner" style="display:none;margin-bottom:12px">
+        <button onclick="shareMyMacros()" style="width:100%;padding:14px;background:linear-gradient(135deg,rgba(0,255,135,0.12),rgba(56,189,248,0.08));border:1.5px solid rgba(0,255,135,0.3);border-radius:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">
+          <span style="font-size:22px">📤</span>
+          <div style="text-align:left">
+            <div style="font-size:14px;font-weight:800;color:var(--green)">Share My Macros</div>
+            <div style="font-size:11px;color:var(--muted)">Generate a card to post on Instagram & TikTok</div>
+          </div>
+        </button>
+      </div>
+
       <!-- Food log input -->
       <div style="position:relative;margin-bottom:10px">
         <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none">➕</span>
@@ -2925,7 +2936,12 @@ function toggleLowCal(){
   if(knob){ knob.style.left=lowCalMode?'22px':'2px'; knob.style.background=lowCalMode?'var(--blue)':'#5a7a9a'; }
   showToast(lowCalMode?'🥗 Low calorie mode ON':'Low calorie mode off');
 }
-function selectCarbLimit(el,val){document.querySelectorAll('[id^=carb-]').forEach(b=>b.classList.remove('active'));el.classList.add('active');selectedCarbLimit=val;}
+function selectCarbLimit(el,val){
+  // Clear ALL carb-related buttons across the page
+  document.querySelectorAll('[id^=carb-],[id=plan-strict],[id=plan-moderate],[id=plan-flexible]').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  selectedCarbLimit=val;
+}
 function toggleChefTag(btn){
   btn.classList.toggle('chef-tag-active');
 }
@@ -4612,6 +4628,9 @@ function updateTrackerDisplay(){
   renderMacroBars(t);
   renderMacroChart();
   renderMealBreakdownChart();
+  // Show share banner once user has logged food
+  const shareBanner = document.getElementById('shareCardBanner');
+  if(shareBanner) shareBanner.style.display = foodLogEntries.length > 0 ? 'block' : 'none';
 }
 
 function renderMacroCards(t){
@@ -6504,20 +6523,15 @@ async function generateMultiDayPlan(days){
     result.innerHTML = '<div style="text-align:center;padding:24px"><div class="pulse" style="font-size:32px">📅</div><p style="color:var(--muted);margin-top:12px">Generating your '+days+'-day plan in one go...</p></div>';
 
     const daysList = Array.from({length:days},(_,i)=>dayNames[i+1]||'Day '+(i+1)).join(', ');
-    const prompt = `You are a professional keto nutritionist. Create a complete keto meal plan for ${days} days (${daysList}).
-Daily goals: ${goals.cal} calories, ${dailyCarbs}g net carbs max, ${goals.protein}g protein, ${goals.fat}g fat.
-${ingredients?'Available ingredients: '+ingredients:'Use varied keto ingredients.'}
-${styleTags?'Style: '+styleTags:''} ${snackTags?'Snack style: '+snackTags:''}
-Make each day DIFFERENT — no repeated meals across days.
-For each meal use EXACTLY this format (repeat for all ${days} days):
-DAY: [1-${days}]
+    const prompt = `Keto meal plan for ${days} days. Goals: ${goals.cal} cal, ${dailyCarbs}g carbs, ${goals.protein}g protein.
+${ingredients?'Ingredients: '+ingredients:''} ${styleTags?'Style: '+styleTags:''}
+Different meals each day. For every meal use EXACTLY:
+DAY: [number]
 MEAL: [Breakfast|Lunch|Dinner|Snack]
-NAME: [recipe name]
-INGREDIENTS: [comma-separated]
-CARBS: [n]g | FAT: [n]g | PROTEIN: [n]g | CALS: [n]
----`;
+NAME: [name]
+CALS: [n] | CARBS: [n]g | PROTEIN: [n]g | FAT: [n]g`;
 
-    const text = await callAI(prompt, 3000);
+    const text = await callAI(prompt, Math.min(days * 500 + 1000, 4000));
 
     // Parse by day blocks
     const dayBlocks = {};
@@ -6590,10 +6604,8 @@ function selectPlanDays(btn, days){
 
 function selectPlanCarbs(btn, mode){
   plannerCarbMode = mode;
-  ['plan-strict','plan-moderate','plan-flexible'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.classList.remove('active');
-  });
+  // Clear all carb-related buttons
+  document.querySelectorAll('[id^=plan-strict],[id^=plan-moderate],[id^=plan-flexible],[id^=carb-]').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
 }
 
