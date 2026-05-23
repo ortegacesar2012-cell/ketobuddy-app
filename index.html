@@ -6655,24 +6655,59 @@ MEAL: [Breakfast|Lunch|Dinner|Snack]
 NAME: [name]
 CALS: [n] | CARBS: [n]g | PROTEIN: [n]g | FAT: [n]g`;
 
-    // For long plans, split into chunks of 3 days max per call
+    // Progress bar + chunked generation
     let fullText = '';
-    const chunkSize = 3;
-    for(let chunk = 0; chunk < days; chunk += chunkSize){
-      const chunkDays = Math.min(chunkSize, days - chunk);
+    const totalChunks = Math.ceil(days / 2);
+    let completedChunks = 0;
+
+    function updateProgress(msg, pct){
+      result.innerHTML = `
+        <div style="padding:20px">
+          <div style="text-align:center;margin-bottom:16px">
+            <div style="font-size:32px;margin-bottom:8px">📅</div>
+            <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px">${msg}</div>
+            <div style="font-size:12px;color:var(--muted)">Hang tight — building your meals...</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.06);border-radius:10px;height:12px;overflow:hidden;margin-bottom:8px">
+            <div style="height:100%;border-radius:10px;background:linear-gradient(90deg,#00ff87,#38bdf8);width:${pct}%;transition:width 0.5s;box-shadow:0 0 12px rgba(0,255,135,0.5)"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)">
+            <span>Day 1</span><span>${Math.round(pct)}%</span><span>Day ${days}</span>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:4px">
+            ${Array.from({length:days},(_,i)=>`<div style="flex:1;height:4px;border-radius:2px;background:${i < Math.round(pct/100*days) ? '#00ff87' : 'rgba(255,255,255,0.1)'}"></div>`).join('')}
+          </div>
+        </div>`;
+    }
+
+    updateProgress('Starting your '+days+'-day plan...', 3);
+
+    for(let chunk = 0; chunk < days; chunk += 2){
+      const chunkDays = Math.min(2, days - chunk);
       const chunkStart = chunk + 1;
       const chunkEnd = chunk + chunkDays;
-      const chunkDaysList = Array.from({length:chunkDays},(_,i)=>dayNames[chunk+i+1]||'Day '+(chunk+i+1)).join(', ');
-      const chunkPrompt = `Keto meal plan for days ${chunkStart}-${chunkEnd} (${chunkDaysList}). Goals: ${goals.cal} cal, ${dailyCarbs}g carbs, ${goals.protein}g protein. ${ingredients?'Ingredients: '+ingredients:''} ${styleTags?'Style: '+styleTags:''}
-Different meals each day. For every meal:
-DAY: [${chunkStart}-${chunkEnd}]
+      const chunkDaysList = Array.from({length:chunkDays},(_,i)=>dayNames[chunk+i+1]||'Day '+(chunk+i+1)).join(' and ');
+
+      updateProgress('Cooking up Day '+chunkStart+(chunkDays>1?' & '+chunkEnd:'')+'...', Math.round((chunk/days)*90)+5);
+
+      const chunkPrompt = `Keto plan for ${chunkDaysList}. Goals: ${goals.cal}cal/${dailyCarbs}g carbs/${goals.protein}g protein. ${ingredients?'Use: '+ingredients:''} ${styleTags||''}
+For each meal use exactly:
+DAY: [${chunkStart}${chunkDays>1?' or '+chunkEnd:''}]
 MEAL: [Breakfast|Lunch|Dinner|Snack]
-NAME: [name]
+NAME: [short name]
 CALS: [n] | CARBS: [n]g | PROTEIN: [n]g | FAT: [n]g`;
-      result.innerHTML = '<div style="text-align:center;padding:20px"><div class="pulse" style="font-size:28px">📅</div><p style="color:var(--muted);margin-top:10px">Days '+chunkStart+'-'+chunkEnd+' of '+days+'...</p></div>';
-      const chunkText = await callAI(chunkPrompt, 1500);
-      fullText += ' ' + chunkText;
+
+      try {
+        const chunkText = await callAI(chunkPrompt, 800);
+        fullText += ' ' + chunkText;
+        completedChunks++;
+        updateProgress('Day '+chunkEnd+' done ✓', Math.round(((chunk+chunkDays)/days)*90)+5);
+      } catch(e) {
+        fullText += ' ';
+      }
     }
+
+    updateProgress('Almost done! Putting it all together...', 97);
     const text = fullText;
 
     // Parse by day blocks
