@@ -6499,61 +6499,67 @@ async function generateMultiDayPlan(days){
   let allDaysHtml = '';
   let allIngredients = [];
 
-  for(let d = 1; d <= days; d++){
-    try {
-      result.innerHTML = '<div style="text-align:center;padding:24px"><div class="pulse" style="font-size:32px">📅</div><p style="color:var(--muted);margin-top:12px">Day '+d+' of '+days+'...</p></div>';
-      const prompt = `You are a professional keto nutritionist. Create a complete keto meal plan for Day ${d} (${dayNames[d]||'Day '+d}).
-Daily goals: ${goals.cal} calories, ${dailyCarbs}g net carbs max, ${goals.protein}g protein, ${goals.fat}g fat
-${ingredients?'Use these ingredients: '+ingredients:'Use varied keto ingredients — make each day different.'}
-${styleTags?'Style: '+styleTags:''}
-Be creative — Day ${d} should have DIFFERENT meals from other days.
-Create exactly: ${mealStructure}.
-For each meal use EXACTLY:
-MEAL: [Breakfast|Lunch|Dinner|Snack]
-NAME: [name]
-DESC: [1 sentence]
-INGREDIENTS: [comma-separated]
-STEPS: [steps separated by |]
-CARBS: [n]g | FAT: [n]g | PROTEIN: [n]g | CALS: [n]`;
+  // Generate ALL days in ONE API call for speed
+  try {
+    result.innerHTML = '<div style="text-align:center;padding:24px"><div class="pulse" style="font-size:32px">📅</div><p style="color:var(--muted);margin-top:12px">Generating your '+days+'-day plan in one go...</p></div>';
 
-      const text = await callAI(prompt, 2000);
-      const blocks = text.split(/(?=MEAL:)/g).filter(b=>b.trim().startsWith('MEAL:'));
-      const meals = blocks.map(block=>{
-        const lines = block.split(/\r?\n/).filter(l=>l.trim());
-        const mealType = lines.find(l=>l.startsWith('MEAL:'))?.replace('MEAL:','').trim()||'Meal';
-        const name = lines.find(l=>l.startsWith('NAME:'))?.replace('NAME:','').trim()||'Keto Meal';
-        const desc = lines.find(l=>l.startsWith('DESC:'))?.replace('DESC:','').trim()||'';
-        const ingLine = lines.find(l=>l.startsWith('INGREDIENTS:'))?.replace('INGREDIENTS:','').trim()||'';
-        const macros = lines.find(l=>l.startsWith('CARBS:'))?.replace('CARBS:','').trim()||'';
-        const ingredients = ingLine.split(',').map(i=>i.trim()).filter(Boolean);
-        const calMatch = macros.match(/CALS:\s*(\d+)/i);
-        const carbMatch = macros.match(/(\d+)g/);
-        allIngredients = allIngredients.concat(ingredients);
-        return {mealType,name,desc,ingredients,macros,
-          calories:calMatch?parseInt(calMatch[1]):0,
-          carbs:carbMatch?parseInt(carbMatch[1]):0};
-      }).filter(m=>m.name);
+    const daysList = Array.from({length:days},(_,i)=>dayNames[i+1]||'Day '+(i+1)).join(', ');
+    const prompt = `You are a professional keto nutritionist. Create a complete keto meal plan for ${days} days (${daysList}).
+Daily goals: ${goals.cal} calories, ${dailyCarbs}g net carbs max, ${goals.protein}g protein, ${goals.fat}g fat.
+${ingredients?'Available ingredients: '+ingredients:'Use varied keto ingredients.'}
+${styleTags?'Style: '+styleTags:''} ${snackTags?'Snack style: '+snackTags:''}
+Make each day DIFFERENT — no repeated meals across days.
+For each meal use EXACTLY this format (repeat for all ${days} days):
+DAY: [1-${days}]
+MEAL: [Breakfast|Lunch|Dinner|Snack]
+NAME: [recipe name]
+INGREDIENTS: [comma-separated]
+CARBS: [n]g | FAT: [n]g | PROTEIN: [n]g | CALS: [n]
+---`;
+
+    const text = await callAI(prompt, 3000);
+
+    // Parse by day blocks
+    const dayBlocks = {};
+    let currentDay = 1;
+    text.split(/\r?\n/).forEach(function(line){
+      line = line.trim();
+      if(line.startsWith('DAY:')) currentDay = parseInt(line.replace('DAY:',''))||1;
+      else if(line.startsWith('MEAL:') || line.startsWith('NAME:') || line.startsWith('INGREDIENTS:') || line.startsWith('CARBS:')){
+        if(!dayBlocks[currentDay]) dayBlocks[currentDay] = [];
+        dayBlocks[currentDay].push(line);
+      }
+    });
+
+    // Build meals per day
+    for(let d = 1; d <= days; d++){
+      const dayLines = dayBlocks[d]||[];
+      const meals = [];
+      let current = {};
+      dayLines.forEach(function(line){
+        if(line.startsWith('MEAL:')){ if(current.name) meals.push(current); current={mealType:line.replace('MEAL:','').trim(),name:'',ingredients:[],calories:0,carbs:0}; }
+        else if(line.startsWith('NAME:')) current.name=line.replace('NAME:','').trim();
+        else if(line.startsWith('INGREDIENTS:')) current.ingredients=line.replace('INGREDIENTS:','').split(',').map(i=>i.trim()).filter(Boolean);
+        else if(line.startsWith('CARBS:')){ const m=line.match(/CALS:\s*(\d+)/i); if(m) current.calories=parseInt(m[1]); const c=line.match(/(\d+)g/); if(c) current.carbs=parseInt(c[1]); }
+      });
+      if(current.name) meals.push(current);
+      allIngredients = allIngredients.concat(...meals.map(m=>m.ingredients));
 
       const typeIcon = {Breakfast:'🌅',Lunch:'☀️',Dinner:'🌙',Snack:'🍿'};
-      allDaysHtml += `<div style="margin-bottom:20px">
-        <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--green);margin-bottom:10px;padding:10px 14px;background:rgba(0,255,135,0.06);border-radius:12px;border:1px solid rgba(0,255,135,0.15)">
-          📅 Day ${d} — ${dayNames[d]||'Day '+d}
-        </div>
-        ${meals.map(m=>`
-          <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:13px;margin-bottom:8px">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-              <div><span style="font-size:11px;color:var(--muted)">${typeIcon[m.mealType]||'🍽️'} ${m.mealType} </span><span style="font-weight:700;font-size:14px">${m.name}</span></div>
-              <span style="font-size:12px;color:var(--orange);font-weight:700">${m.calories} kcal</span>
-            </div>
-            ${m.desc?`<div style="font-size:12px;color:var(--muted)">${m.desc}</div>`:''}
-            <div style="display:flex;gap:8px;margin-top:8px">
-              <button onclick="(function(){var entry={name:'${m.name.replace(/'/g,"\'")}',calories:${m.calories},carbs:${m.carbs},fat:0,protein:0,logId:Date.now()+Math.random(),mealCategory:getMealCategory('${m.mealType}'),_base:{calories:${m.calories},carbs:${m.carbs},fat:0,protein:0},_baseName:'${m.name.replace(/'/g,"\'")}',_grams:100};foodLogEntries.unshift(entry);renderFoodLog();updateTrackerDisplay();saveAll();showToast('📊 Logged!');})();" style="flex:1;padding:7px;background:rgba(0,255,135,0.08);border:1px solid rgba(0,255,135,0.2);border-radius:8px;color:var(--green);font-size:11px;font-weight:700;cursor:pointer">📊 Log</button>
-            </div>
-          </div>`).join('')}
-      </div>`;
-    } catch(e) {
-      allDaysHtml += `<div style="color:var(--red);padding:10px">⚠️ Day ${d} failed: ${e.message}</div>`;
+      allDaysHtml += '<div style="margin-bottom:20px">'
+        +'<div style="font-size:16px;font-weight:800;color:var(--green);margin-bottom:10px;padding:10px 14px;background:rgba(0,255,135,0.06);border-radius:12px;border:1px solid rgba(0,255,135,0.15)">📅 Day '+d+' — '+(dayNames[d]||'Day '+d)+'</div>'
+        +meals.map(function(m){
+          return '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:12px;margin-bottom:7px">'
+            +'<div style="display:flex;justify-content:space-between;align-items:center">'
+            +'<div><span style="font-size:11px;color:var(--muted)">'+(typeIcon[m.mealType]||'🍽️')+' '+m.mealType+' </span><span style="font-weight:700;font-size:14px">'+m.name+'</span></div>'
+            +'<span style="font-size:12px;color:var(--orange);font-weight:700">'+m.calories+' kcal</span>'
+            +'</div>'
+            +'</div>';
+        }).join('')
+        +'</div>';
     }
+  } catch(e) {
+    allDaysHtml += '<div style="color:var(--red);padding:10px">⚠️ '+e.message+'</div>';
   }
 
   // Show all days + bulk actions
