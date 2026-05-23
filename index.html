@@ -1265,10 +1265,21 @@ if(window.caches){
         </div>
       </div>
 
-      <button id="plannerBtn" onclick="generateDayPlan()" style="width:100%;padding:18px;background:linear-gradient(135deg,#00e676,#00c853);color:#000;border:none;border-radius:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;cursor:pointer;margin-bottom:8px;box-shadow:0 6px 24px rgba(0,230,118,0.35)">
+      <!-- Multi-day selector -->
+      <div style="margin-bottom:14px">
+        <div class="snack-input-label">📆 How many days?</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px">
+          <button class="snack-tag-btn active" id="pdays-1" onclick="selectPlanDays(this,1)">1 Day</button>
+          <button class="snack-tag-btn" id="pdays-3" onclick="selectPlanDays(this,3)">3 Days</button>
+          <button class="snack-tag-btn" id="pdays-5" onclick="selectPlanDays(this,5)">5 Days</button>
+          <button class="snack-tag-btn" id="pdays-7" onclick="selectPlanDays(this,7)">7 Days 🔒</button>
+        </div>
+      </div>
+
+      <button id="plannerBtn" onclick="generateDayPlan()" style="width:100%;padding:18px;background:linear-gradient(135deg,#00ff87,#00c853);color:#000;border:none;border-radius:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;cursor:pointer;margin-bottom:8px;box-shadow:0 6px 24px rgba(0,255,135,0.35)">
         📅 Generate My Day Plan
       </button>
-      <div style="text-align:center;font-size:11px;color:var(--muted);margin-bottom:16px">Builds Breakfast · Lunch · Dinner · Snacks to hit your goals</div>
+      <div style="text-align:center;font-size:11px;color:var(--muted);margin-bottom:16px">Builds Breakfast · Lunch · Dinner · Snacks to hit your goals · 7-day plan is Pro only</div>
 
       <div id="plannerResult" style="padding-bottom:20px"></div>
     </div>
@@ -3188,6 +3199,176 @@ CARBS: [net carbs]g | FAT: [fat]g | PROTEIN: [protein]g`;
 }
 
 // Add AI meal/snack ingredients straight to the shop list
+
+function togglePrepFocus(btn){
+  btn.classList.toggle('active');
+}
+
+async function generateMealPrepList(){
+  const btn = document.getElementById('prepBtn');
+  const result = document.getElementById('prepResult');
+  const days = parseInt(document.getElementById('prepDays').value)||7;
+  const people = parseInt(document.getElementById('prepPeople').value)||1;
+  const focuses = [...document.querySelectorAll('[id^=prep-].active')].map(b=>b.textContent.trim()).join(', ');
+  const goals = macroGoals || {cal:1800, carbs:25, protein:120, fat:130};
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Building your list...';
+  result.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted)"><div class="pulse">🛒</div><p style="margin-top:8px">AI is calculating bulk quantities...</p></div>';
+
+  try {
+    const prompt = `You are a professional keto meal prep nutritionist and Costco/bulk shopping expert.
+
+Create an optimized bulk grocery list for ${people} person(s) doing keto for ${days} days.
+Daily keto goals: ${goals.cal} calories, ${goals.carbs}g net carbs, ${goals.protein}g protein, ${goals.fat}g fat
+Protein focus: ${focuses || 'Chicken, Beef'}
+
+Rules:
+- Calculate EXACT bulk quantities (e.g. "5 lbs chicken breast" not "some chicken")
+- Minimize waste — suggest amounts that can be used across multiple meals
+- Group by store section: Proteins, Produce, Dairy/Eggs, Pantry/Oils, Frozen
+- Add estimated cost range in USD per item (Costco/bulk store pricing)
+- Include a meal prep tip for each protein
+
+Respond in EXACTLY this format:
+
+SECTION: Proteins
+ITEM: [name] | QTY: [amount] | COST: $[range] | TIP: [how to batch cook it]
+ITEM: ...
+
+SECTION: Produce
+ITEM: [name] | QTY: [amount] | COST: $[range] | TIP: [storage tip]
+ITEM: ...
+
+SECTION: Dairy & Eggs
+ITEM: [name] | QTY: [amount] | COST: $[range] | TIP: [tip]
+ITEM: ...
+
+SECTION: Pantry & Oils
+ITEM: [name] | QTY: [amount] | COST: $[range] | TIP: [tip]
+ITEM: ...
+
+TOTAL_ESTIMATE: $[low]-$[high]
+PREP_TIME: [hours] hours total prep
+MEALS_COVERED: [description]`;
+
+    const text = await callAI(prompt, 1800);
+
+    // Parse sections
+    const sections = [];
+    let currentSection = null;
+    let totalEst = '', prepTime = '', mealsCovered = '';
+
+    text.split(/\r?\n/).forEach(function(line) {
+      line = line.trim();
+      if(line.startsWith('SECTION:')) {
+        if(currentSection) sections.push(currentSection);
+        currentSection = {name: line.replace('SECTION:','').trim(), items:[]};
+      } else if(line.startsWith('ITEM:') && currentSection) {
+        const parts = line.replace('ITEM:','').split('|');
+        const name = parts[0]?.trim()||'';
+        const qty = parts[1]?.replace('QTY:','').trim()||'';
+        const cost = parts[2]?.replace('COST:','').trim()||'';
+        const tip = parts[3]?.replace('TIP:','').trim()||'';
+        if(name) currentSection.items.push({name,qty,cost,tip});
+      } else if(line.startsWith('TOTAL_ESTIMATE:')) {
+        totalEst = line.replace('TOTAL_ESTIMATE:','').trim();
+      } else if(line.startsWith('PREP_TIME:')) {
+        prepTime = line.replace('PREP_TIME:','').trim();
+      } else if(line.startsWith('MEALS_COVERED:')) {
+        mealsCovered = line.replace('MEALS_COVERED:','').trim();
+      }
+    });
+    if(currentSection) sections.push(currentSection);
+
+    const sectionColors = {
+      'Proteins':'rgba(255,61,104,0.08)','Produce':'rgba(0,255,135,0.06)',
+      'Dairy & Eggs':'rgba(255,203,71,0.06)','Pantry & Oils':'rgba(56,189,248,0.06)',
+      'Frozen':'rgba(181,123,238,0.06)'
+    };
+    const sectionIcons = {'Proteins':'🥩','Produce':'🥦','Dairy & Eggs':'🥚','Pantry & Oils':'🫙','Frozen':'🧊'};
+
+    // Render
+    result.innerHTML = `
+      <!-- Summary card -->
+      <div style="background:linear-gradient(135deg,rgba(0,255,135,0.08),rgba(0,0,0,0));border:1px solid rgba(0,255,135,0.2);border-radius:14px;padding:14px;margin-bottom:14px">
+        <div style="font-size:14px;font-weight:800;color:var(--green);margin-bottom:8px">📋 ${days}-Day Keto Meal Prep for ${people} ${people>1?'people':'person'}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+          <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px">
+            <div style="font-size:18px;font-weight:800;color:#ffcb47">${totalEst}</div>
+            <div style="font-size:10px;color:var(--muted)">Est. cost</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px">
+            <div style="font-size:18px;font-weight:800;color:#38bdf8">${prepTime}</div>
+            <div style="font-size:10px;color:var(--muted)">Prep time</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px">
+            <div style="font-size:18px;font-weight:800;color:#00ff87">${days*3}</div>
+            <div style="font-size:10px;color:var(--muted)">Meals covered</div>
+          </div>
+        </div>
+        ${mealsCovered?`<div style="font-size:11px;color:var(--muted);margin-top:8px">${mealsCovered}</div>`:''}
+      </div>
+
+      <!-- Add all to shop list button -->
+      <button onclick="addAllPrepToShop()" style="width:100%;padding:12px;background:rgba(0,255,135,0.1);border:1px solid rgba(0,255,135,0.25);border-radius:12px;color:var(--green);font-weight:800;font-size:14px;cursor:pointer;margin-bottom:12px">
+        ➕ Add All Items to Shopping List
+      </button>
+
+      <!-- Sections -->
+      ${sections.map(sec => `
+        <div style="margin-bottom:14px">
+          <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">
+            ${sectionIcons[sec.name]||'📦'} ${sec.name}
+          </div>
+          ${sec.items.map(item => `
+            <div style="background:${sectionColors[sec.name]||'rgba(255,255,255,0.03)'};border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px;margin-bottom:6px">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+                <div style="font-weight:700;font-size:14px">${item.name}</div>
+                <div style="text-align:right;flex-shrink:0;margin-left:10px">
+                  <div style="font-size:13px;color:#ffcb47;font-weight:700">${item.cost}</div>
+                  <div style="font-size:11px;color:var(--muted)">${item.qty}</div>
+                </div>
+              </div>
+              ${item.tip?`<div style="font-size:11px;color:var(--muted);border-top:1px solid rgba(255,255,255,0.05);padding-top:5px;margin-top:4px">💡 ${item.tip}</div>`:''}
+            </div>`).join('')}
+        </div>`).join('')}`;
+
+    // Store for adding to shop list
+    window._prepSections = sections;
+
+  } catch(e) {
+    result.innerHTML = `<div style="color:var(--red);padding:10px">⚠️ ${e.message}</div>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🛒 Generate Smart Grocery List';
+}
+
+function addAllPrepToShop(){
+  const sections = window._prepSections;
+  if(!sections) return;
+  let count = 0;
+  sections.forEach(sec => {
+    sec.items.forEach(item => {
+      shopItems.unshift({
+        name: item.name,
+        note: item.qty + (item.cost ? ' · ' + item.cost : ''),
+        amount: item.qty,
+        category: sec.name,
+        checked: false,
+        id: Date.now() + Math.random()
+      });
+      count++;
+    });
+  });
+  renderShopList();
+  saveAll();
+  showToast('✅ ' + count + ' items added to your shopping list!');
+  // Scroll to shopping list
+  document.getElementById('prepResult').scrollIntoView({behavior:'smooth'});
+}
+
 function addMealToShop(ingredients, mealName){
   ingredients.forEach(ing=>{
     if(!ing)return;
@@ -4249,6 +4430,113 @@ function saveProfileSettings(){
   showToast('✅ Profile updated! New goal: '+cal+' kcal/day');
 }
 
+
+function shareMyMacros(){
+  const t = getTotals();
+  const g = macroGoals;
+  const today = new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+  const streak = parseInt(localStorage.getItem('kb_ketoStreak')||'0');
+  const pct = Math.round((t.cal/g.cal)*100);
+
+  // Create shareable canvas card
+  const canvas = document.createElement('canvas');
+  canvas.width = 600; canvas.height = 400;
+  const ctx = canvas.getContext('2d');
+
+  // Background
+  const bg = ctx.createLinearGradient(0,0,600,400);
+  bg.addColorStop(0,'#04080f'); bg.addColorStop(1,'#0b1623');
+  ctx.fillStyle = bg; ctx.fillRect(0,0,600,400);
+
+  // Green accent border
+  ctx.strokeStyle = '#00ff87'; ctx.lineWidth = 3;
+  ctx.strokeRect(2,2,596,396);
+
+  // Avocado + title
+  ctx.font = 'bold 40px serif'; ctx.fillText('🥑', 24, 60);
+  ctx.fillStyle = '#00ff87';
+  ctx.font = 'bold 28px Arial';
+  ctx.fillText('KetoBuddy', 80, 55);
+  ctx.fillStyle = '#4e7a99'; ctx.font = '16px Arial';
+  ctx.fillText(today, 80, 78);
+
+  // Streak
+  if(streak > 0){
+    ctx.fillStyle = '#ffcb47'; ctx.font = 'bold 18px Arial';
+    ctx.fillText('🔥 Day '+streak+' Streak', 400, 55);
+  }
+
+  // Calories big
+  ctx.fillStyle = '#ff8c42'; ctx.font = 'bold 64px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText(Math.round(t.cal), 300, 170);
+  ctx.fillStyle = '#4e7a99'; ctx.font = '18px Arial';
+  ctx.fillText('calories · '+pct+'% of goal', 300, 200);
+
+  // Macros row
+  const macros = [
+    {label:'Carbs', val:t.carbs.toFixed(1)+'g', goal:g.carbs+'g', color:'#ff3d68'},
+    {label:'Protein', val:t.protein.toFixed(1)+'g', goal:g.protein+'g', color:'#38bdf8'},
+    {label:'Fat', val:t.fat.toFixed(1)+'g', goal:g.fat+'g', color:'#ffcb47'},
+  ];
+  macros.forEach((m,i) => {
+    const x = 100 + i*200;
+    ctx.fillStyle = m.color; ctx.font = 'bold 32px Arial';
+    ctx.fillText(m.val, x, 280);
+    ctx.fillStyle = '#4e7a99'; ctx.font = '14px Arial';
+    ctx.fillText(m.label+' / '+m.goal, x, 305);
+  });
+
+  // Footer
+  ctx.fillStyle = '#4e7a99'; ctx.font = '14px Arial';
+  ctx.fillText('ketobuddytracker.netlify.app', 300, 370);
+
+  // Convert to image and show share dialog
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const img = document.createElement('img');
+    img.src = url;
+    img.style.cssText = 'max-width:100%;border-radius:12px';
+
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:12px';
+    modal.innerHTML = '<div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:8px">📤 Your Macro Card</div>';
+    modal.appendChild(img);
+
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:10px;margin-top:10px';
+
+    // Download button
+    const dl = document.createElement('a');
+    dl.href = url; dl.download = 'ketobuddy-macros.png';
+    dl.style.cssText = 'padding:12px 20px;background:#00ff87;color:#000;border-radius:10px;font-weight:800;text-decoration:none;font-size:14px';
+    dl.textContent = '⬇️ Save Image';
+    btnRow.appendChild(dl);
+
+    // Share button (mobile)
+    if(navigator.share){
+      fetch(url).then(r=>r.blob()).then(b=>{
+        const file = new File([b],'ketobuddy-macros.png',{type:'image/png'});
+        const shareBtn = document.createElement('button');
+        shareBtn.style.cssText = 'padding:12px 20px;background:#38bdf8;color:#000;border:none;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer';
+        shareBtn.textContent = '📲 Share';
+        shareBtn.onclick = ()=>navigator.share({files:[file],title:'My Keto Day — KetoBuddy'});
+        btnRow.appendChild(shareBtn);
+      });
+    }
+
+    const close = document.createElement('button');
+    close.style.cssText = 'padding:12px 20px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:10px;color:#fff;font-size:14px;cursor:pointer';
+    close.textContent = '✕ Close';
+    close.onclick = ()=>{ modal.remove(); URL.revokeObjectURL(url); };
+    btnRow.appendChild(close);
+
+    modal.appendChild(btnRow);
+    modal.onclick = e=>{ if(e.target===modal){ modal.remove(); URL.revokeObjectURL(url); }};
+    document.body.appendChild(modal);
+  },'image/png');
+}
+
 function recalcMacrosFromCal(cal){
   cal = parseInt(cal)||0;
   if(cal < 500) return;
@@ -4976,8 +5264,12 @@ function ketoCheckIn(isKeto){
     }
     localStorage.setItem('kb_ketoStreak',ketoStreak);
     localStorage.setItem('kb_ketoCheckIns',JSON.stringify(ketoCheckInDates));
-    document.getElementById('streakBadge').textContent=`🔥 Day ${ketoStreak}`;
-    showToast(`🥑 Keto streak: ${ketoStreak} day${ketoStreak>1?'s':''}!`);
+    const badge = document.getElementById('streakBadge');
+    if(badge){
+      badge.textContent = ketoStreak >= 7 ? `🔥 ${ketoStreak} day streak!` : `🔥 Day ${ketoStreak}`;
+      badge.style.boxShadow = ketoStreak >= 7 ? '0 0 20px rgba(255,203,71,0.4)' : '';
+    }
+    showToast(`🔥 Keto streak: ${ketoStreak} day${ketoStreak>1?'s':''}! Keep going!`);
   } else {
     ketoCheckInDates.push({date:today,keto:false});
     localStorage.setItem('kb_ketoCheckIns',JSON.stringify(ketoCheckInDates));
@@ -6185,6 +6477,111 @@ function selectPlanMeals(btn, count){
   btn.classList.add('active');
 }
 
+
+let plannerDays = 1;
+
+async function generateMultiDayPlan(days){
+  const btn = document.getElementById('plannerBtn');
+  const result = document.getElementById('plannerResult');
+  btn.disabled = true;
+  btn.textContent = '⏳ Building '+days+'-day plan...';
+  result.innerHTML = '<div style="text-align:center;padding:24px"><div class="pulse" style="font-size:32px">📅</div><p style="color:var(--muted);margin-top:12px">Generating '+days+' days of meals...</p></div>';
+
+  const ingredients = document.getElementById('plannerIngredients').value.trim();
+  const styleTags = [...document.querySelectorAll('#plannerStyleTags .chef-tag-active')].map(b=>b.querySelectorAll('span')[1]?.textContent||'').join(', ');
+  const snackTags = [...document.querySelectorAll('#plannerSnackTags .chef-tag-active')].map(b=>b.querySelectorAll('span')[1]?.textContent||'').join(', ');
+  const carbLimits = {strict:20, moderate:50, flexible:75};
+  const dailyCarbs = Math.round((macroGoals.carbs||25) * (carbLimits[plannerCarbMode]||1));
+  const goals = macroGoals || {cal:1800, carbs:dailyCarbs, protein:120, fat:130};
+  const mealStructure = mealStructures[plannerMealCount] || mealStructures[5];
+
+  const dayNames = ['','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  let allDaysHtml = '';
+  let allIngredients = [];
+
+  for(let d = 1; d <= days; d++){
+    try {
+      result.innerHTML = '<div style="text-align:center;padding:24px"><div class="pulse" style="font-size:32px">📅</div><p style="color:var(--muted);margin-top:12px">Day '+d+' of '+days+'...</p></div>';
+      const prompt = `You are a professional keto nutritionist. Create a complete keto meal plan for Day ${d} (${dayNames[d]||'Day '+d}).
+Daily goals: ${goals.cal} calories, ${dailyCarbs}g net carbs max, ${goals.protein}g protein, ${goals.fat}g fat
+${ingredients?'Use these ingredients: '+ingredients:'Use varied keto ingredients — make each day different.'}
+${styleTags?'Style: '+styleTags:''}
+Be creative — Day ${d} should have DIFFERENT meals from other days.
+Create exactly: ${mealStructure}.
+For each meal use EXACTLY:
+MEAL: [Breakfast|Lunch|Dinner|Snack]
+NAME: [name]
+DESC: [1 sentence]
+INGREDIENTS: [comma-separated]
+STEPS: [steps separated by |]
+CARBS: [n]g | FAT: [n]g | PROTEIN: [n]g | CALS: [n]`;
+
+      const text = await callAI(prompt, 2000);
+      const blocks = text.split(/(?=MEAL:)/g).filter(b=>b.trim().startsWith('MEAL:'));
+      const meals = blocks.map(block=>{
+        const lines = block.split(/\r?\n/).filter(l=>l.trim());
+        const mealType = lines.find(l=>l.startsWith('MEAL:'))?.replace('MEAL:','').trim()||'Meal';
+        const name = lines.find(l=>l.startsWith('NAME:'))?.replace('NAME:','').trim()||'Keto Meal';
+        const desc = lines.find(l=>l.startsWith('DESC:'))?.replace('DESC:','').trim()||'';
+        const ingLine = lines.find(l=>l.startsWith('INGREDIENTS:'))?.replace('INGREDIENTS:','').trim()||'';
+        const macros = lines.find(l=>l.startsWith('CARBS:'))?.replace('CARBS:','').trim()||'';
+        const ingredients = ingLine.split(',').map(i=>i.trim()).filter(Boolean);
+        const calMatch = macros.match(/CALS:\s*(\d+)/i);
+        const carbMatch = macros.match(/(\d+)g/);
+        allIngredients = allIngredients.concat(ingredients);
+        return {mealType,name,desc,ingredients,macros,
+          calories:calMatch?parseInt(calMatch[1]):0,
+          carbs:carbMatch?parseInt(carbMatch[1]):0};
+      }).filter(m=>m.name);
+
+      const typeIcon = {Breakfast:'🌅',Lunch:'☀️',Dinner:'🌙',Snack:'🍿'};
+      allDaysHtml += `<div style="margin-bottom:20px">
+        <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--green);margin-bottom:10px;padding:10px 14px;background:rgba(0,255,135,0.06);border-radius:12px;border:1px solid rgba(0,255,135,0.15)">
+          📅 Day ${d} — ${dayNames[d]||'Day '+d}
+        </div>
+        ${meals.map(m=>`
+          <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:13px;margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <div><span style="font-size:11px;color:var(--muted)">${typeIcon[m.mealType]||'🍽️'} ${m.mealType} </span><span style="font-weight:700;font-size:14px">${m.name}</span></div>
+              <span style="font-size:12px;color:var(--orange);font-weight:700">${m.calories} kcal</span>
+            </div>
+            ${m.desc?`<div style="font-size:12px;color:var(--muted)">${m.desc}</div>`:''}
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button onclick="(function(){var entry={name:'${m.name.replace(/'/g,"\'")}',calories:${m.calories},carbs:${m.carbs},fat:0,protein:0,logId:Date.now()+Math.random(),mealCategory:getMealCategory('${m.mealType}'),_base:{calories:${m.calories},carbs:${m.carbs},fat:0,protein:0},_baseName:'${m.name.replace(/'/g,"\'")}',_grams:100};foodLogEntries.unshift(entry);renderFoodLog();updateTrackerDisplay();saveAll();showToast('📊 Logged!');})();" style="flex:1;padding:7px;background:rgba(0,255,135,0.08);border:1px solid rgba(0,255,135,0.2);border-radius:8px;color:var(--green);font-size:11px;font-weight:700;cursor:pointer">📊 Log</button>
+            </div>
+          </div>`).join('')}
+      </div>`;
+    } catch(e) {
+      allDaysHtml += `<div style="color:var(--red);padding:10px">⚠️ Day ${d} failed: ${e.message}</div>`;
+    }
+  }
+
+  // Show all days + bulk actions
+  result.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      <button onclick="addAllMultiDayToShop('${allIngredients.slice(0,50).join(',').replace(/'/g,'')}')" style="padding:11px;background:linear-gradient(135deg,#38bdf8,#0096c7);color:#000;border:none;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer">🛒 Full Grocery List</button>
+      <button onclick="showToast('✅ Log each meal individually using the Log button!')" style="padding:11px;background:linear-gradient(135deg,#00ff87,#00c853);color:#000;border:none;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer">📊 Log to Tracker</button>
+    </div>
+    ${allDaysHtml}`;
+
+  btn.disabled = false;
+  btn.textContent = '📅 Generate '+days+'-Day Plan';
+}
+
+function selectPlanDays(btn, days){
+  if(days === 7 && !isPro()){
+    showToast('🔒 7-day plan is Pro only — upgrade for $1.99/mo!');
+    return;
+  }
+  plannerDays = days;
+  ['pdays-1','pdays-3','pdays-5','pdays-7'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.remove('active');
+  });
+  btn.classList.add('active');
+  document.getElementById('plannerBtn').textContent = '📅 Generate ' + days + '-Day Plan';
+}
+
 function selectPlanCarbs(btn, mode){
   plannerCarbMode = mode;
   ['plan-strict','plan-moderate','plan-flexible'].forEach(id=>{
@@ -6210,6 +6607,12 @@ function initPlannerGoalBar(){
 async function generateDayPlan(){
   const btn = document.getElementById('plannerBtn');
   const result = document.getElementById('plannerResult');
+  const totalDays = plannerDays || 1;
+
+  if(totalDays > 1){
+    await generateMultiDayPlan(totalDays);
+    return;
+  }
   const ingredients = document.getElementById('plannerIngredients').value.trim();
 
   // Get style tags
