@@ -1166,44 +1166,6 @@ if(window.caches){
       <div id="favsPanelList"></div>
     </div>
 
-    <!-- DAY PLAN PANEL -->
-    <div id="chef-plan-panel" style="display:none">
-      <div style="background:linear-gradient(135deg,rgba(0,255,135,0.08),rgba(56,189,248,0.05));border:1px solid rgba(0,255,135,0.15);border-radius:14px;padding:12px 14px;margin-bottom:16px;display:flex;gap:10px;align-items:center">
-        <div style="font-size:22px">🎯</div>
-        <div style="flex:1"><div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.8px">Daily Goal</div>
-        <div style="font-size:13px;color:#c0d0e0;margin-top:2px" id="plannerGoalText">—</div></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-        <button onclick="startPlan('day')" style="padding:18px 10px;background:linear-gradient(135deg,rgba(0,255,135,0.1),rgba(0,200,83,0.05));border:1.5px solid rgba(0,255,135,0.3);border-radius:16px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px">
-          <span style="font-size:36px">📅</span>
-          <span style="font-size:15px;font-weight:800;color:var(--green)">Day Plan</span>
-          <span style="font-size:11px;color:var(--muted);text-align:center">One full day to hit your goals</span>
-        </button>
-        <button onclick="startPlan('week')" style="padding:18px 10px;background:linear-gradient(135deg,rgba(56,189,248,0.1),rgba(0,150,199,0.05));border:1.5px solid rgba(56,189,248,0.3);border-radius:16px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px">
-          <span style="font-size:36px">🥡</span>
-          <span style="font-size:15px;font-weight:800;color:#38bdf8">Meal Prep</span>
-          <span style="font-size:11px;color:var(--muted);text-align:center">5 days · bulk shop · save $$</span>
-        </button>
-      </div>
-      <div style="margin-bottom:12px">
-        <div class="snack-input-label">🛒 Ingredients you have?</div>
-        <div class="inp-icon"><span class="ic">🥩</span><input class="inp" type="text" id="plannerIngredients" placeholder="e.g. chicken, eggs, avocado..."/></div>
-      </div>
-      <div style="margin-bottom:16px">
-        <div class="snack-input-label">🌍 Style?</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px" id="plannerStyleTags">
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥩</span><span>BBQ</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍳</span><span>Simple</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐄</span><span>Carnivore</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇲🇽</span><span>Mexican</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍜</span><span>Asian</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌱</span><span>Veggie</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐟</span><span>Seafood</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇮🇹</span><span>Italian</span></button>
-        </div>
-      </div>
-      <div id="plannerResult" style="padding-bottom:20px"></div>
-    </div>
 
     <!-- FAVORITES PANEL -->
     <div id="chef-favs-panel" style="display:none">
@@ -1328,6 +1290,81 @@ if(window.caches){
         📅 Generate My Day Plan
       </button>
       <div style="text-align:center;font-size:11px;color:var(--muted);margin-bottom:16px">Builds Breakfast · Lunch · Dinner · Snacks to hit your goals · 7-day plan is Pro only</div>
+
+      <!-- Cuisine / Diet style -->
+      <div style="margin-bottom:14px">
+        <div class="snack-input-label">🌍 Diet &amp; cuisine style?</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="plannerStyleTags">
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍔</span><span>American</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥩</span><span>BBQ</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐄</span><span>Carnivore</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇲🇽</span><span>Mexican</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇧🇷</span><span>Brazilian</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍜</span><span>Asian</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇯🇵</span><span>Japanese</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇰🇷</span><span>Korean</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇨🇳</span><span>Chinese</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇮🇹</span><span>Italian</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇬🇷</span><span>Greek</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🫒</span><span>Mediterr.</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌶️</span><span>Spicy</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐟</span><span>Seafood</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌱</span><span>Veggie</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>💪</span><span>High Protein</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍳</span><span>Simple</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥗</span><span>Fresh</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍕</span><span>Comfort</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧁</span><span>Dessert</span></button>
+        </div>
+      </div>
+
+      <!-- Snack style -->
+      <div style="margin-bottom:14px">
+        <div class="snack-input-label">🍿 Snack style?</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="plannerSnackTags">
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧀</span><span>Savory</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍫</span><span>Sweet</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>💪</span><span>Protein</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>⚡</span><span>Quick</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥜</span><span>Nutty</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍦</span><span>No-Cook</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥚</span><span>Egg-Based</span></button>
+          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧁</span><span>Dessert</span></button>
+        </div>
+      </div>
+
+      <!-- Meal count -->
+      <div style="margin-bottom:14px">
+        <div class="snack-input-label">🍽️ How many meals?</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
+          <button class="snack-tag-btn" id="plan-meals-3" onclick="selectPlanMeals(this,3)">3 meals<br><span style="font-size:10px;color:var(--muted)">B · L · D</span></button>
+          <button class="snack-tag-btn active" id="plan-meals-5" onclick="selectPlanMeals(this,5)">3 + 2 snacks<br><span style="font-size:10px;color:var(--muted)">B · L · D + snacks</span></button>
+          <button class="snack-tag-btn" id="plan-meals-6" onclick="selectPlanMeals(this,6)">6 small<br><span style="font-size:10px;color:var(--muted)">every 2-3 hrs</span></button>
+        </div>
+      </div>
+
+      <!-- Plan type -->
+      <div style="margin-bottom:16px">
+        <div class="snack-input-label">📆 Plan type?</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="snack-tag-btn active" id="plan-type-day" onclick="selectPlanType(this,'day')">📅 Day Plan<br><span style="font-size:10px;color:var(--muted)">One day · hit your goals</span></button>
+          <button class="snack-tag-btn" id="plan-type-week" onclick="selectPlanType(this,'week')">🥡 Meal Prep<br><span style="font-size:10px;color:var(--muted)">5 days · bulk · save $$</span></button>
+        </div>
+      </div>
+
+      <!-- Carb strictness -->
+      <div style="margin-bottom:20px">
+        <div class="snack-input-label">🥑 Carb limit?</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
+          <button class="snack-tag-btn" id="plan-strict" onclick="selectPlanCarbs(this,'strict')">🔒 Strict<br><span style="font-size:10px;color:var(--muted)">&lt;20g/day</span></button>
+          <button class="snack-tag-btn active" id="plan-moderate" onclick="selectPlanCarbs(this,'moderate')">⚖️ Standard<br><span style="font-size:10px;color:var(--muted)">&lt;50g/day</span></button>
+          <button class="snack-tag-btn" id="plan-flexible" onclick="selectPlanCarbs(this,'flexible')">🔓 Relaxed<br><span style="font-size:10px;color:var(--muted)">&lt;75g/day</span></button>
+        </div>
+      </div>
+
+      <button id="plannerBtn" onclick="runPlan()" style="width:100%;padding:18px;background:linear-gradient(135deg,#00ff87,#00c853);color:#000;border:none;border-radius:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;cursor:pointer;margin-bottom:8px;box-shadow:0 6px 24px rgba(0,255,135,0.35)">
+        📅 Generate My Day Plan
+      </button>
 
       <div id="plannerResult" style="padding-bottom:20px"></div>
     </div>
@@ -6879,6 +6916,21 @@ D[day number] [Breakfast|Lunch|Dinner|Snack]: [Meal Name] | [cal]cal [carb]g C [
 }
 
 
+
+
+let _planType = 'day';
+function selectPlanType(btn, type){
+  _planType = type;
+  ['plan-type-day','plan-type-week'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});
+  btn.classList.add('active');
+  const pb = document.getElementById('plannerBtn');
+  if(pb) pb.textContent = type==='week' ? '🥡 Generate 5-Day Meal Prep' : '📅 Generate My Day Plan';
+}
+
+function runPlan(){
+  if(_planType === 'week') startPlan('week');
+  else generateDayPlan();
+}
 
 function startPlan(type){
   const result = document.getElementById('plannerResult');
