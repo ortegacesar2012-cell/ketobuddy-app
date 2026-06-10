@@ -2581,7 +2581,7 @@ function showMealCategoryPicker(food){
   let suggested='🌙 Dinner';
   if(h>=5&&h<11) suggested='🌅 Breakfast';
   else if(h>=11&&h<15) suggested='☀️ Lunch';
-  else if(h>=15&&h<18) suggested='🍿 Snack';
+  else if(h>=15&&h<22) suggested='🍿 Snack';
 
   const modal=document.createElement('div');
   modal.id='mealCatModal';
@@ -2791,7 +2791,7 @@ async function handleFoodImage(input){
           role:'user',
           content:[
             {type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:base64}},
-            {type:'text',text:'Identify the food(s) in this image and return nutrition data as a JSON array. For each food item: [{"name":"Food Name","carbs":5.2,"fat":12.1,"protein":8.3,"calories":165,"fiber":1.2,"category":"Category"}]. Values per 100g serving. If multiple foods, list each separately. Return ONLY valid JSON, no other text.'}
+            {type:'text',text:'Identify the food(s) in this image and return nutrition data as a JSON array. For each food item: [{"name":"Food Name","carbs":5.2,"fat":12.1,"protein":8.3,"calories":165,"fiber":1.2,"category":"Category","servingSize":"1 cup (240g)","servingCal":185}]. Values per 100g EXCEPT servingCal which is per actual serving. Estimate a realistic serving size. If multiple foods list each separately. Return ONLY valid JSON no other text.'}
           ]
         }]
       })
@@ -2808,7 +2808,7 @@ async function handleFoodImage(input){
       const cards = items.map(item=>{
         const keto=(item.carbs-(item.fiber||0))<=10;
         const netCarbs=+(item.carbs-(item.fiber||0)).toFixed(1);
-        const foodObj={name:item.name,carbs:netCarbs,fat:+(item.fat||0).toFixed(1),protein:+(item.protein||0).toFixed(1),calories:Math.round(item.calories||0),keto,category:item.category||'Food'};
+        const foodObj={name:item.name,carbs:netCarbs,fat:+(item.fat||0).toFixed(1),protein:+(item.protein||0).toFixed(1),calories:Math.round(item.calories||0),keto,category:item.category||'Food',servingSize:item.servingSize||'100g',servingCal:item.servingCal||0};
         return buildFoodCard(foodObj,true,'');
       }).join('');
       results.innerHTML='<div style="font-size:11px;color:var(--muted);margin-bottom:10px">🖼️ <span style="color:var(--blue)">AI identified from photo</span></div>'+cards;
@@ -3095,7 +3095,7 @@ async function generateChef(){
     let prompt;
     if(isMeal){
       prompt=`You are a professional ${isKeto?'keto':'healthy eating'} chef. Suggest 4 creative ${isKeto?'keto-friendly (low carb, high fat)':'healthy and balanced'} meal ideas.
-${specificSearch?'The user wants: "'+specificSearch+'" — make it '+( isKeto?'keto-friendly':'healthy and nutritious')+'. Prioritize this.':''}
+${specificSearch?'IMPORTANT: The user specifically wants "'+specificSearch+'". ALL 4 results MUST be different variations or preparations of "'+specificSearch+'" — different cooking methods, flavors, or styles. Do NOT suggest unrelated meals.':''}
 ${ingredients?'Available ingredients: '+ingredients:(isKeto?'Use common keto pantry items (eggs, avocado, meat, cheese, butter).':'Use common healthy pantry items.')}
 ${mealTimeTags?'Meal time: '+mealTimeTags:''}
 ${tags?'Cuisine & style: '+tags:''}
@@ -3114,7 +3114,7 @@ STEPS: [2-3 short cooking steps separated by | ]
 CARBS: [net carbs]g | FAT: [fat]g | PROTEIN: [protein]g | CALS: [calories]`;
     } else {
       prompt=`You are a ${isKeto?'keto diet':'healthy eating'} expert. Suggest 5 creative ${isKeto?'keto-friendly (low carb)':'healthy'} snack ideas.
-${specificSearch?'The user wants: "'+specificSearch+'" — make it '+(isKeto?'keto and sugar-free':'healthy and delicious')+'. Prioritize this.':''}
+${specificSearch?'IMPORTANT: The user specifically wants "'+specificSearch+'". ALL 5 results MUST be different variations or preparations of "'+specificSearch+'" — different flavors, toppings, or styles. Do NOT suggest unrelated snacks.':''}
 ${ingredients?'Available ingredients: '+ingredients:(isKeto?'Use common keto snack items.':'Use healthy whole-food snack ingredients.')}
 ${tags?'Craving/Style: '+tags:''}
 Difficulty level: ${selectedSnackDifficulty}
@@ -6786,34 +6786,34 @@ async function generateMultiDayPlan(days){
   }, 4000);
 
   try {
-    // Single fast call — minimal format
+    // Single call — compact format with ingredients
     const prompt = `Create a ${days}-day keto meal plan. Daily: ${goals.cal}cal, ${dailyCarbs}g carbs max, ${goals.protein}g protein.${ingredients?' Use: '+ingredients:''}${styleTags?' Style: '+styleTags:''}
-Each day must have different meals. Be brief.
-Format for every meal:
-D[day number] [Breakfast|Lunch|Dinner|Snack]: [Meal Name] | [cal]cal [carb]g C [prot]g P [fat]g F`;
+Each day must have different meals.
+Format for every meal (one per line):
+D[N] [Breakfast|Lunch|Dinner|Snack]: [Meal Name] | [cal]cal [carb]g C [prot]g P [fat]g F | ING: [ingredient 1, ingredient 2, ingredient 3]`;
 
-    const text = await callAI(prompt, 2000);
+    const text = await callAI(prompt, 2500);
 
     clearInterval(animInterval);
     clearInterval(msgInterval);
 
-    // Parse compact format: D1 Breakfast: Bacon Eggs | 450cal 2g C 35g P 32g F
+    // Parse compact format: D1 Breakfast: Bacon Eggs | 450cal 2g C 35g P 32g F | ING: bacon, eggs, butter
     const dayBlocks = {};
     text.split(/\r?\n/).forEach(line=>{
-      const m = line.match(/^D(\d+)\s+(Breakfast|Lunch|Dinner|Snack):\s*(.+?)\s*\|\s*(\d+)cal\s+(\d+)g\s*C\s+(\d+)g\s*P\s+(\d+)g\s*F/i);
+      const m = line.match(/^D(\d+)\s+(Breakfast|Lunch|Dinner|Snack):\s*(.+?)\s*\|\s*(\d+)cal\s+(\d+)g\s*C\s+(\d+)g\s*P\s+(\d+)g\s*F(?:\s*\|\s*ING:\s*(.+))?/i);
       if(m){
         const d=parseInt(m[1]), mealType=m[2], name=m[3], cal=parseInt(m[4]), carbs=parseInt(m[5]), prot=parseInt(m[6]), fat=parseInt(m[7]);
+        const ingredients = m[8] ? m[8].split(',').map(s=>s.trim()).filter(Boolean) : [];
         if(!dayBlocks[d]) dayBlocks[d]=[];
-        dayBlocks[d].push({mealType,name,cal,carbs,protein:prot,fat});
+        dayBlocks[d].push({mealType,name,cal,carbs,protein:prot,fat,ingredients});
       }
     });
 
     const typeIcon={Breakfast:'🌅',Lunch:'☀️',Dinner:'🌙',Snack:'🍿'};
     const typeColor={Breakfast:'rgba(255,140,66,0.1)',Lunch:'rgba(56,189,248,0.08)',Dinner:'rgba(181,123,238,0.08)',Snack:'rgba(0,255,135,0.06)'};
 
-    let html = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
-      <button onclick="(function(){var a=[];window._multiDayAllMeals&&window._multiDayAllMeals.forEach(function(m){a=a.concat(m.ingredients||[m.name]);});addMealToShop(a,'${days}-Day Plan');showToast('🛒 Added to shop!');})();" style="padding:11px;background:linear-gradient(135deg,#38bdf8,#0096c7);color:#000;border:none;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer">🛒 Grocery List</button>
-      <button onclick="shareMyMacros()" style="padding:11px;background:linear-gradient(135deg,#00ff87,#00c853);color:#000;border:none;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer">📤 Share Card</button>
+    let html = `<div style="margin-bottom:14px">
+      <button onclick="(function(){var a=[];window._multiDayAllMeals&&window._multiDayAllMeals.forEach(function(m){a=a.concat(m.ingredients&&m.ingredients.length?m.ingredients:[m.name]);});addMealToShop(a,'${days}-Day Plan');showToast('🛒 Added to shop!');})();" style="width:100%;padding:11px;background:linear-gradient(135deg,#38bdf8,#0096c7);color:#000;border:none;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer">🛒 Add All Ingredients to Shop</button>
     </div>`;
 
     let allMeals = [];
@@ -6826,16 +6826,19 @@ D[day number] [Breakfast|Lunch|Dinner|Snack]: [Meal Name] | [cal]cal [carb]g C [
           <div style="font-size:15px;font-weight:800;color:var(--green)">📅 ${dayNames[d]||'Day '+d}</div>
           <div style="font-size:12px;color:var(--muted)">${dayTotal} kcal</div>
         </div>
-        ${meals.map(m=>`<div style="background:${typeColor[m.mealType]||'rgba(255,255,255,0.03)'};border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:11px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:10px">
-          <div>
-            <div style="font-size:10px;color:var(--muted)">${typeIcon[m.mealType]||'🍽️'} ${m.mealType}</div>
-            <div style="font-size:14px;font-weight:700">${m.name}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px">${m.carbs}g C · ${m.protein}g P · ${m.fat}g F</div>
+        ${meals.map(m=>`<div style="background:${typeColor[m.mealType]||'rgba(255,255,255,0.03)'};border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:11px;margin-bottom:6px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <div>
+              <div style="font-size:10px;color:var(--muted)">${typeIcon[m.mealType]||'🍽️'} ${m.mealType}</div>
+              <div style="font-size:14px;font-weight:700">${m.name}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">${m.carbs}g C · ${m.protein}g P · ${m.fat}g F</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:14px;font-weight:800;color:var(--orange)">${m.cal}</div>
+              <div style="font-size:10px;color:var(--muted)">kcal</div>
+            </div>
           </div>
-          <div style="text-align:right;flex-shrink:0">
-            <div style="font-size:14px;font-weight:800;color:var(--orange)">${m.cal}</div>
-            <div style="font-size:10px;color:var(--muted)">kcal</div>
-          </div>
+          ${m.ingredients&&m.ingredients.length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px">${m.ingredients.map(ing=>`<span style="font-size:10px;padding:2px 7px;background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.18);border-radius:5px;color:#c0d0e0">${ing}</span>`).join('')}</div>`:''}
         </div>`).join('')}
       </div>`;
     }
@@ -6883,10 +6886,10 @@ function startMealPrep(){
   if(ingredients) parts.push('Use these ingredients: '+ingredients);
   if(styleTags) parts.push('Cuisine style: '+styleTags);
   parts.push('MEAL PREP RULES: Same meals CAN repeat across days to reduce waste and save money at Costco. Pick 2-3 proteins to batch cook. Keep it simple and practical.');
-  parts.push('Format: PREP: [Sunday batch cooking tips] then for each day: D1 Breakfast: [name] | [cal]cal [carb]g C [prot]g P [fat]g F then at end: SHOP: [bulk item 1, bulk item 2, ...]');
+  parts.push('Format: PREP: [Sunday batch cooking tips] then for each day: D1 Breakfast: [name] | [cal]cal [carb]g C [prot]g P [fat]g F | ING: [ing1, ing2, ing3] then at end: SHOP: [bulk item 1, bulk item 2, ...]');
   const prompt = parts.join(' ');
 
-  callAI(prompt,1500).then(function(text){
+  callAI(prompt,2500).then(function(text){
     clearInterval(bar);
     var b=document.getElementById('ppbar');if(b)b.style.width='100%';
     var prepTip='',shopList=[];
@@ -6896,8 +6899,8 @@ function startMealPrep(){
       if(line.startsWith('PREP:')) prepTip=line.replace('PREP:','').trim();
       else if(line.startsWith('SHOP:')) shopList=line.replace('SHOP:','').split(',').map(function(s){return s.trim();}).filter(Boolean);
       else{
-        var m=line.match(/^D(\d+)\s+(Breakfast|Lunch|Dinner|Snack):\s*(.+?)\s*\|\s*(\d+)cal\s+(\d+)g\s*C\s+(\d+)g\s*P\s+(\d+)g\s*F/i);
-        if(m){var d=parseInt(m[1]);if(!dayBlocks[d])dayBlocks[d]=[];dayBlocks[d].push({type:m[2],name:m[3],cal:parseInt(m[4]),carbs:parseInt(m[5]),prot:parseInt(m[6]),fat:parseInt(m[7])});}
+        var m=line.match(/^D(\d+)\s+(Breakfast|Lunch|Dinner|Snack):\s*(.+?)\s*\|\s*(\d+)cal\s+(\d+)g\s*C\s+(\d+)g\s*P\s+(\d+)g\s*F(?:\s*\|\s*ING:\s*(.+))?/i);
+        if(m){var d=parseInt(m[1]);if(!dayBlocks[d])dayBlocks[d]=[];var ings=m[8]?m[8].split(',').map(function(s){return s.trim();}).filter(Boolean):[];dayBlocks[d].push({type:m[2],name:m[3],cal:parseInt(m[4]),carbs:parseInt(m[5]),prot:parseInt(m[6]),fat:parseInt(m[7]),ingredients:ings});}
       }
     });
     var icon={Breakfast:'🌅',Lunch:'☀️',Dinner:'🌙',Snack:'🍿'};
@@ -6905,6 +6908,13 @@ function startMealPrep(){
     var html='';
     if(prepTip) html+='<div style="background:rgba(255,203,71,0.08);border:1px solid rgba(255,203,71,0.2);border-radius:14px;padding:14px;margin-bottom:14px"><div style="font-size:11px;font-weight:700;color:#ffcb47;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">📋 Sunday Batch Cooking</div><div style="font-size:13px;color:#c0d0e0;line-height:1.6">'+prepTip+'</div></div>';
     if(shopList.length) html+='<button onclick="addMealToShop('+JSON.stringify(shopList).replace(/"/g,"'")+',"5-Day Meal Prep")" style="width:100%;padding:12px;background:linear-gradient(135deg,#38bdf8,#0096c7);color:#000;border:none;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;margin-bottom:14px">🛒 Add Grocery List to Shop</button>';
+    else{
+      // Build ingredient list from parsed meals
+      var allIngs=[];
+      Object.values(dayBlocks).forEach(function(meals){meals.forEach(function(m){if(m.ingredients&&m.ingredients.length)allIngs=allIngs.concat(m.ingredients);});});
+      var uniqueIngs=[...new Set(allIngs)];
+      if(uniqueIngs.length) html+='<button onclick="addMealToShop('+JSON.stringify(uniqueIngs).replace(/"/g,"'")+',"5-Day Meal Prep")" style="width:100%;padding:12px;background:linear-gradient(135deg,#38bdf8,#0096c7);color:#000;border:none;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;margin-bottom:14px">🛒 Add All Ingredients to Shop</button>';
+    }
     for(var d=1;d<=5;d++){
       var meals=dayBlocks[d]||[];if(!meals.length)continue;
       var total=meals.reduce(function(a,m){return a+m.cal;},0);
