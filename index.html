@@ -6737,20 +6737,18 @@ async function generateMultiDayPlan(days){
   const ingredients = document.getElementById('plannerIngredients').value.trim();
   const styleTags = [...document.querySelectorAll('#plannerStyleTags .chef-tag-active')].map(b=>b.querySelectorAll('span')[1]?.textContent||'').join(', ');
   const dailyCarbs = Math.round((macroGoals.carbs||25));
-  const goals = macroGoals || {cal:1800, carbs:25, protein:120, fat:130};
+  const goals = (window.macroGoals&&window.macroGoals.cal>0) ? window.macroGoals : (macroGoals||{cal:1800,carbs:25,protein:120,fat:130});
   const dayNames = ['','Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
   btn.disabled = true;
   btn.textContent = '⏳ Generating...';
 
-  // Animated progress bar (fills over ~40 seconds)
   let animPct = 0;
-  const animTarget = 90;
   result.innerHTML = `<div id="planProgress" style="padding:20px">
     <div style="text-align:center;margin-bottom:20px">
       <div style="font-size:36px;margin-bottom:8px">📅</div>
       <div style="font-size:16px;font-weight:800;color:#fff" id="planProgressMsg">Building your ${days}-day plan...</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:4px">One moment — AI is creating varied meals for each day</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">AI is creating varied meals for each day</div>
     </div>
     <div style="background:rgba(255,255,255,0.06);border-radius:12px;height:14px;overflow:hidden;margin-bottom:10px">
       <div id="planProgressBar" style="height:100%;width:3%;border-radius:12px;background:linear-gradient(90deg,#00ff87,#38bdf8);transition:width 0.8s ease;box-shadow:0 0 16px rgba(0,255,135,0.5)"></div>
@@ -6759,79 +6757,89 @@ async function generateMultiDayPlan(days){
       <span>Day 1</span><span id="planProgressPct">3%</span><span>Day ${days}</span>
     </div>
     <div style="display:flex;gap:4px">
-      ${Array.from({length:days},(_,i)=>`<div class="day-pip" id="pip${i+1}" style="flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,0.08)"></div>`).join('')}
+      ${Array.from({length:days},(_,i)=>`<div id="pip${i+1}" style="flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,0.08)"></div>`).join('')}
     </div>
   </div>`;
 
-  // Animate the bar over time
   const animInterval = setInterval(()=>{
-    animPct = Math.min(animPct + (animTarget - animPct) * 0.05 + 0.3, animTarget);
-    const bar = document.getElementById('planProgressBar');
-    const pct = document.getElementById('planProgressPct');
-    if(bar) bar.style.width = animPct + '%';
-    if(pct) pct.textContent = Math.round(animPct) + '%';
-    // Light up day pips
-    const daysDone = Math.floor((animPct/100)*days);
-    for(let i=1;i<=days;i++){
-      const pip = document.getElementById('pip'+i);
-      if(pip) pip.style.background = i<=daysDone ? '#00ff87' : 'rgba(255,255,255,0.08)';
-    }
-  }, 500);
+    animPct = Math.min(animPct + (90-animPct)*0.05+0.3, 90);
+    const bar=document.getElementById('planProgressBar'), pct=document.getElementById('planProgressPct');
+    if(bar) bar.style.width=animPct+'%'; if(pct) pct.textContent=Math.round(animPct)+'%';
+    const done=Math.floor((animPct/100)*days);
+    for(let i=1;i<=days;i++){const p=document.getElementById('pip'+i);if(p)p.style.background=i<=done?'#00ff87':'rgba(255,255,255,0.08)';}
+  },500);
 
-  const msgs = ['Picking proteins...','Balancing macros...','Finding keto recipes...','Making each day unique...','Almost there...'];
-  let msgIdx = 0;
-  const msgInterval = setInterval(()=>{
-    const el = document.getElementById('planProgressMsg');
-    if(el) el.textContent = msgs[msgIdx++ % msgs.length];
-  }, 4000);
+  const msgs=['Picking proteins...','Balancing macros...','Finding keto recipes...','Making each day unique...','Almost there...'];
+  let msgIdx=0;
+  const msgInterval=setInterval(()=>{const el=document.getElementById('planProgressMsg');if(el)el.textContent=msgs[msgIdx++%msgs.length];},4000);
 
   try {
-    // Single call — compact format with ingredients
-    const prompt = `Create a ${days}-day keto meal plan. Daily: ${goals.cal}cal, ${dailyCarbs}g carbs max, ${goals.protein}g protein.${ingredients?' Use: '+ingredients:''}${styleTags?' Style: '+styleTags:''}
-Each day must have different meals.
+    const prompt=`Create a ${days}-day keto meal plan. Daily: ${goals.cal}cal, ${dailyCarbs}g carbs max, ${goals.protein}g protein.${ingredients?' Use: '+ingredients:''}${styleTags?' Style: '+styleTags:''}
+Each day must have DIFFERENT meals — no repeats across days.
+Also estimate a cost in USD per day for groceries (typical US store or Costco).
 Format for every meal (one per line):
-D[N] [Breakfast|Lunch|Dinner|Snack]: [Meal Name] | [cal]cal [carb]g C [prot]g P [fat]g F | ING: [ingredient 1, ingredient 2, ingredient 3]`;
+D[N] [Breakfast|Lunch|Dinner|Snack]: [Meal Name] | [cal]cal [carb]g C [prot]g P [fat]g F | ING: [ing1, ing2, ing3]
+At the end of each day's meals add one line:
+DCOST[N]: $[estimated daily grocery cost e.g. $12.50]`;
 
     const text = await callAI(prompt, 2500);
+    clearInterval(animInterval); clearInterval(msgInterval);
 
-    clearInterval(animInterval);
-    clearInterval(msgInterval);
-
-    // Parse compact format: D1 Breakfast: Bacon Eggs | 450cal 2g C 35g P 32g F | ING: bacon, eggs, butter
-    const dayBlocks = {};
+    const dayBlocks={}, dayCosts={};
     text.split(/\r?\n/).forEach(line=>{
-      const m = line.match(/^D(\d+)\s+(Breakfast|Lunch|Dinner|Snack):\s*(.+?)\s*\|\s*(\d+)cal\s+(\d+)g\s*C\s+(\d+)g\s*P\s+(\d+)g\s*F(?:\s*\|\s*ING:\s*(.+))?/i);
+      const cm = line.match(/^DCOST(\d+):\s*\$?([\d.]+)/i);
+      if(cm){ dayCosts[parseInt(cm[1])] = parseFloat(cm[2]); return; }
+      const m=line.match(/^D(\d+)\s+(Breakfast|Lunch|Dinner|Snack):\s*(.+?)\s*\|\s*(\d+)cal\s+(\d+)g\s*C\s+(\d+)g\s*P\s+(\d+)g\s*F(?:\s*\|\s*ING:\s*(.+))?/i);
       if(m){
-        const d=parseInt(m[1]), mealType=m[2], name=m[3], cal=parseInt(m[4]), carbs=parseInt(m[5]), prot=parseInt(m[6]), fat=parseInt(m[7]);
-        const ingredients = m[8] ? m[8].split(',').map(s=>s.trim()).filter(Boolean) : [];
+        const d=parseInt(m[1]),mealType=m[2],name=m[3],cal=parseInt(m[4]),carbs=parseInt(m[5]),prot=parseInt(m[6]),fat=parseInt(m[7]);
+        const ings=m[8]?m[8].split(',').map(s=>s.trim()).filter(Boolean):[];
         if(!dayBlocks[d]) dayBlocks[d]=[];
-        dayBlocks[d].push({mealType,name,cal,carbs,protein:prot,fat,ingredients});
+        dayBlocks[d].push({mealType,name,cal,carbs,protein:prot,fat,ingredients:ings});
       }
     });
 
     const typeIcon={Breakfast:'🌅',Lunch:'☀️',Dinner:'🌙',Snack:'🍿'};
     const typeColor={Breakfast:'rgba(255,140,66,0.1)',Lunch:'rgba(56,189,248,0.08)',Dinner:'rgba(181,123,238,0.08)',Snack:'rgba(0,255,135,0.06)'};
 
-    let html = `<div style="margin-bottom:14px">
-      <button onclick="(function(){var a=[];window._multiDayAllMeals&&window._multiDayAllMeals.forEach(function(m){a=a.concat(m.ingredients&&m.ingredients.length?m.ingredients:[m.name]);});addMealToShop(a,'${days}-Day Plan');showToast('🛒 Added to shop!');})();" style="width:100%;padding:11px;background:linear-gradient(135deg,#38bdf8,#0096c7);color:#000;border:none;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer">🛒 Add All Ingredients to Shop</button>
+    // Total cost
+    const totalCost = Object.values(dayCosts).reduce((a,c)=>a+c,0);
+    const totalCostStr = totalCost>0 ? '$'+totalCost.toFixed(2) : null;
+
+    // Header
+    let html=`<div style="background:rgba(0,255,135,0.05);border:1px solid rgba(0,255,135,0.15);border-radius:14px;padding:14px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">📅 ${days}-Day Keto Plan</div>
+      ${styleTags?`<div style="font-size:12px;color:var(--green);margin-bottom:4px">🍴 ${styleTags}</div>`:''}
+      <div style="font-size:12px;color:var(--muted);margin-bottom:${totalCostStr?'6':'0'}px">🎯 <span style="color:#fff">${goals.cal} kcal · ${dailyCarbs}g carbs · ${goals.protein}g protein</span> per day</div>
+      ${totalCostStr?`<div style="font-size:13px;font-weight:700;color:var(--green)">💰 Est. total: ${totalCostStr} for ${days} days (≈ $${(totalCost/days).toFixed(2)}/day)</div>`:''}
     </div>`;
 
-    let allMeals = [];
+    // Top action buttons
+    html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <button onclick="scheduleMultiDayToCalendar()" style="padding:11px;background:linear-gradient(135deg,rgba(181,123,255,0.15),rgba(130,80,255,0.08));border:1.5px solid rgba(181,123,255,0.35);border-radius:12px;color:var(--purple);font-weight:800;font-size:13px;cursor:pointer">📅 Add Week to Calendar</button>
+      <button onclick="(function(){var a=[];window._multiDayAllMeals&&window._multiDayAllMeals.forEach(function(m){a=a.concat(m.ingredients&&m.ingredients.length?m.ingredients:[m.name]);});addMealToShop(a,'${days}-Day Plan');showToast('🛒 Added to shop!');})()" style="padding:11px;background:linear-gradient(135deg,#38bdf8,#0096c7);color:#000;border:none;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer">🛒 All Ingredients</button>
+    </div>`;
+
+    let allMeals=[];
     for(let d=1;d<=days;d++){
-      const meals = dayBlocks[d]||[];
-      const dayTotal = meals.reduce((a,m)=>a+m.cal,0);
-      allMeals = allMeals.concat(meals.map(m=>({...m,day:d})));
-      html += `<div style="margin-bottom:14px">
+      const meals=dayBlocks[d]||[];
+      const dayTotal=meals.reduce((a,m)=>a+m.cal,0);
+      const dayCost=dayCosts[d];
+      allMeals=allMeals.concat(meals.map(m=>({...m,day:d})));
+
+      html+=`<div style="margin-bottom:16px">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(0,255,135,0.06);border-radius:12px;border:1px solid rgba(0,255,135,0.15);margin-bottom:8px">
           <div style="font-size:15px;font-weight:800;color:var(--green)">📅 ${dayNames[d]||'Day '+d}</div>
-          <div style="font-size:12px;color:var(--muted)">${dayTotal} kcal</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            ${dayCost?`<div style="font-size:11px;font-weight:700;color:var(--green)">💰 $${dayCost.toFixed(2)}</div>`:''}
+            <div style="font-size:12px;color:var(--muted)">${dayTotal} kcal</div>
+            <button onclick="logDayMeals(${d})" style="padding:5px 10px;background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.25);border-radius:8px;color:var(--green);font-size:11px;font-weight:700;cursor:pointer">📊 Log</button>
+          </div>
         </div>
         ${meals.map((m,mi)=>{
-          const mealId = `mdmeal-d${d}-${mi}`;
-          const ingHtml = m.ingredients&&m.ingredients.length
-            ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px">${m.ingredients.map(ing=>`<span style="font-size:10px;padding:2px 7px;background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.18);border-radius:5px;color:#c0d0e0">${ing}</span>`).join('')}</div>`
-            : '';
-          return `<div id="${mealId}" style="background:${typeColor[m.mealType]||'rgba(255,255,255,0.03)'};border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:11px;margin-bottom:6px;cursor:pointer" onclick="toggleMdMealSteps('${mealId}','${m.name.replace(/'/g,'\\\'')}',[${m.ingredients?m.ingredients.map(i=>`'${i.replace(/'/g,'\\\'')}'`).join(','):''}])">
+          const mealId=`mdmeal-d${d}-${mi}`;
+          const ingHtml=m.ingredients&&m.ingredients.length
+            ?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px">${m.ingredients.map(ing=>`<span style="font-size:10px;padding:2px 7px;background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.18);border-radius:5px;color:#c0d0e0">${ing}</span>`).join('')}</div>`:'';
+          return `<div id="${mealId}" style="background:${typeColor[m.mealType]||'rgba(255,255,255,0.03)'};border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:11px;margin-bottom:6px;cursor:pointer" onclick="toggleMdMealSteps('${mealId}','${m.name.replace(/'/g,"\\'")}' ,[${m.ingredients?m.ingredients.map(i=>`'${i.replace(/'/g,"\\'")} '`).join(','):''}])">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
               <div>
                 <div style="font-size:10px;color:var(--muted)">${typeIcon[m.mealType]||'🍽️'} ${m.mealType}</div>
@@ -6854,21 +6862,72 @@ D[N] [Breakfast|Lunch|Dinner|Snack]: [Meal Name] | [cal]cal [carb]g C [prot]g P 
     }
 
     window._multiDayAllMeals = allMeals;
+    window._multiDayDays = days;
 
-    if(Object.keys(dayBlocks).length === 0){
-      html += '<div style="color:var(--muted);text-align:center;padding:20px">⚠️ Could not parse meals. Try again with fewer days.</div>';
-    }
+    if(!Object.keys(dayBlocks).length)
+      html+='<div style="color:var(--muted);text-align:center;padding:20px">⚠️ Could not parse meals. Try again.</div>';
 
-    result.innerHTML = html;
+    result.innerHTML=html;
 
   } catch(e){
-    clearInterval(animInterval);
-    clearInterval(msgInterval);
-    result.innerHTML = `<div style="color:var(--red);padding:16px;text-align:center">⚠️ ${e.message}<br><br><button onclick="generateMultiDayPlan(${days})" style="padding:10px 20px;background:var(--green);color:#000;border:none;border-radius:10px;font-weight:700;cursor:pointer">Try Again</button></div>`;
+    clearInterval(animInterval); clearInterval(msgInterval);
+    result.innerHTML=`<div style="color:var(--red);padding:16px;text-align:center">⚠️ ${e.message}<br><br><button onclick="generateMultiDayPlan(${days})" style="padding:10px 20px;background:var(--green);color:#000;border:none;border-radius:10px;font-weight:700;cursor:pointer">Try Again</button></div>`;
   }
+  btn.disabled=false;
+  btn.textContent='📅 Generate '+days+'-Day Plan';
+}
 
-  btn.disabled = false;
-  btn.textContent = '📅 Generate '+days+'-Day Plan';
+// Log a specific day's meals to tracker
+function logDayMeals(dayNum){
+  const meals=(window._multiDayAllMeals||[]).filter(m=>m.day===dayNum);
+  if(!meals.length){ showToast('No meals for that day'); return; }
+  const catMap={Breakfast:'🌅 Breakfast',Lunch:'☀️ Lunch',Dinner:'🌙 Dinner',Snack:'🍿 Snack'};
+  meals.forEach(m=>{
+    addToLog({name:m.name,calories:m.cal,carbs:m.carbs,fat:m.fat,protein:m.protein,category:'Day Plan',keto:m.carbs<=15},catMap[m.mealType]||'🍽️ Other');
+  });
+  showToast('✅ Day '+(window._multiDayDays>3?['','Mon','Tue','Wed','Thu','Fri','Sat','Sun'][dayNum]||dayNum:dayNum)+' logged!');
+  setTimeout(()=>{const btn=document.querySelector('.nav-btn[onclick*="tracker"]');if(btn)switchSection('tracker',btn);},600);
+}
+
+// Schedule all days into calendar starting from tomorrow (or next Monday for 7-day)
+function scheduleMultiDayToCalendar(){
+  const allMeals=window._multiDayAllMeals;
+  const days=window._multiDayDays||3;
+  if(!allMeals||!allMeals.length){showToast('Generate a plan first');return;}
+
+  // Start from tomorrow for 3-day, next Monday for 5 or 7-day
+  const today=new Date();
+  let startDay=new Date(today);
+  if(days>=5){
+    const dow=today.getDay();
+    const daysUntilMon=dow===0?1:(8-dow)%7||7;
+    startDay=new Date(today);
+    startDay.setDate(today.getDate()+daysUntilMon);
+  } else {
+    startDay.setDate(today.getDate()+1);
+  }
+  startDay.setHours(0,0,0,0);
+
+  try{
+    const arch=JSON.parse(localStorage.getItem('kb_foodHistory')||'{}');
+    for(let d=1;d<=days;d++){
+      const day=new Date(startDay);
+      day.setDate(startDay.getDate()+(d-1));
+      const key=day.toDateString();
+      const dayMeals=allMeals.filter(m=>m.day===d).map(m=>({name:m.name,calories:m.cal,carbs:m.carbs,fat:m.fat,protein:m.protein}));
+      const existing=arch[key]||[];
+      const names=existing.map(e=>e.name);
+      arch[key]=existing.concat(dayMeals.filter(m=>!names.includes(m.name)));
+    }
+    localStorage.setItem('kb_foodHistory',JSON.stringify(arch));
+    const endDay=new Date(startDay); endDay.setDate(startDay.getDate()+days-1);
+    const fmt=d=>d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    showToast('📅 Scheduled '+fmt(startDay)+' – '+fmt(endDay)+'!');
+    setTimeout(()=>{
+      const btn=document.querySelector('.nav-btn[onclick*="calendar"]')||document.querySelector('.nav-btn[onclick*="journal"]');
+      if(btn){const sec=btn.getAttribute('onclick').match(/'(\w+)'/)?.[1];if(sec)switchSection(sec,btn);}
+    },800);
+  }catch(e){showToast('⚠️ Could not save to calendar');}
 }
 
 
