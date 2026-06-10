@@ -6915,64 +6915,79 @@ function startMealPrep(){
   const snackTags = [...document.querySelectorAll('#plannerSnackTags .chef-tag-active')]
     .map(b=>{ const spans=b.querySelectorAll('span'); return spans.length>1?spans[1].textContent.trim():b.textContent.trim(); })
     .join(', ');
-
-  // Always use the live macro goals, not defaults
   const goals = (window.macroGoals && window.macroGoals.cal > 0)
     ? window.macroGoals
     : (macroGoals && macroGoals.cal > 0 ? macroGoals : {cal:1800, carbs:25, protein:120, fat:130});
 
   result.innerHTML = '<div style="padding:24px;text-align:center"><div style="font-size:36px;margin-bottom:10px">🥡</div><div style="font-size:15px;font-weight:800;color:#fff">Building your bulk meal prep...</div><div style="font-size:12px;color:var(--muted);margin-top:6px">Cook once, eat for 5 days</div><div style="margin-top:16px;background:rgba(255,255,255,0.06);border-radius:10px;height:10px;overflow:hidden"><div id="ppbar" style="height:100%;width:5%;border-radius:10px;background:linear-gradient(90deg,#38bdf8,#00ff87);transition:width 0.6s"></div></div></div>';
-
   let pct = 5;
   const bar = setInterval(function(){
     pct = Math.min(pct + (88-pct)*0.07 + 0.5, 88);
-    const b = document.getElementById('ppbar');
-    if(b) b.style.width = pct + '%';
+    const b = document.getElementById('ppbar'); if(b) b.style.width = pct + '%';
   }, 500);
 
-  const prompt = `You are a keto meal prep expert. Create a simple bulk keto meal prep plan.
-The goal: cook ONE day of meals in bulk, enough portions for 5 days. Cook once on Sunday, eat the same meals Mon–Fri.
-Daily targets (MUST match these per serving): ${goals.cal} calories, ${goals.carbs}g net carbs max, ${goals.protein}g protein, ${goals.fat}g fat.
-${styleTags ? 'CUISINE STYLE — all meals must follow: '+styleTags+'.' : 'Use common keto staples.'}
+  // Snack calories = ~15% of daily, rest split ~25/35/40 B/L/D
+  const snackCal  = Math.round(goals.cal * 0.15);
+  const breakCal  = Math.round(goals.cal * 0.25);
+  const lunchCal  = Math.round(goals.cal * 0.25);
+  const dinnerCal = goals.cal - breakCal - lunchCal - snackCal;
+  const snackCarbs = Math.round(goals.carbs * 0.15);
+
+  const prompt = `You are a keto meal prep expert. Create a bulk keto meal prep plan.
+Cook once on Sunday, eat the same meals Mon–Fri.
+Daily targets per day: ${goals.cal} cal total, ${goals.carbs}g net carbs max, ${goals.protein}g protein, ${goals.fat}g fat.
+${styleTags ? 'CUISINE: all meals must be '+styleTags+' style.' : ''}
 ${snackTags ? 'Snack style: '+snackTags+'.' : ''}
-${ingredients ? 'Use these ingredients: '+ingredients+'.' : ''}
+${ingredients ? 'Use: '+ingredients+'.' : ''}
 
-Give exactly 3 meals (Breakfast, Lunch, Dinner) that are easy to batch cook for 5 days.
-Each meal must match the cuisine style above. All 3 meals together must add up to ~${goals.cal} calories, ~${goals.carbs}g carbs, ~${goals.protein}g protein per day.
+Give exactly 4 items: Breakfast (~${breakCal} cal), Lunch (~${lunchCal} cal), Dinner (~${dinnerCal} cal), Snack (~${snackCal} cal, ~${snackCarbs}g carbs).
+All 4 together must total ~${goals.cal} cal and ~${goals.carbs}g carbs.
+Each must match the cuisine style. Easy to batch cook for 5 days.
+Also estimate a TOTAL COST in USD to buy all ingredients for 5 days at a typical grocery store or Costco.
 
-For each meal respond in EXACTLY this format (no extra text):
+Respond in EXACTLY this format for each item:
 MEAL: Breakfast
-NAME: [meal name in the requested cuisine style]
-BATCH: [e.g. "Cook 10 eggs total for 5 days"]
-ING: [ingredient 1 (5-day qty)], [ingredient 2 (5-day qty)], [ingredient 3 (5-day qty)]
+NAME: [name]
+BATCH: [e.g. "Make 5 portions at once"]
+ING: [ingredient 1 with 5-day qty], [ingredient 2 with 5-day qty], [ingredient 3 with 5-day qty]
 STEPS: [step 1] | [step 2] | [step 3]
-CALS: [calories] | CARBS: [net carbs]g | PROT: [protein]g | FAT: [fat]g
+CALS: [cal] | CARBS: [carbs]g | PROT: [protein]g | FAT: [fat]g
+COST: $[estimated cost for 5 servings e.g. "$8.50"]
 
 MEAL: Lunch
-NAME: [meal name in the requested cuisine style]
-BATCH: [how much to batch cook for 5 days]
-ING: [ingredient 1 (5-day qty)], [ingredient 2 (5-day qty)], [ingredient 3 (5-day qty)]
+NAME: [name]
+BATCH: [batch note]
+ING: [ing1], [ing2], [ing3]
 STEPS: [step 1] | [step 2] | [step 3]
-CALS: [calories] | CARBS: [net carbs]g | PROT: [protein]g | FAT: [fat]g
+CALS: [cal] | CARBS: [carbs]g | PROT: [protein]g | FAT: [fat]g
+COST: $[cost]
 
 MEAL: Dinner
-NAME: [meal name in the requested cuisine style]
-BATCH: [how much to batch cook for 5 days]
-ING: [ingredient 1 (5-day qty)], [ingredient 2 (5-day qty)], [ingredient 3 (5-day qty)]
+NAME: [name]
+BATCH: [batch note]
+ING: [ing1], [ing2], [ing3]
 STEPS: [step 1] | [step 2] | [step 3]
-CALS: [calories] | CARBS: [net carbs]g | PROT: [protein]g | FAT: [fat]g
+CALS: [cal] | CARBS: [carbs]g | PROT: [protein]g | FAT: [fat]g
+COST: $[cost]
 
-SHOP: [bulk item 1], [bulk item 2], [bulk item 3], [bulk item 4], [bulk item 5], [bulk item 6]`;
+MEAL: Snack
+NAME: [name]
+BATCH: [batch note]
+ING: [ing1], [ing2], [ing3]
+STEPS: [step 1] | [step 2] | [step 3]
+CALS: [cal] | CARBS: [carbs]g | PROT: [protein]g | FAT: [fat]g
+COST: $[cost]
 
-  callAI(prompt, 1200).then(function(text){
+SHOP: [item 1], [item 2], [item 3], [item 4], [item 5], [item 6], [item 7]`;
+
+  callAI(prompt, 1600).then(function(text){
     clearInterval(bar);
-    const b = document.getElementById('ppbar');
-    if(b) b.style.width = '100%';
+    const b = document.getElementById('ppbar'); if(b) b.style.width = '100%';
 
-    // Parse meals
     const mealBlocks = text.split(/(?=MEAL:)/g).filter(s=>s.trim().startsWith('MEAL:'));
-    const mealIcon = {Breakfast:'🌅', Lunch:'☀️', Dinner:'🌙'};
-    const mealColor = {Breakfast:'rgba(255,140,66,0.08)', Lunch:'rgba(56,189,248,0.06)', Dinner:'rgba(181,123,238,0.07)'};
+    const mealIcon  = {Breakfast:'🌅', Lunch:'☀️', Dinner:'🌙', Snack:'🍿'};
+    const mealColor = {Breakfast:'rgba(255,140,66,0.08)', Lunch:'rgba(56,189,248,0.06)', Dinner:'rgba(181,123,238,0.07)', Snack:'rgba(0,230,118,0.06)'};
+    const getMealCat= {Breakfast:'🌅 Breakfast', Lunch:'☀️ Lunch', Dinner:'🌙 Dinner', Snack:'🍿 Snack'};
 
     let shopList = [];
     const shopMatch = text.match(/SHOP:\s*(.+)/i);
@@ -6980,24 +6995,27 @@ SHOP: [bulk item 1], [bulk item 2], [bulk item 3], [bulk item 4], [bulk item 5],
 
     const meals = mealBlocks.map(function(block){
       const lines = block.split('\n').map(l=>l.trim()).filter(Boolean);
-      const type = lines.find(l=>l.startsWith('MEAL:'))?.replace('MEAL:','').trim() || 'Meal';
-      const name = lines.find(l=>l.startsWith('NAME:'))?.replace('NAME:','').trim() || '';
-      const batch = lines.find(l=>l.startsWith('BATCH:'))?.replace('BATCH:','').trim() || '';
-      const ingLine = lines.find(l=>l.startsWith('ING:'))?.replace('ING:','').trim() || '';
-      const stepsLine = lines.find(l=>l.startsWith('STEPS:'))?.replace('STEPS:','').trim() || '';
-      const macroLine = lines.find(l=>l.startsWith('CALS:')) || '';
-      const calM = macroLine.match(/CALS:\s*(\d+)/i);
+      const type     = lines.find(l=>l.startsWith('MEAL:'))?.replace('MEAL:','').trim() || 'Meal';
+      const name     = lines.find(l=>l.startsWith('NAME:'))?.replace('NAME:','').trim() || '';
+      const batch    = lines.find(l=>l.startsWith('BATCH:'))?.replace('BATCH:','').trim() || '';
+      const ingLine  = lines.find(l=>l.startsWith('ING:'))?.replace('ING:','').trim() || '';
+      const stepsLine= lines.find(l=>l.startsWith('STEPS:'))?.replace('STEPS:','').trim() || '';
+      const macroLine= lines.find(l=>l.startsWith('CALS:')) || '';
+      const costLine = lines.find(l=>l.startsWith('COST:')) || '';
+      const calM  = macroLine.match(/CALS:\s*(\d+)/i);
       const carbM = macroLine.match(/CARBS:\s*(\d+)/i);
       const protM = macroLine.match(/PROT:\s*(\d+)/i);
-      const fatM = macroLine.match(/FAT:\s*(\d+)/i);
+      const fatM  = macroLine.match(/FAT:\s*(\d+)/i);
+      const costM = costLine.match(/\$[\d.]+/);
       return {
         type, name, batch,
         ingredients: ingLine.split(',').map(s=>s.trim()).filter(Boolean),
         steps: stepsLine.split('|').map(s=>s.trim()).filter(Boolean),
-        cal: calM?parseInt(calM[1]):0,
-        carbs: carbM?parseInt(carbM[1]):0,
-        prot: protM?parseInt(protM[1]):0,
-        fat: fatM?parseInt(fatM[1]):0
+        cal:   calM  ? parseInt(calM[1])  : 0,
+        carbs: carbM ? parseInt(carbM[1]) : 0,
+        prot:  protM ? parseInt(protM[1]) : 0,
+        fat:   fatM  ? parseInt(fatM[1])  : 0,
+        cost:  costM ? costM[0] : null
       };
     }).filter(m=>m.name);
 
@@ -7006,33 +7024,57 @@ SHOP: [bulk item 1], [bulk item 2], [bulk item 3], [bulk item 4], [bulk item 5],
       return;
     }
 
+    // Store meals for tracker/calendar actions
+    window._prepMeals = meals;
+
     const allIngs = meals.reduce(function(a,m){ return a.concat(m.ingredients); }, []);
     const shopIngs = shopList.length ? shopList : [...new Set(allIngs)];
 
+    // Total cost estimate
+    const totalCost = meals.reduce(function(sum,m){
+      if(!m.cost) return sum;
+      return sum + parseFloat(m.cost.replace('$',''));
+    }, 0);
+    const totalCostStr = totalCost > 0 ? '$'+totalCost.toFixed(2) : null;
+
+    // Day totals
+    const dayTotals = meals.reduce(function(a,m){ return {cal:a.cal+m.cal, carbs:a.carbs+m.carbs, prot:a.prot+m.prot, fat:a.fat+m.fat}; }, {cal:0,carbs:0,prot:0,fat:0});
+
     let html = '';
 
-    // Header
-    html += '<div style="background:rgba(56,189,248,0.07);border:1px solid rgba(56,189,248,0.18);border-radius:14px;padding:14px;margin-bottom:14px">'
+    // Header card
+    html += '<div style="background:rgba(56,189,248,0.07);border:1px solid rgba(56,189,248,0.18);border-radius:14px;padding:14px;margin-bottom:12px">'
       + '<div style="font-size:12px;font-weight:700;color:#38bdf8;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">🥡 5-Day Bulk Meal Prep</div>'
-      + (styleTags?'<div style="font-size:12px;color:#38bdf8;margin-bottom:4px">🍴 Cuisine: '+styleTags+'</div>':'')
-      + '<div style="font-size:12px;color:var(--muted);margin-bottom:6px">🎯 Daily targets: <span style="color:#fff">'+goals.cal+' kcal · '+goals.carbs+'g carbs · '+goals.protein+'g protein · '+goals.fat+'g fat</span></div>'
-      + '<div style="font-size:13px;color:#c0d0e0">Cook once on Sunday. Each recipe makes <strong style="color:#fff">5 portions</strong> — same meals Mon–Fri.</div>'
+      + (styleTags?'<div style="font-size:12px;color:#38bdf8;margin-bottom:4px">🍴 '+styleTags+'</div>':'')
+      + '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">🎯 <span style="color:#fff">'+dayTotals.cal+' kcal · '+dayTotals.carbs+'g carbs · '+dayTotals.prot+'g protein · '+dayTotals.fat+'g fat</span> per day</div>'
+      + (totalCostStr ? '<div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:8px">💰 Est. total cost: '+totalCostStr+' for 5 days (≈ '+'$'+(totalCost/5).toFixed(2)+'/day)</div>' : '')
+      + '<div style="font-size:12px;color:#c0d0e0">Cook once on Sunday. Each recipe makes 5 portions — same meals Mon–Fri.</div>'
       + '</div>';
 
-    // Grocery button
-    html += '<button onclick="addMealToShop('+JSON.stringify(shopIngs).replace(/"/g,"'")+',\'5-Day Meal Prep\')" style="width:100%;padding:12px;background:linear-gradient(135deg,#38bdf8,#0096c7);color:#000;border:none;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;margin-bottom:14px">🛒 Add All to Shopping List</button>';
+    // Action buttons
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">'
+      + '<button onclick="addPrepToTracker()" style="padding:11px;background:linear-gradient(135deg,rgba(0,230,118,0.15),rgba(0,200,83,0.08));border:1.5px solid rgba(0,230,118,0.35);border-radius:12px;color:var(--green);font-weight:800;font-size:13px;cursor:pointer">📊 Log Today</button>'
+      + '<button onclick="schedulePrepWeek()" style="padding:11px;background:linear-gradient(135deg,rgba(181,123,255,0.15),rgba(130,80,255,0.08));border:1.5px solid rgba(181,123,255,0.35);border-radius:12px;color:var(--purple);font-weight:800;font-size:13px;cursor:pointer">📅 Add to Calendar</button>'
+      + '</div>'
+      + '<button onclick="addMealToShop('+JSON.stringify(shopIngs).replace(/"/g,"'")+',\'5-Day Meal Prep\')" style="width:100%;padding:11px;background:linear-gradient(135deg,#38bdf8,#0096c7);color:#000;border:none;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer;margin-bottom:14px">🛒 Add All to Shopping List</button>';
 
     // Meal cards
-    meals.forEach(function(m){
+    meals.forEach(function(m, mi){
       const color = mealColor[m.type] || 'rgba(255,255,255,0.03)';
-      const icon = mealIcon[m.type] || '🍽️';
+      const icon  = mealIcon[m.type]  || '🍽️';
       html += '<div style="background:'+color+';border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;margin-bottom:12px">'
-        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-        + '<div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.8px">'+icon+' '+m.type+'</div>'
-        + '<div style="font-size:16px;font-weight:800">'+m.name+'</div>'
-        + (m.batch?'<div style="font-size:11px;color:#38bdf8;margin-top:2px">📦 '+m.batch+'</div>':'')+'</div>'
-        + '<div style="text-align:right"><div style="font-size:15px;font-weight:800;color:var(--orange)">'+m.cal+' kcal</div>'
-        + '<div style="font-size:10px;color:var(--muted)">per serving</div></div></div>'
+        + '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">'
+        + '<div style="flex:1">'
+        + '<div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.8px">'+icon+' '+m.type+'</div>'
+        + '<div style="font-size:16px;font-weight:800;margin-top:2px">'+m.name+'</div>'
+        + (m.batch ? '<div style="font-size:11px;color:#38bdf8;margin-top:2px">📦 '+m.batch+'</div>' : '')
+        + (m.cost  ? '<div style="font-size:11px;color:var(--green);margin-top:2px">💰 '+m.cost+' for 5 days</div>' : '')
+        + '</div>'
+        + '<div style="text-align:right;flex-shrink:0;margin-left:10px">'
+        + '<div style="font-size:15px;font-weight:800;color:var(--orange)">'+m.cal+' kcal</div>'
+        + '<div style="font-size:10px;color:var(--muted)">per serving</div>'
+        + '<button onclick="addSinglePrepMeal('+mi+')" style="margin-top:6px;padding:5px 9px;background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.25);border-radius:8px;color:var(--green);font-size:10px;font-weight:700;cursor:pointer">+ Track</button>'
+        + '</div></div>'
         + '<div style="display:flex;gap:6px;margin-bottom:10px">'
         + '<div style="flex:1;text-align:center;padding:5px;background:rgba(255,77,109,0.08);border-radius:8px"><div style="font-size:12px;font-weight:700;color:var(--red)">'+m.carbs+'g</div><div style="font-size:9px;color:var(--muted)">carbs</div></div>'
         + '<div style="flex:1;text-align:center;padding:5px;background:rgba(76,201,240,0.08);border-radius:8px"><div style="font-size:12px;font-weight:700;color:var(--blue)">'+m.prot+'g</div><div style="font-size:9px;color:var(--muted)">protein</div></div>'
@@ -7056,6 +7098,80 @@ SHOP: [bulk item 1], [bulk item 2], [bulk item 3], [bulk item 4], [bulk item 5],
     clearInterval(bar);
     result.innerHTML = '<div style="color:var(--red);text-align:center;padding:16px">'+e.message+'<br><br><button onclick="startMealPrep()" style="padding:10px 20px;background:var(--green);color:#000;border:none;border-radius:10px;font-weight:700;cursor:pointer">Try Again</button></div>';
   });
+}
+
+// Log all prep meals to today's tracker
+function addPrepToTracker(){
+  const meals = window._prepMeals;
+  if(!meals||!meals.length){ showToast('Generate a plan first'); return; }
+  const catMap = {Breakfast:'🌅 Breakfast', Lunch:'☀️ Lunch', Dinner:'🌙 Dinner', Snack:'🍿 Snack'};
+  meals.forEach(function(m){
+    addToLog({
+      name: m.name, calories: m.cal, carbs: m.carbs,
+      fat: m.fat, protein: m.prot, category:'Meal Prep', keto: m.carbs<=15
+    }, catMap[m.type]||'🍽️ Other');
+  });
+  showToast('✅ All '+meals.length+' meals logged to today!');
+  setTimeout(function(){ const btn=document.querySelector('.nav-btn[onclick*="tracker"]'); if(btn) switchSection('tracker',btn); }, 600);
+}
+
+// Log a single prep meal to today
+function addSinglePrepMeal(idx){
+  const meals = window._prepMeals;
+  if(!meals||!meals[idx]) return;
+  const m = meals[idx];
+  const catMap = {Breakfast:'🌅 Breakfast', Lunch:'☀️ Lunch', Dinner:'🌙 Dinner', Snack:'🍿 Snack'};
+  addToLog({
+    name: m.name, calories: m.cal, carbs: m.carbs,
+    fat: m.fat, protein: m.prot, category:'Meal Prep', keto: m.carbs<=15
+  }, catMap[m.type]||'🍽️ Other');
+  showToast('✅ '+m.name+' logged!');
+}
+
+// Schedule all prep meals into Mon–Fri of the next working week in the food history
+function schedulePrepWeek(){
+  const meals = window._prepMeals;
+  if(!meals||!meals.length){ showToast('Generate a plan first'); return; }
+
+  // Find the next Monday
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0=Sun
+  const daysUntilMon = dayOfWeek === 0 ? 1 : (8 - dayOfWeek) % 7 || 7;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + daysUntilMon);
+  monday.setHours(0,0,0,0);
+
+  try {
+    const arch = JSON.parse(localStorage.getItem('kb_foodHistory')||'{}');
+    const mealEntries = meals.map(function(m){
+      return {name:m.name, calories:m.cal, carbs:m.carbs, fat:m.fat, protein:m.prot};
+    });
+    for(let d=0; d<5; d++){
+      const day = new Date(monday);
+      day.setDate(monday.getDate() + d);
+      const key = day.toDateString();
+      // Merge with any existing entries (don't overwrite journal/weight data)
+      const existing = arch[key] || [];
+      // Only add if not already there
+      const names = existing.map(function(e){ return e.name; });
+      const toAdd = mealEntries.filter(function(e){ return !names.includes(e.name); });
+      arch[key] = existing.concat(toAdd);
+    }
+    localStorage.setItem('kb_foodHistory', JSON.stringify(arch));
+
+    // Show confirmation with dates
+    const endDay = new Date(monday); endDay.setDate(monday.getDate()+4);
+    const fmt = function(d){ return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); };
+    showToast('📅 Scheduled '+fmt(monday)+' – '+fmt(endDay)+'!');
+
+    // Switch to calendar so user can see it
+    setTimeout(function(){
+      const btn = document.querySelector('.nav-btn[onclick*="calendar"]')||document.querySelector('.nav-btn[onclick*="journal"]');
+      if(btn) switchSection(btn.getAttribute('onclick').match(/'(\w+)'/)?.[1]||'journal', btn);
+    }, 800);
+  } catch(e){
+    showToast('⚠️ Could not save to calendar');
+  }
 }
 
 async function generateDayPlan(){
