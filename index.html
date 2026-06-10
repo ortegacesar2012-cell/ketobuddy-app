@@ -6909,7 +6909,17 @@ async function toggleMdMealSteps(id, mealName, ingredients){
 function startMealPrep(){
   const result = document.getElementById('plannerResult');
   const ingredients = document.getElementById('plannerIngredients').value.trim();
-  const goals = macroGoals || {cal:1800, carbs:25, protein:120, fat:130};
+  const styleTags = [...document.querySelectorAll('#plannerStyleTags .chef-tag-active')]
+    .map(b=>{ const spans=b.querySelectorAll('span'); return spans.length>1?spans[1].textContent.trim():b.textContent.trim(); })
+    .join(', ');
+  const snackTags = [...document.querySelectorAll('#plannerSnackTags .chef-tag-active')]
+    .map(b=>{ const spans=b.querySelectorAll('span'); return spans.length>1?spans[1].textContent.trim():b.textContent.trim(); })
+    .join(', ');
+
+  // Always use the live macro goals, not defaults
+  const goals = (window.macroGoals && window.macroGoals.cal > 0)
+    ? window.macroGoals
+    : (macroGoals && macroGoals.cal > 0 ? macroGoals : {cal:1800, carbs:25, protein:120, fat:130});
 
   result.innerHTML = '<div style="padding:24px;text-align:center"><div style="font-size:36px;margin-bottom:10px">🥡</div><div style="font-size:15px;font-weight:800;color:#fff">Building your bulk meal prep...</div><div style="font-size:12px;color:var(--muted);margin-top:6px">Cook once, eat for 5 days</div><div style="margin-top:16px;background:rgba(255,255,255,0.06);border-radius:10px;height:10px;overflow:hidden"><div id="ppbar" style="height:100%;width:5%;border-radius:10px;background:linear-gradient(90deg,#38bdf8,#00ff87);transition:width 0.6s"></div></div></div>';
 
@@ -6920,44 +6930,39 @@ function startMealPrep(){
     if(b) b.style.width = pct + '%';
   }, 500);
 
-  // Simple, reliable prompt: one day of meals bulk-cooked for 5 days
   const prompt = `You are a keto meal prep expert. Create a simple bulk keto meal prep plan.
-The goal: cook ONE day of meals in bulk, enough portions for 5 days.
-Daily targets: ${goals.cal} calories, ${goals.carbs}g net carbs max, ${goals.protein}g protein.
-${ingredients ? 'Use these ingredients: '+ingredients : 'Use common keto staples (chicken, beef, eggs, avocado, cheese, veggies).'}
+The goal: cook ONE day of meals in bulk, enough portions for 5 days. Cook once on Sunday, eat the same meals Mon–Fri.
+Daily targets (MUST match these per serving): ${goals.cal} calories, ${goals.carbs}g net carbs max, ${goals.protein}g protein, ${goals.fat}g fat.
+${styleTags ? 'CUISINE STYLE — all meals must follow: '+styleTags+'.' : 'Use common keto staples.'}
+${snackTags ? 'Snack style: '+snackTags+'.' : ''}
+${ingredients ? 'Use these ingredients: '+ingredients+'.' : ''}
 
-Give exactly 3 meals (Breakfast, Lunch, Dinner) that are EASY TO BATCH COOK for 5 days.
-For each meal give:
-- A simple name
-- How much to cook for 5 days (e.g. "Cook 10 eggs total")
-- 3 ingredients with bulk quantities for 5 portions
-- 3 short prep steps
+Give exactly 3 meals (Breakfast, Lunch, Dinner) that are easy to batch cook for 5 days.
+Each meal must match the cuisine style above. All 3 meals together must add up to ~${goals.cal} calories, ~${goals.carbs}g carbs, ~${goals.protein}g protein per day.
 
-Then give a SHOP list of 6-8 bulk ingredients to buy.
-
-Respond in EXACTLY this format:
+For each meal respond in EXACTLY this format (no extra text):
 MEAL: Breakfast
-NAME: [meal name]
-BATCH: [how much to cook for 5 days]
+NAME: [meal name in the requested cuisine style]
+BATCH: [e.g. "Cook 10 eggs total for 5 days"]
 ING: [ingredient 1 (5-day qty)], [ingredient 2 (5-day qty)], [ingredient 3 (5-day qty)]
 STEPS: [step 1] | [step 2] | [step 3]
-CALS: [per serving calories] | CARBS: [net carbs]g | PROT: [protein]g | FAT: [fat]g
+CALS: [calories] | CARBS: [net carbs]g | PROT: [protein]g | FAT: [fat]g
 
 MEAL: Lunch
-NAME: [meal name]
-BATCH: [how much to cook for 5 days]
+NAME: [meal name in the requested cuisine style]
+BATCH: [how much to batch cook for 5 days]
 ING: [ingredient 1 (5-day qty)], [ingredient 2 (5-day qty)], [ingredient 3 (5-day qty)]
 STEPS: [step 1] | [step 2] | [step 3]
-CALS: [per serving calories] | CARBS: [net carbs]g | PROT: [protein]g | FAT: [fat]g
+CALS: [calories] | CARBS: [net carbs]g | PROT: [protein]g | FAT: [fat]g
 
 MEAL: Dinner
-NAME: [meal name]
-BATCH: [how much to cook for 5 days]
+NAME: [meal name in the requested cuisine style]
+BATCH: [how much to batch cook for 5 days]
 ING: [ingredient 1 (5-day qty)], [ingredient 2 (5-day qty)], [ingredient 3 (5-day qty)]
 STEPS: [step 1] | [step 2] | [step 3]
-CALS: [per serving calories] | CARBS: [net carbs]g | PROT: [protein]g | FAT: [fat]g
+CALS: [calories] | CARBS: [net carbs]g | PROT: [protein]g | FAT: [fat]g
 
-SHOP: [item 1], [item 2], [item 3], [item 4], [item 5], [item 6]`;
+SHOP: [bulk item 1], [bulk item 2], [bulk item 3], [bulk item 4], [bulk item 5], [bulk item 6]`;
 
   callAI(prompt, 1200).then(function(text){
     clearInterval(bar);
@@ -7008,8 +7013,10 @@ SHOP: [item 1], [item 2], [item 3], [item 4], [item 5], [item 6]`;
 
     // Header
     html += '<div style="background:rgba(56,189,248,0.07);border:1px solid rgba(56,189,248,0.18);border-radius:14px;padding:14px;margin-bottom:14px">'
-      + '<div style="font-size:12px;font-weight:700;color:#38bdf8;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">🥡 5-Day Bulk Meal Prep</div>'
-      + '<div style="font-size:13px;color:#c0d0e0">Cook once on Sunday. Each recipe below makes <strong style="color:#fff">5 portions</strong>. Same meals every day — simple, cheap, keto.</div>'
+      + '<div style="font-size:12px;font-weight:700;color:#38bdf8;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">🥡 5-Day Bulk Meal Prep</div>'
+      + (styleTags?'<div style="font-size:12px;color:#38bdf8;margin-bottom:4px">🍴 Cuisine: '+styleTags+'</div>':'')
+      + '<div style="font-size:12px;color:var(--muted);margin-bottom:6px">🎯 Daily targets: <span style="color:#fff">'+goals.cal+' kcal · '+goals.carbs+'g carbs · '+goals.protein+'g protein · '+goals.fat+'g fat</span></div>'
+      + '<div style="font-size:13px;color:#c0d0e0">Cook once on Sunday. Each recipe makes <strong style="color:#fff">5 portions</strong> — same meals Mon–Fri.</div>'
       + '</div>';
 
     // Grocery button
