@@ -1166,16 +1166,6 @@ if(window.caches){
       <div id="favsPanelList"></div>
     </div>
 
-
-    <!-- FAVORITES PANEL -->
-    <div id="chef-favs-panel" style="display:none">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div style="font-size:14px;font-weight:700">⭐ Saved Meals & Snacks</div>
-        <button onclick="clearAllFavorites()" style="font-size:11px;color:#ff4d6d;background:none;border:none;cursor:pointer">Clear All</button>
-      </div>
-      <div id="favsPanelList"></div>
-    </div>
-
     <!-- DAY PLAN PANEL -->
     <div id="chef-plan-panel" style="display:none">
       <!-- Daily goal bar -->
@@ -1269,9 +1259,9 @@ if(window.caches){
       <div style="margin-bottom:20px">
         <div class="snack-input-label">🥑 Carb limit?</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
-          <button class="snack-tag-btn" id="plan-strict" onclick="selectPlanCarbs(this,'strict')">🔒 Strict<br><span style="font-size:10px;color:var(--muted)">&lt;20g/day</span></button>
-          <button class="snack-tag-btn active" id="plan-moderate" onclick="selectPlanCarbs(this,'moderate')">⚖️ Standard<br><span style="font-size:10px;color:var(--muted)">&lt;50g/day</span></button>
-          <button class="snack-tag-btn" id="plan-flexible" onclick="selectPlanCarbs(this,'flexible')">🔓 Relaxed<br><span style="font-size:10px;color:var(--muted)">&lt;75g/day</span></button>
+          <button class="snack-tag-btn" id="pcarb-strict" onclick="selectPlanCarbs(this,'strict')">🔒 Strict<br><span style="font-size:10px;color:var(--muted)">&lt;20g/day</span></button>
+          <button class="snack-tag-btn active" id="pcarb-moderate" onclick="selectPlanCarbs(this,'moderate')">⚖️ Standard<br><span style="font-size:10px;color:var(--muted)">&lt;50g/day</span></button>
+          <button class="snack-tag-btn" id="pcarb-flexible" onclick="selectPlanCarbs(this,'flexible')">🔓 Relaxed<br><span style="font-size:10px;color:var(--muted)">&lt;75g/day</span></button>
         </div>
       </div>
 
@@ -1286,85 +1276,13 @@ if(window.caches){
         </div>
       </div>
 
-      <button id="plannerBtn" onclick="generateDayPlan()" style="width:100%;padding:18px;background:linear-gradient(135deg,#00ff87,#00c853);color:#000;border:none;border-radius:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;cursor:pointer;margin-bottom:8px;box-shadow:0 6px 24px rgba(0,255,135,0.35)">
+      <button id="plannerBtn" onclick="generateDayPlan()" style="width:100%;padding:16px;background:linear-gradient(135deg,#00ff87,#00c853);color:#000;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:17px;font-weight:800;cursor:pointer;margin-bottom:8px;box-shadow:0 6px 24px rgba(0,255,135,0.35)">
         📅 Generate My Day Plan
+      </button>
+      <button onclick="startMealPrep()" style="width:100%;padding:14px;background:linear-gradient(135deg,rgba(56,189,248,0.15),rgba(0,150,199,0.08));border:1.5px solid rgba(56,189,248,0.35);border-radius:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#38bdf8;cursor:pointer;margin-bottom:8px">
+        🥡 5-Day Meal Prep — Save $$$
       </button>
       <div style="text-align:center;font-size:11px;color:var(--muted);margin-bottom:16px">Builds Breakfast · Lunch · Dinner · Snacks to hit your goals · 7-day plan is Pro only</div>
-
-      <!-- Cuisine / Diet style -->
-      <div style="margin-bottom:14px">
-        <div class="snack-input-label">🌍 Diet &amp; cuisine style?</div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="plannerStyleTags">
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍔</span><span>American</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥩</span><span>BBQ</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐄</span><span>Carnivore</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇲🇽</span><span>Mexican</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇧🇷</span><span>Brazilian</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍜</span><span>Asian</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇯🇵</span><span>Japanese</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇰🇷</span><span>Korean</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇨🇳</span><span>Chinese</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇮🇹</span><span>Italian</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🇬🇷</span><span>Greek</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🫒</span><span>Mediterr.</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌶️</span><span>Spicy</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🐟</span><span>Seafood</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🌱</span><span>Veggie</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>💪</span><span>High Protein</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍳</span><span>Simple</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥗</span><span>Fresh</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍕</span><span>Comfort</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧁</span><span>Dessert</span></button>
-        </div>
-      </div>
-
-      <!-- Snack style -->
-      <div style="margin-bottom:14px">
-        <div class="snack-input-label">🍿 Snack style?</div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="plannerSnackTags">
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧀</span><span>Savory</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍫</span><span>Sweet</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>💪</span><span>Protein</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>⚡</span><span>Quick</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥜</span><span>Nutty</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🍦</span><span>No-Cook</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🥚</span><span>Egg-Based</span></button>
-          <button class="chef-tag-btn" onclick="toggleChefTag(this)"><span>🧁</span><span>Dessert</span></button>
-        </div>
-      </div>
-
-      <!-- Meal count -->
-      <div style="margin-bottom:14px">
-        <div class="snack-input-label">🍽️ How many meals?</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
-          <button class="snack-tag-btn" id="plan-meals-3" onclick="selectPlanMeals(this,3)">3 meals<br><span style="font-size:10px;color:var(--muted)">B · L · D</span></button>
-          <button class="snack-tag-btn active" id="plan-meals-5" onclick="selectPlanMeals(this,5)">3 + 2 snacks<br><span style="font-size:10px;color:var(--muted)">B · L · D + snacks</span></button>
-          <button class="snack-tag-btn" id="plan-meals-6" onclick="selectPlanMeals(this,6)">6 small<br><span style="font-size:10px;color:var(--muted)">every 2-3 hrs</span></button>
-        </div>
-      </div>
-
-      <!-- Plan type -->
-      <div style="margin-bottom:16px">
-        <div class="snack-input-label">📆 Plan type?</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <button class="snack-tag-btn active" id="plan-type-day" onclick="selectPlanType(this,'day')">📅 Day Plan<br><span style="font-size:10px;color:var(--muted)">One day · hit your goals</span></button>
-          <button class="snack-tag-btn" id="plan-type-week" onclick="selectPlanType(this,'week')">🥡 Meal Prep<br><span style="font-size:10px;color:var(--muted)">5 days · bulk · save $$</span></button>
-        </div>
-      </div>
-
-      <!-- Carb strictness -->
-      <div style="margin-bottom:20px">
-        <div class="snack-input-label">🥑 Carb limit?</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
-          <button class="snack-tag-btn" id="plan-strict" onclick="selectPlanCarbs(this,'strict')">🔒 Strict<br><span style="font-size:10px;color:var(--muted)">&lt;20g/day</span></button>
-          <button class="snack-tag-btn active" id="plan-moderate" onclick="selectPlanCarbs(this,'moderate')">⚖️ Standard<br><span style="font-size:10px;color:var(--muted)">&lt;50g/day</span></button>
-          <button class="snack-tag-btn" id="plan-flexible" onclick="selectPlanCarbs(this,'flexible')">🔓 Relaxed<br><span style="font-size:10px;color:var(--muted)">&lt;75g/day</span></button>
-        </div>
-      </div>
-
-      <button id="plannerBtn" onclick="runPlan()" style="width:100%;padding:18px;background:linear-gradient(135deg,#00ff87,#00c853);color:#000;border:none;border-radius:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;cursor:pointer;margin-bottom:8px;box-shadow:0 6px 24px rgba(0,255,135,0.35)">
-        📅 Generate My Day Plan
-      </button>
 
       <div id="plannerResult" style="padding-bottom:20px"></div>
     </div>
@@ -3027,8 +2945,8 @@ function toggleLowCal(){
   showToast(lowCalMode?'🥗 Low calorie mode ON':'Low calorie mode off');
 }
 function selectCarbLimit(el,val){
-  // Clear ALL carb-related buttons across the page
-  document.querySelectorAll('[id^=carb-],[id=plan-strict],[id=plan-moderate],[id=plan-flexible]').forEach(b=>b.classList.remove('active'));
+  // Clear only AI Chef carb buttons (not planner buttons)
+  document.querySelectorAll('[id^=carb-]').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   selectedCarbLimit=val;
 }
@@ -3097,9 +3015,14 @@ function setChefMode(mode, btn){
   document.getElementById('chef-favs-panel').style.display=isFavs?'block':'none';
   document.getElementById('chef-plan-panel').style.display=isPlan?'block':'none';
   document.getElementById('snackResult').innerHTML='';
-  if(isPlan) initPlannerGoalBar();
+  if(isPlan){
+    const el=document.getElementById('plannerGoalText');
+    if(el&&macroGoals&&macroGoals.cal){
+      el.innerHTML='<span style="color:var(--orange)">🔥 '+macroGoals.cal+' kcal</span> · <span style="color:var(--red)">🥑 '+macroGoals.carbs+'g carbs</span> · <span style="color:var(--blue)">💪 '+macroGoals.protein+'g protein</span> · <span style="color:var(--yellow)">🧈 '+macroGoals.fat+'g fat</span>';
+    } else if(el) el.textContent='Complete onboarding to set your goals';
+  }
 
-  if(isNormal){
+  if(!isFavs){
     document.getElementById('chef-carb-label').textContent=mode==='meal'?'Max carbs per meal?':'Max carbs per snack?';
     document.getElementById('snackBtn').textContent=mode==='meal'?'🤖 Generate Meal Ideas':'🤖 Generate Snack Ideas';
     document.getElementById('chef-ing-label').textContent=mode==='meal'?'What ingredients do you have?':'What do you have available?';
@@ -3108,7 +3031,7 @@ function setChefMode(mode, btn){
     document.querySelectorAll('.chef-tag-active').forEach(t=>t.classList.remove('chef-tag-active'));
     document.getElementById('snackIngredients').value='';
     const ss=document.getElementById('chefSpecificSearch');if(ss)ss.value='';
-  } else {
+  } else if(isFavs) {
     renderFavsPanel();
   }
   document.querySelectorAll('#sec-snack .inner-tab').forEach(t=>t.classList.remove('active'));
@@ -6772,7 +6695,18 @@ function deleteFavMeal(id){
 
 
 // ===== AI MEAL PLANNER =====
+
 let plannerCarbMode = 'moderate';
+function selectPlanCarbs(btn, mode){
+  plannerCarbMode = mode;
+  ['pcarb-strict','pcarb-moderate','pcarb-flexible'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.remove('active');
+  });
+  btn.classList.add('active');
+}
+
+
 
 let plannerMealCount = 5;
 
@@ -6787,6 +6721,15 @@ function selectPlanMeals(btn, count){
 
 
 let plannerDays = 1;
+
+function selectPlanDays(btn, days){
+  plannerDays = days;
+  ['pdays-1','pdays-3','pdays-5','pdays-7'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.remove('active');
+  });
+  btn.classList.add('active');
+}
 
 async function generateMultiDayPlan(days){
   const btn = document.getElementById('plannerBtn');
@@ -6917,81 +6860,63 @@ D[day number] [Breakfast|Lunch|Dinner|Snack]: [Meal Name] | [cal]cal [carb]g C [
 
 
 
-
-let _planType = 'day';
-function selectPlanType(btn, type){
-  _planType = type;
-  ['plan-type-day','plan-type-week'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});
-  btn.classList.add('active');
-  const pb = document.getElementById('plannerBtn');
-  if(pb) pb.textContent = type==='week' ? '🥡 Generate 5-Day Meal Prep' : '📅 Generate My Day Plan';
-}
-
-function runPlan(){
-  if(_planType === 'week') startPlan('week');
-  else generateDayPlan();
-}
-
-function startPlan(type){
+function startMealPrep(){
   const result = document.getElementById('plannerResult');
   const ingredients = document.getElementById('plannerIngredients').value.trim();
   const styleTags = [...document.querySelectorAll('#plannerStyleTags .chef-tag-active')]
     .map(b=>b.querySelectorAll('span')[1]?.textContent||'').join(', ');
   const goals = macroGoals || {cal:1800,carbs:25,protein:120,fat:130};
 
-  if(type==='day'){ generateDayPlan(); return; }
+  result.innerHTML = '<div id="pp" style="padding:20px"><div style="text-align:center;margin-bottom:16px"><div style="font-size:36px;margin-bottom:8px">🥡</div><div style="font-size:15px;font-weight:800;color:#fff" id="ppmsg">Building your 5-day meal prep...</div><div style="font-size:12px;color:var(--muted);margin-top:4px">Same meals repeat to save money</div></div><div style="background:rgba(255,255,255,0.06);border-radius:10px;height:12px;overflow:hidden;margin-bottom:6px"><div id="ppbar" style="height:100%;width:3%;border-radius:10px;background:linear-gradient(90deg,#38bdf8,#00ff87);transition:width 0.8s;box-shadow:0 0 12px rgba(56,189,248,0.4)"></div></div><div style="text-align:center;font-size:11px;color:var(--muted)" id="pppct">3%</div></div>';
 
-  // MEAL PREP 5 days
-  result.innerHTML = '<div id="planProgress" style="padding:20px"><div style="text-align:center;margin-bottom:16px"><div style="font-size:36px;margin-bottom:8px">🥡</div><div style="font-size:16px;font-weight:800;color:#fff" id="planProgressMsg">Building your meal prep plan...</div><div style="font-size:12px;color:var(--muted);margin-top:4px">Optimized for bulk shopping & saving money</div></div><div style="background:rgba(255,255,255,0.06);border-radius:10px;height:12px;overflow:hidden;margin-bottom:8px"><div id="planProgressBar" style="height:100%;width:3%;border-radius:10px;background:linear-gradient(90deg,#38bdf8,#00ff87);transition:width 0.8s;box-shadow:0 0 12px rgba(56,189,248,0.4)"></div></div><div style="text-align:center;font-size:11px;color:var(--muted)" id="planProgressPct">3%</div></div>';
-
-  let pct=3;
-  const msgs=['Finding bulk proteins...','Planning veggie batches...','Calculating portions...','Optimizing grocery list...','Almost done...'];
-  let mi=0;
+  let pct=3,mi=0;
+  const msgs=['Finding bulk proteins...','Planning veggie batches...','Calculating portions...','Building grocery list...','Almost done...'];
   const bar=setInterval(function(){
     pct=Math.min(pct+(88-pct)*0.06+0.4,90);
-    const b=document.getElementById('planProgressBar'),p=document.getElementById('planProgressPct'),m=document.getElementById('planProgressMsg');
+    const b=document.getElementById('ppbar'),p=document.getElementById('pppct'),m=document.getElementById('ppmsg');
     if(b)b.style.width=pct+'%';if(p)p.textContent=Math.round(pct)+'%';
-    if(m&&pct>mi*18+10){m.textContent=msgs[mi];mi=Math.min(mi+1,msgs.length-1);}
+    if(m&&pct>mi*18+10){m.textContent=msgs[mi];mi=Math.min(mi+1,4);}
   },600);
 
-  const prepPromptParts = ['Create a 5-day keto meal prep plan. Daily: '+goals.cal+'cal, '+goals.carbs+'g carbs, '+goals.protein+'g protein.'];
-  if(ingredients) prepPromptParts.push('Use: '+ingredients);
-  if(styleTags) prepPromptParts.push('Style: '+styleTags);
-  prepPromptParts.push('Meal prep style - same meals can repeat, bulk cook Sunday to save money.');
-  prepPromptParts.push('Format: PREP: [tip] then D1-D5 Breakfast/Lunch/Dinner: [name] | [cal]cal [carb]g C [prot]g P [fat]g F then SHOP: [ingredients]');
-  const prompt = prepPromptParts.join(' ');
+  const parts=['Create a 5-day keto meal prep plan for one person.'];
+  parts.push('Daily goals: '+goals.cal+' calories, '+goals.carbs+'g net carbs, '+goals.protein+'g protein.');
+  if(ingredients) parts.push('Use these ingredients: '+ingredients);
+  if(styleTags) parts.push('Cuisine style: '+styleTags);
+  parts.push('MEAL PREP RULES: Same meals CAN repeat across days to reduce waste and save money at Costco. Pick 2-3 proteins to batch cook. Keep it simple and practical.');
+  parts.push('Format: PREP: [Sunday batch cooking tips] then for each day: D1 Breakfast: [name] | [cal]cal [carb]g C [prot]g P [fat]g F then at end: SHOP: [bulk item 1, bulk item 2, ...]');
+  const prompt = parts.join(' ');
 
   callAI(prompt,1500).then(function(text){
     clearInterval(bar);
-    const b=document.getElementById('planProgressBar');if(b)b.style.width='100%';
-    let prepTip='',shopList=[];
-    const dayBlocks={};
+    var b=document.getElementById('ppbar');if(b)b.style.width='100%';
+    var prepTip='',shopList=[];
+    var dayBlocks={};
     text.split(/\r?\n/).forEach(function(line){
       line=line.trim();
       if(line.startsWith('PREP:')) prepTip=line.replace('PREP:','').trim();
       else if(line.startsWith('SHOP:')) shopList=line.replace('SHOP:','').split(',').map(function(s){return s.trim();}).filter(Boolean);
       else{
-        const m=line.match(/^D(\d+)\s+(Breakfast|Lunch|Dinner|Snack):\s*(.+?)\s*\|\s*(\d+)cal\s+(\d+)g\s*C\s+(\d+)g\s*P\s+(\d+)g\s*F/i);
-        if(m){const d=parseInt(m[1]),mt=m[2],name=m[3],cal=parseInt(m[4]),carbs=parseInt(m[5]),prot=parseInt(m[6]),fat=parseInt(m[7]);if(!dayBlocks[d])dayBlocks[d]=[];dayBlocks[d].push({mealType:mt,name:name,cal:cal,carbs:carbs,protein:prot,fat:fat});}
+        var m=line.match(/^D(\d+)\s+(Breakfast|Lunch|Dinner|Snack):\s*(.+?)\s*\|\s*(\d+)cal\s+(\d+)g\s*C\s+(\d+)g\s*P\s+(\d+)g\s*F/i);
+        if(m){var d=parseInt(m[1]);if(!dayBlocks[d])dayBlocks[d]=[];dayBlocks[d].push({type:m[2],name:m[3],cal:parseInt(m[4]),carbs:parseInt(m[5]),prot:parseInt(m[6]),fat:parseInt(m[7])});}
       }
     });
-    const icon={Breakfast:'🌅',Lunch:'☀️',Dinner:'🌙',Snack:'🍿'};
-    const days=['','Mon','Tue','Wed','Thu','Fri'];
-    let html='';
-    if(prepTip) html+='<div style="background:rgba(255,203,71,0.08);border:1px solid rgba(255,203,71,0.2);border-radius:14px;padding:14px;margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:#ffcb47;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">📋 Sunday Prep</div><div style="font-size:13px;color:#c0d0e0;line-height:1.6">'+prepTip+'</div></div>';
+    var icon={Breakfast:'🌅',Lunch:'☀️',Dinner:'🌙',Snack:'🍿'};
+    var days=['','Mon','Tue','Wed','Thu','Fri'];
+    var html='';
+    if(prepTip) html+='<div style="background:rgba(255,203,71,0.08);border:1px solid rgba(255,203,71,0.2);border-radius:14px;padding:14px;margin-bottom:14px"><div style="font-size:11px;font-weight:700;color:#ffcb47;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">📋 Sunday Batch Cooking</div><div style="font-size:13px;color:#c0d0e0;line-height:1.6">'+prepTip+'</div></div>';
     if(shopList.length) html+='<button onclick="addMealToShop('+JSON.stringify(shopList).replace(/"/g,"'")+',"5-Day Meal Prep")" style="width:100%;padding:12px;background:linear-gradient(135deg,#38bdf8,#0096c7);color:#000;border:none;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;margin-bottom:14px">🛒 Add Grocery List to Shop</button>';
-    for(let d=1;d<=5;d++){
-      const meals=dayBlocks[d]||[];if(!meals.length)continue;
-      const total=meals.reduce(function(a,m){return a+m.cal;},0);
-      html+='<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(56,189,248,0.07);border-radius:11px;border:1px solid rgba(56,189,248,0.15);margin-bottom:7px"><div style="font-size:14px;font-weight:800;color:#38bdf8">📅 '+days[d]+'</div><div style="font-size:12px;color:var(--muted)">'+total+' kcal</div></div>';
-      meals.forEach(function(m){html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;margin-bottom:5px"><div><div style="font-size:11px;color:var(--muted)">'+(icon[m.mealType]||'🍽️')+' '+m.mealType+'</div><div style="font-size:13px;font-weight:700">'+m.name+'</div></div><div style="text-align:right;font-size:13px;font-weight:800;color:var(--orange)">'+m.cal+' kcal</div></div>';});
+    for(var d=1;d<=5;d++){
+      var meals=dayBlocks[d]||[];if(!meals.length)continue;
+      var total=meals.reduce(function(a,m){return a+m.cal;},0);
+      html+='<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(56,189,248,0.07);border-radius:11px;border:1px solid rgba(56,189,248,0.15);margin-bottom:7px"><span style="font-size:14px;font-weight:800;color:#38bdf8">📅 '+days[d]+'</span><span style="font-size:12px;color:var(--muted)">'+total+' kcal</span></div>';
+      meals.forEach(function(m){html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;margin-bottom:5px"><div><div style="font-size:11px;color:var(--muted)">'+(icon[m.type]||'🍽️')+' '+m.type+'</div><div style="font-size:13px;font-weight:700">'+m.name+'</div></div><span style="font-size:13px;font-weight:800;color:var(--orange)">'+m.cal+' kcal</span></div>';});
       html+='</div>';
     }
-    if(!Object.keys(dayBlocks).length) html='<div style="color:var(--muted);text-align:center;padding:20px">Could not generate. <button onclick="startPlan(\x22week\x22)" style="color:var(--green);background:none;border:none;cursor:pointer;font-weight:700">Try again</button></div>';
+    if(!Object.keys(dayBlocks).length) html='<div style="text-align:center;padding:20px;color:var(--muted)">Could not parse meals. <button onclick="startMealPrep()" style="color:var(--green);background:none;border:none;cursor:pointer;font-weight:700">Try again</button></div>';
     result.innerHTML=html;
   }).catch(function(e){
     clearInterval(bar);
-    result.innerHTML='<div style="color:var(--red);text-align:center;padding:16px">'+e.message+'<br><br><button onclick="startPlan(\x22week\x22)" style="padding:10px 20px;background:var(--green);color:#000;border:none;border-radius:10px;font-weight:700;cursor:pointer">Try Again</button></div>';
+    result.innerHTML='<div style="color:var(--red);text-align:center;padding:16px">'+e.message+'<br><br><button onclick="startMealPrep()" style="padding:10px 20px;background:var(--green);color:#000;border:none;border-radius:10px;font-weight:700;cursor:pointer">Try Again</button></div>';
   });
 }
 
