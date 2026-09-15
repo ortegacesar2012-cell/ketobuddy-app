@@ -637,8 +637,10 @@ if(window.caches){
         var d=window.obData||{};
         var wKg=d.weightKg||70,hCm=d.heightCm||170,age=d.age||30;
         var sex=d.sex||'male',af=d.activityFactor||1.2,go=d.goalOffset||-250,kl=d.ketoLevel||'some';
-        var bmr=sex==='male'?(10*wKg+6.25*hCm-5*age+5):(10*wKg+6.25*hCm-5*age-161);
-        var cal=Math.round(bmr*af)+go;
+        var bmr=calcBMR(sex,wKg,hCm,age);
+        var tdee=calcTDEE(sex,wKg,hCm,age,af);
+        var cal=tdee+go;
+        d.tdee=tdee;
         var carbs={new:30,some:25,adapted:20,expert:20}[kl]||25;
         var prot=Math.round(wKg*1.8);
         var fat=Math.max(Math.round((cal-carbs*4-prot*4)/9),40);
@@ -3011,6 +3013,7 @@ function setChefMode(mode, btn){
   const isNormal = !isFavs && !isPlan;
   document.getElementById('chef-meal-opts').style.display=mode==='meal'?'block':'none';
   document.getElementById('chef-snack-opts').style.display=mode==='snack'?'block':'none';
+  document.getElementById('chef-snack-difficulty').style.display=mode==='snack'?'block':'none';
   document.getElementById('chef-generate-area').style.display=isNormal?'block':'none';
   document.getElementById('chef-favs-panel').style.display=isFavs?'block':'none';
   document.getElementById('chef-plan-panel').style.display=isPlan?'block':'none';
@@ -3095,7 +3098,7 @@ async function generateChef(){
     let prompt;
     if(isMeal){
       prompt=`You are a professional ${isKeto?'keto':'healthy eating'} chef. Suggest 4 creative ${isKeto?'keto-friendly (low carb, high fat)':'healthy and balanced'} meal ideas.
-${specificSearch?'IMPORTANT: The user specifically wants "'+specificSearch+'". ALL 4 results MUST be different variations or preparations of "'+specificSearch+'" — different cooking methods, flavors, or styles. Do NOT suggest unrelated meals.':''}
+${specificSearch?'IMPORTANT: The user typed "'+specificSearch+'" because they want a keto-friendly recipe for making that food/dish/sauce ITSELF from scratch. ALL 4 results MUST be different keto recipes that directly recreate "'+specificSearch+'" (different techniques, flavor twists, or styles of making it) — do NOT suggest meals that merely use "'+specificSearch+'" as an ingredient in something else, and do NOT assume the user already has it on hand.':''}
 ${ingredients?'Available ingredients: '+ingredients:(isKeto?'Use common keto pantry items (eggs, avocado, meat, cheese, butter).':'Use common healthy pantry items.')}
 ${mealTimeTags?'Meal time: '+mealTimeTags:''}
 ${tags?'Cuisine & style: '+tags:''}
@@ -3114,7 +3117,7 @@ STEPS: [2-3 short cooking steps separated by | ]
 CARBS: [net carbs]g | FAT: [fat]g | PROTEIN: [protein]g | CALS: [calories]`;
     } else {
       prompt=`You are a ${isKeto?'keto diet':'healthy eating'} expert. Suggest 5 creative ${isKeto?'keto-friendly (low carb)':'healthy'} snack ideas.
-${specificSearch?'IMPORTANT: The user specifically wants "'+specificSearch+'". ALL 5 results MUST be different variations or preparations of "'+specificSearch+'" — different flavors, toppings, or styles. Do NOT suggest unrelated snacks.':''}
+${specificSearch?'IMPORTANT: The user typed "'+specificSearch+'" because they want a keto-friendly recipe for making that food/dish/sauce ITSELF from scratch. ALL 5 results MUST be different keto recipes that directly recreate "'+specificSearch+'" (different techniques, flavor twists, or styles of making it) — do NOT suggest snacks that merely use "'+specificSearch+'" as an ingredient in something else, and do NOT assume the user already has it on hand.':''}
 ${ingredients?'Available ingredients: '+ingredients:(isKeto?'Use common keto snack items.':'Use healthy whole-food snack ingredients.')}
 ${tags?'Craving/Style: '+tags:''}
 Difficulty level: ${selectedSnackDifficulty}
@@ -3991,6 +3994,18 @@ function filterFAQ(q){renderFAQ(q);}
 function toggleFAQ(i){document.getElementById('faq-'+i).classList.toggle('open');}
 
 // ====== ONBOARDING ======
+// Single source of truth for calorie math (Mifflin-St Jeor) — every
+// calorie/TDEE calculation in the app should route through these two
+// functions instead of re-implementing the formula inline.
+function calcBMR(sex, weightKg, heightCm, age){
+  return sex==='male'
+    ? (10*weightKg + 6.25*heightCm - 5*age + 5)
+    : (10*weightKg + 6.25*heightCm - 5*age - 161);
+}
+function calcTDEE(sex, weightKg, heightCm, age, activityFactor){
+  return Math.round(calcBMR(sex, weightKg, heightCm, age) * activityFactor);
+}
+
 let obData={name:'',sex:'male',age:0,heightCm:0,weightKg:0,activityFactor:1.2,activityLabel:'Sedentary',goal:'lose_slow',goalLabel:'Lose Weight Gradually',goalOffset:-250,ketoLevel:'some'};
 let macroGoals={cal:1600,carbs:25,fat:120,protein:100};
 let ob_currentScreen=1;
@@ -4022,8 +4037,7 @@ function liveUpdateMacroPreview(){
   const weightKg=wunit==='lbs'?wval/2.20462:wval;
   if(!age||!heightCm||!weightKg){ preview.style.display='none'; return; }
   const sex=obData.sex||'male';
-  const bmr=sex==='male'?10*weightKg+6.25*heightCm-5*age+5:10*weightKg+6.25*heightCm-5*age-161;
-  const tdee=Math.round(bmr*(obData.activityFactor||1.2));
+  const tdee=calcTDEE(sex,weightKg,heightCm,age,obData.activityFactor||1.2);
   const goal=tdee+(obData.goalOffset||-250);
   const carbs=30, protein=Math.round(weightKg*1.8), fat=Math.round((goal-carbs*4-protein*4)/9);
   preview.style.display='block';
@@ -4093,8 +4107,8 @@ function obCalcInline(){
   var wKg = d.weightKg||70, hCm = d.heightCm||170, age = d.age||30;
   var sex = d.sex||'male', af = d.activityFactor||1.2, go = d.goalOffset||-250;
   var kl = d.ketoLevel||'some';
-  var bmr = sex==='male' ? (10*wKg+6.25*hCm-5*age+5) : (10*wKg+6.25*hCm-5*age-161);
-  var cal = Math.round(bmr*af) + go;
+  var tdee = calcTDEE(sex,wKg,hCm,age,af);
+  var cal = tdee + go;
   var carbs = {new:30,some:25,adapted:20,expert:20}[kl]||25;
   var prot = Math.round(wKg*1.8);
   var fat = Math.max(Math.round((cal-carbs*4-prot*4)/9), 40);
@@ -4217,10 +4231,8 @@ function obBack(from){
 
 function obCalculateAndShow(){
   // Mifflin-St Jeor BMR
-  let bmr;
-  if(obData.sex==='male') bmr=10*obData.weightKg+6.25*obData.heightCm-5*obData.age+5;
-  else                     bmr=10*obData.weightKg+6.25*obData.heightCm-5*obData.age-161;
-  const tdee=Math.round(bmr*obData.activityFactor);
+  const bmr=calcBMR(obData.sex,obData.weightKg,obData.heightCm,obData.age);
+  const tdee=calcTDEE(obData.sex,obData.weightKg,obData.heightCm,obData.age,obData.activityFactor);
   obData.tdee=tdee; // store for goal presets
   const goalCal=tdee+obData.goalOffset;
 
@@ -4384,7 +4396,12 @@ function applyPresetGoal(type){
   const el=document.getElementById('preset-'+type);
   if(el) el.style.opacity='1';
 
-  const tdee=obData.tdee||2000;
+  // obData.tdee is not reliably set by the live onboarding flow, so recompute
+  // TDEE directly from the saved profile using the shared calculator
+  const wKg=obData.weightKg||70, hCm=obData.heightCm||170, age=obData.age||30;
+  const sex=obData.sex||'male', af=obData.activityFactor||1.2;
+  const tdee=calcTDEE(sex,wKg,hCm,age,af);
+  obData.tdee=tdee;
   const protein=macroGoals.protein||120;
   const carbs=macroGoals.carbs||25;
   let cal;
@@ -4441,8 +4458,9 @@ function saveProfileSettings(){
 
   // Recalculate macros
   var sex = obData.sex||'male';
-  var bmr = sex==='male' ? (10*weightKg+6.25*heightCm-5*age+5) : (10*weightKg+6.25*heightCm-5*age-161);
-  var cal = Math.round(bmr*af) + goalOffset;
+  var tdee = calcTDEE(sex,weightKg,heightCm,age,af);
+  obData.tdee = tdee;
+  var cal = tdee + goalOffset;
   var carbs = macroGoals.carbs||25;
   var prot = Math.round(weightKg*1.8);
   var fat = Math.max(Math.round((cal-carbs*4-prot*4)/9),40);
