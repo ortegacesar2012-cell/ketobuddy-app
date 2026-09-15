@@ -1087,8 +1087,10 @@ if(window.caches){
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:4px">
         <button class="snack-tag-btn active" id="srv-1" onclick="selectServings(this,'1')">1</button>
         <button class="snack-tag-btn" id="srv-2" onclick="selectServings(this,'2')">2</button>
+        <button class="snack-tag-btn" id="srv-3" onclick="selectServings(this,'3')">3</button>
         <button class="snack-tag-btn" id="srv-4" onclick="selectServings(this,'4')">4</button>
-        <button class="snack-tag-btn" id="srv-6" onclick="selectServings(this,'6')">6+</button>
+        <button class="snack-tag-btn" id="srv-6" onclick="selectServings(this,'6')">6</button>
+        <button class="snack-tag-btn" id="srv-8" onclick="selectServings(this,'8')">8+</button>
       </div>
     </div>
 
@@ -1251,19 +1253,13 @@ if(window.caches){
       <div style="margin-bottom:14px">
         <div class="snack-input-label">🍽️ How many meals?</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
-          <button class="snack-tag-btn" id="plan-meals-3" onclick="selectPlanMeals(this,3)">3 meals<br><span style="font-size:10px;color:var(--muted)">B · L · D</span></button>
-          <button class="snack-tag-btn active" id="plan-meals-5" onclick="selectPlanMeals(this,5)">3 + 2 snacks<br><span style="font-size:10px;color:var(--muted)">B · L · D + snacks</span></button>
-          <button class="snack-tag-btn" id="plan-meals-6" onclick="selectPlanMeals(this,6)">6 small meals<br><span style="font-size:10px;color:var(--muted)">Every 2-3 hrs</span></button>
-        </div>
-      </div>
-
-      <!-- Carb strictness -->
-      <div style="margin-bottom:20px">
-        <div class="snack-input-label">🥑 Carb limit?</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
-          <button class="snack-tag-btn" id="pcarb-strict" onclick="selectPlanCarbs(this,'strict')">🔒 Strict<br><span style="font-size:10px;color:var(--muted)">&lt;20g/day</span></button>
-          <button class="snack-tag-btn active" id="pcarb-moderate" onclick="selectPlanCarbs(this,'moderate')">⚖️ Standard<br><span style="font-size:10px;color:var(--muted)">&lt;50g/day</span></button>
-          <button class="snack-tag-btn" id="pcarb-flexible" onclick="selectPlanCarbs(this,'flexible')">🔓 Relaxed<br><span style="font-size:10px;color:var(--muted)">&lt;75g/day</span></button>
+          <button class="snack-tag-btn" id="plan-opt-1m" onclick="selectPlanMealOption(this,'1m')">1 Meal<br><span style="font-size:10px;color:var(--muted)">Just one</span></button>
+          <button class="snack-tag-btn" id="plan-opt-1s" onclick="selectPlanMealOption(this,'1s')">1 Snack<br><span style="font-size:10px;color:var(--muted)">Just a snack</span></button>
+          <button class="snack-tag-btn" id="plan-opt-2m" onclick="selectPlanMealOption(this,'2m')">2 Meals<br><span style="font-size:10px;color:var(--muted)">L · D</span></button>
+          <button class="snack-tag-btn" id="plan-opt-3m" onclick="selectPlanMealOption(this,'3m')">3 Meals<br><span style="font-size:10px;color:var(--muted)">B · L · D</span></button>
+          <button class="snack-tag-btn" id="plan-opt-3m1s" onclick="selectPlanMealOption(this,'3m1s')">3 + 1 Snack<br><span style="font-size:10px;color:var(--muted)">B · L · D + 1</span></button>
+          <button class="snack-tag-btn active" id="plan-opt-3m2s" onclick="selectPlanMealOption(this,'3m2s')">3 + 2 Snacks<br><span style="font-size:10px;color:var(--muted)">B · L · D + 2</span></button>
+          <button class="snack-tag-btn" id="plan-opt-6sm" onclick="selectPlanMealOption(this,'6sm')">6 Small Meals<br><span style="font-size:10px;color:var(--muted)">Every 2-3 hrs</span></button>
         </div>
       </div>
 
@@ -6714,24 +6710,20 @@ function deleteFavMeal(id){
 
 // ===== AI MEAL PLANNER =====
 
-let plannerCarbMode = 'moderate';
-function selectPlanCarbs(btn, mode){
-  plannerCarbMode = mode;
-  ['pcarb-strict','pcarb-moderate','pcarb-flexible'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.classList.remove('active');
-  });
-  btn.classList.add('active');
-}
-
-
-
-let plannerMealCount = 5;
-
-function selectPlanMeals(btn, count){
-  plannerMealCount = count;
-  ['plan-meals-3','plan-meals-5','plan-meals-6'].forEach(id=>{
-    const el=document.getElementById(id);
+const MEAL_PLAN_OPTIONS = {
+  '1m':   {structure:'1 meal only — call it "Meal", skip breakfast/lunch/dinner labels', items:['🍽️ Meal']},
+  '1s':   {structure:'1 snack only', items:['🍿 Snack']},
+  '2m':   {structure:'2 meals (label as Lunch and Dinner, skip breakfast)', items:['☀️ Lunch','🌙 Dinner']},
+  '3m':   {structure:'1 Breakfast, 1 Lunch, 1 Dinner (no snacks)', items:['🌅 Breakfast','☀️ Lunch','🌙 Dinner']},
+  '3m1s': {structure:'1 Breakfast, 1 Lunch, 1 Dinner, 1 Snack', items:['🌅 Breakfast','☀️ Lunch','🌙 Dinner','🍿 Snack']},
+  '3m2s': {structure:'1 Breakfast, 1 Lunch, 1 Dinner, 2 Snacks', items:['🌅 Breakfast','☀️ Lunch','🌙 Dinner','🍿 Snack 1','🍿 Snack 2']},
+  '6sm':  {structure:'6 small meals evenly spaced (label them Meal 1 through Meal 6, use Snack type for smaller ones)', items:['🍽️ Meal 1','🍽️ Meal 2','🍽️ Meal 3','🍽️ Meal 4','🍽️ Meal 5','🍽️ Meal 6']}
+};
+let plannerMealPlan = '3m2s';
+function selectPlanMealOption(btn, key){
+  plannerMealPlan = key;
+  Object.keys(MEAL_PLAN_OPTIONS).forEach(k=>{
+    const el=document.getElementById('plan-opt-'+k);
     if(el) el.classList.remove('active');
   });
   btn.classList.add('active');
@@ -7270,9 +7262,7 @@ async function generateDayPlan(){
 
   // Use actual user goals from onboarding — don't override them
   const goals = (macroGoals && macroGoals.cal > 0) ? macroGoals : {cal:1800, carbs:25, protein:120, fat:130};
-  // Carb mode adjusts the carb limit relative to user's goal
-  const carbModeMultiplier = {strict:0.8, moderate:1.0, flexible:1.5};
-  const dailyCarbs = Math.round(goals.carbs * (carbModeMultiplier[plannerCarbMode] || 1.0));
+  const dailyCarbs = goals.carbs;
   const targetCal = goals.cal;
   const targetProtein = goals.protein;
   const targetFat = goals.fat;
@@ -7285,7 +7275,7 @@ async function generateDayPlan(){
     <div style="background:rgba(0,230,118,0.04);border:1px solid rgba(0,230,118,0.1);border-radius:16px;padding:14px;margin-bottom:12px">
       <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📊 Calculating your day totals...</div>
       <div style="display:flex;gap:8px">
-        ${['🌅 Breakfast','☀️ Lunch','🌙 Dinner','🍿 Snack 1','🍿 Snack 2'].slice(0,plannerMealCount||5).map(m=>`
+        ${(MEAL_PLAN_OPTIONS[plannerMealPlan]||MEAL_PLAN_OPTIONS['3m2s']).items.map(m=>`
           <div style="flex:1;background:rgba(255,255,255,0.03);border-radius:10px;padding:10px 6px;text-align:center">
             <div style="font-size:16px;margin-bottom:4px">${m.split(' ')[0]}</div>
             <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;margin-bottom:4px"></div>
@@ -7300,12 +7290,7 @@ async function generateDayPlan(){
 
   try {
     const favNames = aiMealFavorites.slice(0,10).map(f=>f.name).join(', ');
-    const mealStructures = {
-      3: '1 Breakfast, 1 Lunch, 1 Dinner (no snacks)',
-      5: '1 Breakfast, 1 Lunch, 1 Dinner, 2 Snacks',
-      6: '6 small meals evenly spaced (label them Meal 1 through Meal 6, use Snack type for smaller ones)'
-    };
-    const mealStructure = mealStructures[plannerMealCount] || mealStructures[5];
+    const mealStructure = (MEAL_PLAN_OPTIONS[plannerMealPlan]||MEAL_PLAN_OPTIONS['3m2s']).structure;
 
     const prompt = `You are a professional keto nutritionist and macro calculator. Create a keto meal plan for one day that PRECISELY hits these targets:
 
