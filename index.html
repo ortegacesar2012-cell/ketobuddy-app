@@ -1252,14 +1252,25 @@ if(window.caches){
       <!-- Meal count -->
       <div style="margin-bottom:14px">
         <div class="snack-input-label">🍽️ How many meals?</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
-          <button class="snack-tag-btn" id="plan-opt-1m" onclick="selectPlanMealOption(this,'1m')">1 Meal<br><span style="font-size:10px;color:var(--muted)">Just one</span></button>
-          <button class="snack-tag-btn" id="plan-opt-1s" onclick="selectPlanMealOption(this,'1s')">1 Snack<br><span style="font-size:10px;color:var(--muted)">Just a snack</span></button>
-          <button class="snack-tag-btn" id="plan-opt-2m" onclick="selectPlanMealOption(this,'2m')">2 Meals<br><span style="font-size:10px;color:var(--muted)">L · D</span></button>
-          <button class="snack-tag-btn" id="plan-opt-3m" onclick="selectPlanMealOption(this,'3m')">3 Meals<br><span style="font-size:10px;color:var(--muted)">B · L · D</span></button>
-          <button class="snack-tag-btn" id="plan-opt-3m1s" onclick="selectPlanMealOption(this,'3m1s')">3 + 1 Snack<br><span style="font-size:10px;color:var(--muted)">B · L · D + 1</span></button>
-          <button class="snack-tag-btn active" id="plan-opt-3m2s" onclick="selectPlanMealOption(this,'3m2s')">3 + 2 Snacks<br><span style="font-size:10px;color:var(--muted)">B · L · D + 2</span></button>
-          <button class="snack-tag-btn" id="plan-opt-6sm" onclick="selectPlanMealOption(this,'6sm')">6 Small Meals<br><span style="font-size:10px;color:var(--muted)">Every 2-3 hrs</span></button>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px">
+          <button class="snack-tag-btn" id="plan-nm-1" onclick="selectPlanNumMeals(this,1)">1</button>
+          <button class="snack-tag-btn" id="plan-nm-2" onclick="selectPlanNumMeals(this,2)">2</button>
+          <button class="snack-tag-btn active" id="plan-nm-3" onclick="selectPlanNumMeals(this,3)">3</button>
+          <button class="snack-tag-btn" id="plan-nm-4" onclick="selectPlanNumMeals(this,4)">4</button>
+          <button class="snack-tag-btn" id="plan-nm-5" onclick="selectPlanNumMeals(this,5)">5</button>
+          <button class="snack-tag-btn" id="plan-nm-6" onclick="selectPlanNumMeals(this,6)">6</button>
+          <button class="snack-tag-btn" id="plan-nm-7" onclick="selectPlanNumMeals(this,7)">7</button>
+        </div>
+      </div>
+
+      <!-- Snack count -->
+      <div style="margin-bottom:14px">
+        <div class="snack-input-label">🍿 How many snacks?</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px">
+          <button class="snack-tag-btn" id="plan-ns-0" onclick="selectPlanNumSnacks(this,0)">0</button>
+          <button class="snack-tag-btn" id="plan-ns-1" onclick="selectPlanNumSnacks(this,1)">1</button>
+          <button class="snack-tag-btn active" id="plan-ns-2" onclick="selectPlanNumSnacks(this,2)">2</button>
+          <button class="snack-tag-btn" id="plan-ns-3" onclick="selectPlanNumSnacks(this,3)">3</button>
         </div>
       </div>
 
@@ -6710,23 +6721,42 @@ function deleteFavMeal(id){
 
 // ===== AI MEAL PLANNER =====
 
-const MEAL_PLAN_OPTIONS = {
-  '1m':   {structure:'1 meal only — call it "Meal", skip breakfast/lunch/dinner labels', items:['🍽️ Meal']},
-  '1s':   {structure:'1 snack only', items:['🍿 Snack']},
-  '2m':   {structure:'2 meals (label as Lunch and Dinner, skip breakfast)', items:['☀️ Lunch','🌙 Dinner']},
-  '3m':   {structure:'1 Breakfast, 1 Lunch, 1 Dinner (no snacks)', items:['🌅 Breakfast','☀️ Lunch','🌙 Dinner']},
-  '3m1s': {structure:'1 Breakfast, 1 Lunch, 1 Dinner, 1 Snack', items:['🌅 Breakfast','☀️ Lunch','🌙 Dinner','🍿 Snack']},
-  '3m2s': {structure:'1 Breakfast, 1 Lunch, 1 Dinner, 2 Snacks', items:['🌅 Breakfast','☀️ Lunch','🌙 Dinner','🍿 Snack 1','🍿 Snack 2']},
-  '6sm':  {structure:'6 small meals evenly spaced (label them Meal 1 through Meal 6, use Snack type for smaller ones)', items:['🍽️ Meal 1','🍽️ Meal 2','🍽️ Meal 3','🍽️ Meal 4','🍽️ Meal 5','🍽️ Meal 6']}
-};
-let plannerMealPlan = '3m2s';
-function selectPlanMealOption(btn, key){
-  plannerMealPlan = key;
-  Object.keys(MEAL_PLAN_OPTIONS).forEach(k=>{
-    const el=document.getElementById('plan-opt-'+k);
-    if(el) el.classList.remove('active');
-  });
+let plannerNumMeals = 3, plannerNumSnacks = 2;
+function selectPlanNumMeals(btn, n){
+  plannerNumMeals = n;
+  for(let i=1;i<=7;i++){ const el=document.getElementById('plan-nm-'+i); if(el) el.classList.remove('active'); }
   btn.classList.add('active');
+}
+function selectPlanNumSnacks(btn, n){
+  plannerNumSnacks = n;
+  for(let i=0;i<=3;i++){ const el=document.getElementById('plan-ns-'+i); if(el) el.classList.remove('active'); }
+  btn.classList.add('active');
+}
+// Ordered meal-type labels for the chosen meal/snack counts — used consistently
+// for the prompt sent to the AI, the parser, and the skeleton preview.
+function getMealTypeLabels(numMeals, numSnacks){
+  let mealLabels;
+  if(numMeals<=0) mealLabels=[];
+  else if(numMeals===1) mealLabels=['Meal'];
+  else if(numMeals===2) mealLabels=['Lunch','Dinner'];
+  else if(numMeals===3) mealLabels=['Breakfast','Lunch','Dinner'];
+  else mealLabels=Array.from({length:numMeals},(_,i)=>'Meal '+(i+1));
+  const snackLabels = numSnacks<=0 ? [] : numSnacks===1 ? ['Snack'] : Array.from({length:numSnacks},(_,i)=>'Snack '+(i+1));
+  return mealLabels.concat(snackLabels);
+}
+function getMealStructureText(numMeals, numSnacks){
+  const labels=getMealTypeLabels(numMeals,numSnacks);
+  return labels.length+' item(s) — exactly one meal/snack per label, in this exact order and using these exact labels: '+labels.join(', ');
+}
+function getMealTypeIcon(label){
+  if(/breakfast/i.test(label)) return '🌅';
+  if(/lunch/i.test(label)) return '☀️';
+  if(/dinner/i.test(label)) return '🌙';
+  if(/snack/i.test(label)) return '🍿';
+  return '🍽️';
+}
+function getMealStructureItems(numMeals, numSnacks){
+  return getMealTypeLabels(numMeals,numSnacks).map(l=>getMealTypeIcon(l)+' '+l);
 }
 
 
@@ -6746,9 +6776,16 @@ async function generateMultiDayPlan(days){
   const result = document.getElementById('plannerResult');
   const ingredients = document.getElementById('plannerIngredients').value.trim();
   const styleTags = [...document.querySelectorAll('#plannerStyleTags .chef-tag-active')].map(b=>b.querySelectorAll('span')[1]?.textContent||'').join(', ');
-  const dailyCarbs = Math.round((macroGoals.carbs||25));
   const goals = (window.macroGoals&&window.macroGoals.cal>0) ? window.macroGoals : (macroGoals||{cal:1800,carbs:25,protein:120,fat:130});
-  const dayNames = ['','Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const dailyCarbs = goals.carbs;
+  // Real weekday abbreviations starting from today, not a hardcoded Mon-first list
+  const weekdayAbbr=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const planStartDate=new Date();
+  const dayNames=['']; // 1-indexed to match D[N]
+  for(let i=1;i<=days;i++){
+    const d=new Date(planStartDate); d.setDate(planStartDate.getDate()+(i-1));
+    dayNames.push(weekdayAbbr[d.getDay()]);
+  }
 
   btn.disabled = true;
   btn.textContent = '⏳ Generating...';
@@ -6784,11 +6821,15 @@ async function generateMultiDayPlan(days){
   const msgInterval=setInterval(()=>{const el=document.getElementById('planProgressMsg');if(el)el.textContent=msgs[msgIdx++%msgs.length];},4000);
 
   try {
+    const mealStructure = getMealStructureText(plannerNumMeals, plannerNumSnacks);
     const prompt=`Create a ${days}-day keto meal plan. Daily: ${goals.cal}cal, ${dailyCarbs}g carbs max, ${goals.protein}g protein.${ingredients?' Use: '+ingredients:''}${styleTags?' Style: '+styleTags:''}
 Each day must have DIFFERENT meals — no repeats across days.
+Every single day must contain exactly: ${mealStructure}.
+If this is only 1-2 items per day, each one must satisfy nearly the entire daily target by itself — size portions accordingly (larger, protein-dense portions).
 Also estimate a cost in USD per day for groceries (typical US store or Costco).
 Format for every meal (one per line):
-D[N] [Breakfast|Lunch|Dinner|Snack]: [Meal Name] | [cal]cal [carb]g C [prot]g P [fat]g F | ING: [ing1, ing2, ing3]
+D[N] [MealLabel]: [Meal Name] | [cal]cal [carb]g C [prot]g P [fat]g F | ING: [ing1 with real purchase-ready quantity, ing2 with quantity, ing3 with quantity]
+Where [MealLabel] is EXACTLY one of the labels listed above.
 At the end of each day's meals add one line:
 DCOST[N]: $[estimated daily grocery cost e.g. $12.50]`;
 
@@ -6799,9 +6840,9 @@ DCOST[N]: $[estimated daily grocery cost e.g. $12.50]`;
     text.split(/\r?\n/).forEach(line=>{
       const cm = line.match(/^DCOST(\d+):\s*\$?([\d.]+)/i);
       if(cm){ dayCosts[parseInt(cm[1])] = parseFloat(cm[2]); return; }
-      const m=line.match(/^D(\d+)\s+(Breakfast|Lunch|Dinner|Snack):\s*(.+?)\s*\|\s*(\d+)cal\s+(\d+)g\s*C\s+(\d+)g\s*P\s+(\d+)g\s*F(?:\s*\|\s*ING:\s*(.+))?/i);
+      const m=line.match(/^D(\d+)\s+([A-Za-z0-9 ]+?):\s*(.+?)\s*\|\s*(\d+)cal\s+(\d+)g\s*C\s+(\d+)g\s*P\s+(\d+)g\s*F(?:\s*\|\s*ING:\s*(.+))?/i);
       if(m){
-        const d=parseInt(m[1]),mealType=m[2],name=m[3],cal=parseInt(m[4]),carbs=parseInt(m[5]),prot=parseInt(m[6]),fat=parseInt(m[7]);
+        const d=parseInt(m[1]),mealType=m[2].trim(),name=m[3],cal=parseInt(m[4]),carbs=parseInt(m[5]),prot=parseInt(m[6]),fat=parseInt(m[7]);
         const ings=m[8]?m[8].split(',').map(s=>s.trim()).filter(Boolean):[];
         if(!dayBlocks[d]) dayBlocks[d]=[];
         dayBlocks[d].push({mealType,name,cal,carbs,protein:prot,fat,ingredients:ings});
@@ -6895,27 +6936,21 @@ function logDayMeals(dayNum){
   meals.forEach(m=>{
     addToLog({name:m.name,calories:m.cal,carbs:m.carbs,fat:m.fat,protein:m.protein,category:'Day Plan',keto:m.carbs<=15},catMap[m.mealType]||'🍽️ Other');
   });
-  showToast('✅ Day '+(window._multiDayDays>3?['','Mon','Tue','Wed','Thu','Fri','Sat','Sun'][dayNum]||dayNum:dayNum)+' logged!');
+  const weekdayAbbr=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const logDate=new Date(); logDate.setDate(logDate.getDate()+(dayNum-1));
+  showToast('✅ Day '+(window._multiDayDays>3?weekdayAbbr[logDate.getDay()]:dayNum)+' logged!');
   setTimeout(()=>{const btn=document.querySelector('.nav-btn[onclick*="tracker"]');if(btn)switchSection('tracker',btn);},600);
 }
 
-// Schedule all days into calendar starting from tomorrow (or next Monday for 7-day)
+// Schedule all days into calendar starting from today
 function scheduleMultiDayToCalendar(){
   const allMeals=window._multiDayAllMeals;
   const days=window._multiDayDays||3;
   if(!allMeals||!allMeals.length){showToast('Generate a plan first');return;}
 
-  // Start from tomorrow for 3-day, next Monday for 5 or 7-day
+  // Always start from today per user preference
   const today=new Date();
   let startDay=new Date(today);
-  if(days>=5){
-    const dow=today.getDay();
-    const daysUntilMon=dow===0?1:(8-dow)%7||7;
-    startDay=new Date(today);
-    startDay.setDate(today.getDate()+daysUntilMon);
-  } else {
-    startDay.setDate(today.getDate()+1);
-  }
   startDay.setHours(0,0,0,0);
 
   try{
@@ -7275,7 +7310,7 @@ async function generateDayPlan(){
     <div style="background:rgba(0,230,118,0.04);border:1px solid rgba(0,230,118,0.1);border-radius:16px;padding:14px;margin-bottom:12px">
       <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📊 Calculating your day totals...</div>
       <div style="display:flex;gap:8px">
-        ${(MEAL_PLAN_OPTIONS[plannerMealPlan]||MEAL_PLAN_OPTIONS['3m2s']).items.map(m=>`
+        ${getMealStructureItems(plannerNumMeals, plannerNumSnacks).map(m=>`
           <div style="flex:1;background:rgba(255,255,255,0.03);border-radius:10px;padding:10px 6px;text-align:center">
             <div style="font-size:16px;margin-bottom:4px">${m.split(' ')[0]}</div>
             <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;margin-bottom:4px"></div>
@@ -7290,7 +7325,7 @@ async function generateDayPlan(){
 
   try {
     const favNames = aiMealFavorites.slice(0,10).map(f=>f.name).join(', ');
-    const mealStructure = (MEAL_PLAN_OPTIONS[plannerMealPlan]||MEAL_PLAN_OPTIONS['3m2s']).structure;
+    const mealStructure = getMealStructureText(plannerNumMeals, plannerNumSnacks);
 
     const prompt = `You are a professional keto nutritionist and macro calculator. Create a keto meal plan for one day that PRECISELY hits these targets:
 
@@ -7305,16 +7340,16 @@ ${styleTags ? 'Style preference: '+styleTags : ''}
 ${snackTags ? 'Snack style: '+snackTags : ''}
 ${favNames ? 'Do NOT repeat: '+favNames : ''}
 
-IMPORTANT: Plan your meals to hit the targets. If protein goal is ${targetProtein}g total, divide it across all meals. If calories goal is ${targetCal}, make sure all meals add up to ~${targetCal} kcal.
+IMPORTANT: Plan your meals to hit the targets. If protein goal is ${targetProtein}g total, divide it across all meals. If calories goal is ${targetCal}, make sure all meals add up to ~${targetCal} kcal. If this is only 1-2 items total, that single meal/snack must satisfy nearly the entire daily target by itself — size portions accordingly (this usually means larger, protein-dense portions, e.g. a bigger cut of meat).
 
 Create exactly: ${mealStructure}.
 
 For each meal/snack use EXACTLY this format:
 
-MEAL: [Breakfast|Lunch|Dinner|Snack]
+MEAL: [use one of the exact labels listed above, in order]
 NAME: [recipe name]
 DESC: [1 sentence description]
-INGREDIENTS: [comma-separated with quantities]
+INGREDIENTS: [comma-separated, each with a real purchase-ready quantity, e.g. "8 oz boneless chicken thighs" not just "chicken"]
 STEPS: [2-4 steps separated by |]
 CARBS: [net carbs]g | FAT: [fat]g | PROTEIN: [protein]g | CALS: [calories]`
     const text = await callAI(prompt, 2500);
