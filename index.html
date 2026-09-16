@@ -1190,6 +1190,13 @@ if(window.caches){
         </div>
       </div>
 
+      <!-- Mode toggle: Weekly Variety vs Batch Cook -->
+      <div class="inner-tabs" style="margin-bottom:8px">
+        <button class="inner-tab active" id="planmode-variety" onclick="setPlannerMode('variety',this)">🍽️ Weekly Variety</button>
+        <button class="inner-tab" id="planmode-batch" onclick="setPlannerMode('batch',this)">🥡 Batch Cook</button>
+      </div>
+      <div id="plannerModeDesc" style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:14px;line-height:1.5">A different menu each day — more variety, more cooking</div>
+
       <!-- Ingredients -->
       <div style="margin-bottom:14px">
         <div class="snack-input-label">🛒 Ingredients you have?</div>
@@ -1279,8 +1286,8 @@ if(window.caches){
         </div>
       </div>
 
-      <!-- Multi-day selector -->
-      <div style="margin-bottom:14px">
+      <!-- Multi-day selector (Weekly Variety only) -->
+      <div id="plannerDaysWrap" style="margin-bottom:14px">
         <div class="snack-input-label">📆 How many days?</div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px">
           <button class="snack-tag-btn active" id="pdays-1" onclick="selectPlanDays(this,1)">1 Day</button>
@@ -1291,12 +1298,12 @@ if(window.caches){
       </div>
 
       <button id="plannerBtn" onclick="generateDayPlan()" style="width:100%;padding:16px;background:linear-gradient(135deg,#00ff87,#00c853);color:#000;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:17px;font-weight:800;cursor:pointer;margin-bottom:8px;box-shadow:0 6px 24px rgba(0,255,135,0.35)">
-        📅 Generate My Plan
+        📅 Generate Weekly Menu
       </button>
-      <button onclick="startMealPrep()" style="width:100%;padding:14px;background:linear-gradient(135deg,rgba(56,189,248,0.15),rgba(0,150,199,0.08));border:1.5px solid rgba(56,189,248,0.35);border-radius:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#38bdf8;cursor:pointer;margin-bottom:8px">
-        🥡 Bulk Batch Cook — Save $$$
+      <button id="batchPrepBtn" onclick="startMealPrep()" style="display:none;width:100%;padding:16px;background:linear-gradient(135deg,#00ff87,#00c853);color:#000;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:17px;font-weight:800;cursor:pointer;margin-bottom:8px;box-shadow:0 6px 24px rgba(0,255,135,0.35)">
+        🥡 Generate Meal Prep
       </button>
-      <div style="text-align:center;font-size:11px;color:var(--muted);margin-bottom:16px">Builds Breakfast · Lunch · Dinner · Snacks to hit your goals · 7-day plan is Pro only</div>
+      <div style="text-align:center;font-size:11px;color:var(--muted);margin-bottom:16px" id="plannerCaption">Builds Breakfast · Lunch · Dinner · Snacks to hit your goals · 7-day plan is Pro only</div>
 
       <div id="plannerResult" style="padding-bottom:20px"></div>
     </div>
@@ -6788,6 +6795,23 @@ function getMealStructureItems(){
 
 let plannerDays = 1;
 
+let plannerMode = 'variety';
+function setPlannerMode(mode, btn){
+  plannerMode = mode;
+  document.querySelectorAll('#sec-snack .inner-tabs .inner-tab[id^="planmode-"]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const isBatch = mode === 'batch';
+  document.getElementById('plannerBtn').style.display = isBatch ? 'none' : 'block';
+  document.getElementById('batchPrepBtn').style.display = isBatch ? 'block' : 'none';
+  document.getElementById('plannerDaysWrap').style.display = isBatch ? 'none' : 'block';
+  document.getElementById('plannerModeDesc').textContent = isBatch
+    ? 'Cook once, eat the same meals all week — realistic and low-effort'
+    : 'A different menu each day — more variety, more cooking';
+  document.getElementById('plannerCaption').textContent = isBatch
+    ? 'Cook everything in one session · Mon–Fri, same meals repeat'
+    : 'Builds Breakfast · Lunch · Dinner · Snacks to hit your goals · 7-day plan is Pro only';
+  document.getElementById('plannerResult').innerHTML = '';
+}
 function selectPlanDays(btn, days){
   plannerDays = days;
   ['pdays-1','pdays-3','pdays-5','pdays-7'].forEach(id=>{
@@ -6951,7 +6975,7 @@ DCOST[N]: $[estimated daily grocery cost e.g. $12.50]`;
     result.innerHTML=`<div style="color:var(--red);padding:16px;text-align:center">⚠️ ${e.message}<br><br><button onclick="generateMultiDayPlan(${days})" style="padding:10px 20px;background:var(--green);color:#000;border:none;border-radius:10px;font-weight:700;cursor:pointer">Try Again</button></div>`;
   }
   btn.disabled=false;
-  btn.textContent='📅 Generate My Plan';
+  btn.textContent='📅 Generate Weekly Menu';
 }
 
 // Log a specific day's meals to tracker
@@ -7501,7 +7525,7 @@ CARBS: [net carbs]g | FAT: [fat]g | PROTEIN: [protein]g | CALS: [calories]`
   }
 
   btn.disabled=false;
-  btn.textContent='📅 Generate My Plan';
+  btn.textContent='📅 Generate Weekly Menu';
 }
 
 function getMealCategory(mealType){
