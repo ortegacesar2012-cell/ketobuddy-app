@@ -907,8 +907,8 @@ if(window.caches){
         </button>
         <button onclick="switchSection('snack',document.querySelector('.nav-btn[onclick*=snack]'));setTimeout(()=>setChefMode('plan',document.getElementById('chef-tab-plan')),100)" style="padding:14px 10px;background:rgba(0,230,118,0.07);border:1px solid rgba(0,230,118,0.2);border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px">
           <span style="font-size:26px">📅</span>
-          <span style="font-size:12px;color:var(--green);font-weight:700">Day Planner</span>
-          <span style="font-size:10px;color:var(--muted)">Plan your full day</span>
+          <span style="font-size:12px;color:var(--green);font-weight:700">Meal Prep</span>
+          <span style="font-size:10px;color:var(--muted)">Plan your meals</span>
         </button>
         <button onclick="switchSection('snack',document.querySelector('.nav-btn[onclick*=snack]'))" style="padding:14px 10px;background:rgba(199,125,255,0.07);border:1px solid rgba(199,125,255,0.2);border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px">
           <span style="font-size:26px">🤖</span>
@@ -989,7 +989,7 @@ if(window.caches){
 
   <!-- AI CHEF -->
   <div id="sec-snack" class="section" style="padding-bottom:30px">
-    <div class="sec-head"><h2>AI Chef 👨‍🍳</h2><p>Snacks · Meals · Full Day Plans — all AI powered</p></div>
+    <div class="sec-head"><h2>AI Chef 👨‍🍳</h2><p>Snacks · Meals · Meal Prep — all AI powered</p></div>
 
 
     <div id="aiUsageBanner" style="background:rgba(199,125,255,0.08);border:1px solid rgba(199,125,255,0.2);border-radius:12px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
@@ -1001,7 +1001,7 @@ if(window.caches){
     <div class="inner-tabs" style="margin-bottom:14px">
       <button class="inner-tab active" id="chef-tab-snack" onclick="setChefMode('snack',this)">🍿 Snacks</button>
       <button class="inner-tab" id="chef-tab-meal" onclick="setChefMode('meal',this)">🍽️ Meals</button>
-      <button class="inner-tab" id="chef-tab-plan" onclick="setChefMode('plan',this)">📅 Day Plan</button>
+      <button class="inner-tab" id="chef-tab-plan" onclick="setChefMode('plan',this)">📅 Meal Prep</button>
       <button class="inner-tab" id="chef-tab-favs" onclick="setChefMode('favs',this)">⭐ Saved</button>
     </div>
 
@@ -1028,6 +1028,15 @@ if(window.caches){
 
     <!-- Meal-specific options -->
     <div id="chef-meal-opts" style="display:none;margin-bottom:12px">
+
+      <!-- Daily goal bar -->
+      <div style="background:linear-gradient(135deg,rgba(0,230,118,0.08),rgba(76,201,240,0.05));border:1px solid rgba(0,230,118,0.15);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;gap:12px;align-items:center">
+        <div style="font-size:24px">🎯</div>
+        <div style="flex:1">
+          <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.8px">Your Daily Target</div>
+          <div style="font-size:13px;color:#c0d0e0;margin-top:3px" id="mealGoalText">Loading...</div>
+        </div>
+      </div>
 
       <div class="snack-input-label">🕐 Meal time?</div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:12px">
@@ -1249,17 +1258,13 @@ if(window.caches){
         </div>
       </div>
 
-      <!-- Meal count -->
+      <!-- Which meals -->
       <div style="margin-bottom:14px">
-        <div class="snack-input-label">🍽️ How many meals?</div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px">
-          <button class="snack-tag-btn" id="plan-nm-1" onclick="selectPlanNumMeals(this,1)">1</button>
-          <button class="snack-tag-btn" id="plan-nm-2" onclick="selectPlanNumMeals(this,2)">2</button>
-          <button class="snack-tag-btn active" id="plan-nm-3" onclick="selectPlanNumMeals(this,3)">3</button>
-          <button class="snack-tag-btn" id="plan-nm-4" onclick="selectPlanNumMeals(this,4)">4</button>
-          <button class="snack-tag-btn" id="plan-nm-5" onclick="selectPlanNumMeals(this,5)">5</button>
-          <button class="snack-tag-btn" id="plan-nm-6" onclick="selectPlanNumMeals(this,6)">6</button>
-          <button class="snack-tag-btn" id="plan-nm-7" onclick="selectPlanNumMeals(this,7)">7</button>
+        <div class="snack-input-label">🍽️ Which meals?</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
+          <button class="snack-tag-btn active" id="plan-mt-breakfast" onclick="togglePlanMealType(this,'breakfast')">🌅 Breakfast</button>
+          <button class="snack-tag-btn active" id="plan-mt-lunch" onclick="togglePlanMealType(this,'lunch')">☀️ Lunch</button>
+          <button class="snack-tag-btn active" id="plan-mt-dinner" onclick="togglePlanMealType(this,'dinner')">🌙 Dinner</button>
         </div>
       </div>
 
@@ -1286,10 +1291,10 @@ if(window.caches){
       </div>
 
       <button id="plannerBtn" onclick="generateDayPlan()" style="width:100%;padding:16px;background:linear-gradient(135deg,#00ff87,#00c853);color:#000;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:17px;font-weight:800;cursor:pointer;margin-bottom:8px;box-shadow:0 6px 24px rgba(0,255,135,0.35)">
-        📅 Generate My Day Plan
+        📅 Generate My Plan
       </button>
       <button onclick="startMealPrep()" style="width:100%;padding:14px;background:linear-gradient(135deg,rgba(56,189,248,0.15),rgba(0,150,199,0.08));border:1.5px solid rgba(56,189,248,0.35);border-radius:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#38bdf8;cursor:pointer;margin-bottom:8px">
-        🥡 5-Day Meal Prep — Save $$$
+        🥡 Bulk Batch Cook — Save $$$
       </button>
       <div style="text-align:center;font-size:11px;color:var(--muted);margin-bottom:16px">Builds Breakfast · Lunch · Dinner · Snacks to hit your goals · 7-day plan is Pro only</div>
 
@@ -3031,6 +3036,12 @@ function setChefMode(mode, btn){
       el.innerHTML='<span style="color:var(--orange)">🔥 '+macroGoals.cal+' kcal</span> · <span style="color:var(--red)">🥑 '+macroGoals.carbs+'g carbs</span> · <span style="color:var(--blue)">💪 '+macroGoals.protein+'g protein</span> · <span style="color:var(--yellow)">🧈 '+macroGoals.fat+'g fat</span>';
     } else if(el) el.textContent='Complete onboarding to set your goals';
   }
+  if(mode==='meal'){
+    const mel=document.getElementById('mealGoalText');
+    if(mel&&macroGoals&&macroGoals.cal){
+      mel.innerHTML='<span style="color:var(--orange)">🔥 '+macroGoals.cal+' kcal</span> · <span style="color:var(--red)">🥑 '+macroGoals.carbs+'g carbs</span> · <span style="color:var(--blue)">💪 '+macroGoals.protein+'g protein</span> · <span style="color:var(--yellow)">🧈 '+macroGoals.fat+'g fat</span> per day';
+    } else if(mel) mel.textContent='Complete onboarding to set your goals';
+  }
 
   if(!isFavs){
     document.getElementById('chef-carb-label').textContent=mode==='meal'?'Max carbs per meal?':'Max carbs per snack?';
@@ -3100,6 +3111,17 @@ async function generateChef(){
   // Get saved favorites to avoid repeating them
   const favNames = aiMealFavorites.slice(0,20).map(f=>f.name).join(', ');
 
+  // Size each meal to roughly one meal's share of the actual daily target,
+  // adjusted if the user picked a specific meal time (breakfast/lunch/dinner).
+  let mealSizeLine = '';
+  if(isMeal && !lowCalMode && macroGoals && macroGoals.cal){
+    const mealShareMap = {Breakfast:0.25, Lunch:0.30, Dinner:0.35, 'Meal Prep':0.30};
+    const selectedTimes = mealTimeTags ? mealTimeTags.split(',').map(s=>s.trim()).filter(Boolean) : [];
+    const share = (selectedTimes.length===1 && mealShareMap[selectedTimes[0]]) ? mealShareMap[selectedTimes[0]] : (1/3);
+    const mCal=Math.round(macroGoals.cal*share), mProt=Math.round(macroGoals.protein*share), mFat=Math.round(macroGoals.fat*share);
+    mealSizeLine = `IMPORTANT: Size each meal around ${mCal} kcal (±20%) — this is roughly one meal's share of the user's ${macroGoals.cal} kcal/day target. Aim for about ${mProt}g protein and ${mFat}g fat per meal too (carbs still follow the carb limit below).`;
+  }
+
   try{
     const isKeto = currentDietMode !== 'regular';
     let prompt;
@@ -3112,6 +3134,7 @@ ${tags?'Cuisine & style: '+tags:''}
 Difficulty: ${selectedDifficulty}
 Servings: ${selectedServings}
 ${isKeto?'Carb limit: '+selectedCarbLimit+' net carbs. Keep strictly keto — no grains, no sugar.':'No carb restriction. Balanced healthy meal — lean proteins, veggies, moderate whole grains ok.'}
+${mealSizeLine}
 ${lowCalMode?'IMPORTANT: Low calorie mode — each meal MUST be under 400 kcal total. Use light portions.':''}
 ${favNames?'Do NOT repeat: '+favNames:''}
 Be creative — different cuisines, varied cooking methods, no boring basics.
@@ -3408,7 +3431,11 @@ function addAllPrepToShop(){
   document.getElementById('prepResult').scrollIntoView({behavior:'smooth'});
 }
 
-function addMealToShop(ingredients, mealName){
+function addMealToShop(ingredients, mealName, isBulkPlan){
+  if(isBulkPlan && shopItems.length > 0){
+    const replace = confirm('Your shopping list still has items on it (maybe from an earlier plan). Tap OK to replace the list with just these new ingredients, or Cancel to add these on top of what\'s already there.');
+    if(replace) shopItems = [];
+  }
   ingredients.forEach(ing=>{
     if(!ing)return;
     shopItems.unshift({
@@ -6721,31 +6748,30 @@ function deleteFavMeal(id){
 
 // ===== AI MEAL PLANNER =====
 
-let plannerNumMeals = 3, plannerNumSnacks = 2;
-function selectPlanNumMeals(btn, n){
-  plannerNumMeals = n;
-  for(let i=1;i<=7;i++){ const el=document.getElementById('plan-nm-'+i); if(el) el.classList.remove('active'); }
-  btn.classList.add('active');
+let plannerMealTypes = {breakfast:true, lunch:true, dinner:true};
+let plannerNumSnacks = 2;
+function togglePlanMealType(btn, key){
+  plannerMealTypes[key] = !plannerMealTypes[key];
+  btn.classList.toggle('active', plannerMealTypes[key]);
 }
 function selectPlanNumSnacks(btn, n){
   plannerNumSnacks = n;
   for(let i=0;i<=3;i++){ const el=document.getElementById('plan-ns-'+i); if(el) el.classList.remove('active'); }
   btn.classList.add('active');
 }
-// Ordered meal-type labels for the chosen meal/snack counts — used consistently
+// Ordered meal-type labels for the chosen selection — used consistently
 // for the prompt sent to the AI, the parser, and the skeleton preview.
-function getMealTypeLabels(numMeals, numSnacks){
-  let mealLabels;
-  if(numMeals<=0) mealLabels=[];
-  else if(numMeals===1) mealLabels=['Meal'];
-  else if(numMeals===2) mealLabels=['Lunch','Dinner'];
-  else if(numMeals===3) mealLabels=['Breakfast','Lunch','Dinner'];
-  else mealLabels=Array.from({length:numMeals},(_,i)=>'Meal '+(i+1));
-  const snackLabels = numSnacks<=0 ? [] : numSnacks===1 ? ['Snack'] : Array.from({length:numSnacks},(_,i)=>'Snack '+(i+1));
-  return mealLabels.concat(snackLabels);
+function getMealTypeLabels(){
+  const mealLabels=[];
+  if(plannerMealTypes.breakfast) mealLabels.push('Breakfast');
+  if(plannerMealTypes.lunch) mealLabels.push('Lunch');
+  if(plannerMealTypes.dinner) mealLabels.push('Dinner');
+  const snackLabels = plannerNumSnacks<=0 ? [] : plannerNumSnacks===1 ? ['Snack'] : Array.from({length:plannerNumSnacks},(_,i)=>'Snack '+(i+1));
+  const all = mealLabels.concat(snackLabels);
+  return all.length ? all : ['Meal']; // guard: nothing selected still gets a balanced meal
 }
-function getMealStructureText(numMeals, numSnacks){
-  const labels=getMealTypeLabels(numMeals,numSnacks);
+function getMealStructureText(){
+  const labels=getMealTypeLabels();
   return labels.length+' item(s) — exactly one meal/snack per label, in this exact order and using these exact labels: '+labels.join(', ');
 }
 function getMealTypeIcon(label){
@@ -6755,8 +6781,8 @@ function getMealTypeIcon(label){
   if(/snack/i.test(label)) return '🍿';
   return '🍽️';
 }
-function getMealStructureItems(numMeals, numSnacks){
-  return getMealTypeLabels(numMeals,numSnacks).map(l=>getMealTypeIcon(l)+' '+l);
+function getMealStructureItems(){
+  return getMealTypeLabels().map(l=>getMealTypeIcon(l)+' '+l);
 }
 
 
@@ -6821,7 +6847,7 @@ async function generateMultiDayPlan(days){
   const msgInterval=setInterval(()=>{const el=document.getElementById('planProgressMsg');if(el)el.textContent=msgs[msgIdx++%msgs.length];},4000);
 
   try {
-    const mealStructure = getMealStructureText(plannerNumMeals, plannerNumSnacks);
+    const mealStructure = getMealStructureText();
     const prompt=`Create a ${days}-day keto meal plan. Daily: ${goals.cal}cal, ${dailyCarbs}g carbs max, ${goals.protein}g protein.${ingredients?' Use: '+ingredients:''}${styleTags?' Style: '+styleTags:''}
 Each day must have DIFFERENT meals — no repeats across days.
 Every single day must contain exactly: ${mealStructure}.
@@ -6867,7 +6893,7 @@ DCOST[N]: $[estimated daily grocery cost e.g. $12.50]`;
     // Top action buttons
     html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
       <button onclick="scheduleMultiDayToCalendar()" style="padding:11px;background:linear-gradient(135deg,rgba(181,123,255,0.15),rgba(130,80,255,0.08));border:1.5px solid rgba(181,123,255,0.35);border-radius:12px;color:var(--purple);font-weight:800;font-size:13px;cursor:pointer">📅 Add Week to Calendar</button>
-      <button onclick="(function(){var a=[];window._multiDayAllMeals&&window._multiDayAllMeals.forEach(function(m){a=a.concat(m.ingredients&&m.ingredients.length?m.ingredients:[m.name]);});addMealToShop(a,'${days}-Day Plan');showToast('🛒 Added to shop!');})()" style="padding:11px;background:linear-gradient(135deg,#38bdf8,#0096c7);color:#000;border:none;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer">🛒 All Ingredients</button>
+      <button onclick="(function(){var a=[];window._multiDayAllMeals&&window._multiDayAllMeals.forEach(function(m){a=a.concat(m.ingredients&&m.ingredients.length?m.ingredients:[m.name]);});addMealToShop(a,'${days}-Day Meal Prep',true);showToast('🛒 Added to shop!');})()" style="padding:11px;background:linear-gradient(135deg,#38bdf8,#0096c7);color:#000;border:none;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer">🛒 All Ingredients</button>
     </div>`;
 
     let allMeals=[];
@@ -6925,7 +6951,7 @@ DCOST[N]: $[estimated daily grocery cost e.g. $12.50]`;
     result.innerHTML=`<div style="color:var(--red);padding:16px;text-align:center">⚠️ ${e.message}<br><br><button onclick="generateMultiDayPlan(${days})" style="padding:10px 20px;background:var(--green);color:#000;border:none;border-radius:10px;font-weight:700;cursor:pointer">Try Again</button></div>`;
   }
   btn.disabled=false;
-  btn.textContent='📅 Generate '+days+'-Day Plan';
+  btn.textContent='📅 Generate My Plan';
 }
 
 // Log a specific day's meals to tracker
@@ -6934,7 +6960,7 @@ function logDayMeals(dayNum){
   if(!meals.length){ showToast('No meals for that day'); return; }
   const catMap={Breakfast:'🌅 Breakfast',Lunch:'☀️ Lunch',Dinner:'🌙 Dinner',Snack:'🍿 Snack'};
   meals.forEach(m=>{
-    addToLog({name:m.name,calories:m.cal,carbs:m.carbs,fat:m.fat,protein:m.protein,category:'Day Plan',keto:m.carbs<=15},catMap[m.mealType]||'🍽️ Other');
+    addToLog({name:m.name,calories:m.cal,carbs:m.carbs,fat:m.fat,protein:m.protein,category:'Meal Prep',keto:m.carbs<=15},catMap[m.mealType]||'🍽️ Other');
   });
   const weekdayAbbr=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const logDate=new Date(); logDate.setDate(logDate.getDate()+(dayNum-1));
@@ -7030,12 +7056,16 @@ function startMealPrep(){
     const b = document.getElementById('ppbar'); if(b) b.style.width = pct + '%';
   }, 500);
 
-  // Snack calories = ~15% of daily, rest split ~25/35/40 B/L/D
-  const snackCal  = Math.round(goals.cal * 0.15);
-  const breakCal  = Math.round(goals.cal * 0.25);
-  const lunchCal  = Math.round(goals.cal * 0.25);
-  const dinnerCal = goals.cal - breakCal - lunchCal - snackCal;
-  const snackCarbs = Math.round(goals.carbs * 0.15);
+  const labels = getMealTypeLabels();
+  const snackCount = labels.filter(l=>/snack/i.test(l)).length;
+  const mainCount = labels.length - snackCount;
+  const totalSnackCal = Math.round(goals.cal * 0.15 * snackCount);
+  const totalSnackCarbs = Math.round(goals.carbs * 0.15 * snackCount);
+  const perSnackCal = snackCount>0 ? Math.round(totalSnackCal/snackCount) : 0;
+  const perSnackCarbs = snackCount>0 ? Math.round(totalSnackCarbs/snackCount) : 0;
+  const perMainCal = mainCount>0 ? Math.round((goals.cal-totalSnackCal)/mainCount) : 0;
+  const itemSummary = labels.map(l=>/snack/i.test(l) ? `${l} (~${perSnackCal} cal, ~${perSnackCarbs}g carbs)` : `${l} (~${perMainCal} cal)`).join(', ');
+  const formatBlocks = labels.map(l=>`MEAL: ${l}\nNAME: [name]\nBATCH: [e.g. "Make 5 portions at once"]\nING: [ingredient 1 with 5-day qty], [ingredient 2 with 5-day qty], [ingredient 3 with 5-day qty]\nSTEPS: [step 1] | [step 2] | [step 3]\nCALS: [cal] | CARBS: [carbs]g | PROT: [protein]g | FAT: [fat]g\nCOST: $[estimated cost for 5 servings e.g. "$8.50"]`).join('\n\n');
 
   const prompt = `You are a keto meal prep expert. Create a bulk keto meal prep plan.
 Cook once on Sunday, eat the same meals Mon–Fri.
@@ -7044,43 +7074,13 @@ ${styleTags ? 'CUISINE: all meals must be '+styleTags+' style.' : ''}
 ${snackTags ? 'Snack style: '+snackTags+'.' : ''}
 ${ingredients ? 'Use: '+ingredients+'.' : ''}
 
-Give exactly 4 items: Breakfast (~${breakCal} cal), Lunch (~${lunchCal} cal), Dinner (~${dinnerCal} cal), Snack (~${snackCal} cal, ~${snackCarbs}g carbs).
-All 4 together must total ~${goals.cal} cal and ~${goals.carbs}g carbs.
+Give exactly ${labels.length} items: ${itemSummary}.
+All ${labels.length} together must total ~${goals.cal} cal and ~${goals.carbs}g carbs. If this is only 1-2 items total, size portions to cover nearly the whole day's targets by itself.
 Each must match the cuisine style. Easy to batch cook for 5 days.
 Also estimate a TOTAL COST in USD to buy all ingredients for 5 days at a typical grocery store or Costco.
 
 Respond in EXACTLY this format for each item:
-MEAL: Breakfast
-NAME: [name]
-BATCH: [e.g. "Make 5 portions at once"]
-ING: [ingredient 1 with 5-day qty], [ingredient 2 with 5-day qty], [ingredient 3 with 5-day qty]
-STEPS: [step 1] | [step 2] | [step 3]
-CALS: [cal] | CARBS: [carbs]g | PROT: [protein]g | FAT: [fat]g
-COST: $[estimated cost for 5 servings e.g. "$8.50"]
-
-MEAL: Lunch
-NAME: [name]
-BATCH: [batch note]
-ING: [ing1], [ing2], [ing3]
-STEPS: [step 1] | [step 2] | [step 3]
-CALS: [cal] | CARBS: [carbs]g | PROT: [protein]g | FAT: [fat]g
-COST: $[cost]
-
-MEAL: Dinner
-NAME: [name]
-BATCH: [batch note]
-ING: [ing1], [ing2], [ing3]
-STEPS: [step 1] | [step 2] | [step 3]
-CALS: [cal] | CARBS: [carbs]g | PROT: [protein]g | FAT: [fat]g
-COST: $[cost]
-
-MEAL: Snack
-NAME: [name]
-BATCH: [batch note]
-ING: [ing1], [ing2], [ing3]
-STEPS: [step 1] | [step 2] | [step 3]
-CALS: [cal] | CARBS: [carbs]g | PROT: [protein]g | FAT: [fat]g
-COST: $[cost]
+${formatBlocks}
 
 SHOP: [item 1], [item 2], [item 3], [item 4], [item 5], [item 6], [item 7]`;
 
@@ -7160,7 +7160,7 @@ SHOP: [item 1], [item 2], [item 3], [item 4], [item 5], [item 6], [item 7]`;
       + '<button onclick="addPrepToTracker()" style="padding:11px;background:linear-gradient(135deg,rgba(0,230,118,0.15),rgba(0,200,83,0.08));border:1.5px solid rgba(0,230,118,0.35);border-radius:12px;color:var(--green);font-weight:800;font-size:13px;cursor:pointer">📊 Log Today</button>'
       + '<button onclick="schedulePrepWeek()" style="padding:11px;background:linear-gradient(135deg,rgba(181,123,255,0.15),rgba(130,80,255,0.08));border:1.5px solid rgba(181,123,255,0.35);border-radius:12px;color:var(--purple);font-weight:800;font-size:13px;cursor:pointer">📅 Add to Calendar</button>'
       + '</div>'
-      + '<button onclick="addMealToShop('+JSON.stringify(shopIngs).replace(/"/g,"'")+',\'5-Day Meal Prep\')" style="width:100%;padding:11px;background:linear-gradient(135deg,#38bdf8,#0096c7);color:#000;border:none;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer;margin-bottom:14px">🛒 Add All to Shopping List</button>';
+      + '<button onclick="addMealToShop('+JSON.stringify(shopIngs).replace(/"/g,"'")+',\'5-Day Meal Prep\',true)" style="width:100%;padding:11px;background:linear-gradient(135deg,#38bdf8,#0096c7);color:#000;border:none;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer;margin-bottom:14px">🛒 Add All to Shopping List</button>';
 
     // Meal cards
     meals.forEach(function(m, mi){
@@ -7237,13 +7237,10 @@ function schedulePrepWeek(){
   const meals = window._prepMeals;
   if(!meals||!meals.length){ showToast('Generate a plan first'); return; }
 
-  // Find the next Monday
+  // Always start from today per user preference
   const today = new Date();
-  const dayOfWeek = today.getDay(); // 0=Sun
-  const daysUntilMon = dayOfWeek === 0 ? 1 : (8 - dayOfWeek) % 7 || 7;
-  const monday = new Date(today);
-  monday.setDate(today.getDate() + daysUntilMon);
-  monday.setHours(0,0,0,0);
+  const startDay = new Date(today);
+  startDay.setHours(0,0,0,0);
 
   try {
     const arch = JSON.parse(localStorage.getItem('kb_foodHistory')||'{}');
@@ -7251,8 +7248,8 @@ function schedulePrepWeek(){
       return {name:m.name, calories:m.cal, carbs:m.carbs, fat:m.fat, protein:m.prot};
     });
     for(let d=0; d<5; d++){
-      const day = new Date(monday);
-      day.setDate(monday.getDate() + d);
+      const day = new Date(startDay);
+      day.setDate(startDay.getDate() + d);
       const key = day.toDateString();
       // Merge with any existing entries (don't overwrite journal/weight data)
       const existing = arch[key] || [];
@@ -7264,9 +7261,9 @@ function schedulePrepWeek(){
     localStorage.setItem('kb_foodHistory', JSON.stringify(arch));
 
     // Show confirmation with dates
-    const endDay = new Date(monday); endDay.setDate(monday.getDate()+4);
+    const endDay = new Date(startDay); endDay.setDate(startDay.getDate()+4);
     const fmt = function(d){ return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); };
-    showToast('📅 Scheduled '+fmt(monday)+' – '+fmt(endDay)+'!');
+    showToast('📅 Scheduled '+fmt(startDay)+' – '+fmt(endDay)+'!');
 
     // Switch to calendar so user can see it
     setTimeout(function(){
@@ -7310,7 +7307,7 @@ async function generateDayPlan(){
     <div style="background:rgba(0,230,118,0.04);border:1px solid rgba(0,230,118,0.1);border-radius:16px;padding:14px;margin-bottom:12px">
       <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📊 Calculating your day totals...</div>
       <div style="display:flex;gap:8px">
-        ${getMealStructureItems(plannerNumMeals, plannerNumSnacks).map(m=>`
+        ${getMealStructureItems().map(m=>`
           <div style="flex:1;background:rgba(255,255,255,0.03);border-radius:10px;padding:10px 6px;text-align:center">
             <div style="font-size:16px;margin-bottom:4px">${m.split(' ')[0]}</div>
             <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;margin-bottom:4px"></div>
@@ -7325,7 +7322,7 @@ async function generateDayPlan(){
 
   try {
     const favNames = aiMealFavorites.slice(0,10).map(f=>f.name).join(', ');
-    const mealStructure = getMealStructureText(plannerNumMeals, plannerNumSnacks);
+    const mealStructure = getMealStructureText();
 
     const prompt = `You are a professional keto nutritionist and macro calculator. Create a keto meal plan for one day that PRECISELY hits these targets:
 
@@ -7504,7 +7501,7 @@ CARBS: [net carbs]g | FAT: [fat]g | PROTEIN: [protein]g | CALS: [calories]`
   }
 
   btn.disabled=false;
-  btn.textContent='📅 Generate My Day Plan';
+  btn.textContent='📅 Generate My Plan';
 }
 
 function getMealCategory(mealType){
@@ -7590,7 +7587,7 @@ function addPlanToShop(idx){
     // Add ALL meals' ingredients
     let allIngredients = [];
     meals.forEach(m => { allIngredients = allIngredients.concat(m.ingredients||[]); });
-    if(allIngredients.length) addMealToShop(allIngredients, 'Full Day Plan');
+    if(allIngredients.length) addMealToShop(allIngredients, 'Full Meal Prep', true);
     showToast('🛒 All ingredients added to shopping list!');
   } else {
     if(!meals[idx]) return;
